@@ -9,22 +9,32 @@ dipasang pada pesawat terbang untuk melakukan fungsionalitas tersendiri.
 
 Avionik merupakan komponen penting dalam sebuah pesawat terbang dan merupakan \textit{safety-critical system}, yaitu
 sistem yang apabila mengalami kegagalan dapat mengakibatkan kematian, kerugian besar, atau kerusakan lingkungan. Avionik
-memiliki beberapa kriteria yang wajib dipenuhi. Kriteria tersebut distandarkan oleh Aeronautical Radio, Incorporated
-(ARINC) dalam sebuah standar spesifikasi penerbangan bernama ARINC 653.
+pada sebuah pesawat umumnya menggunakan sistem operasi \textit{real-time}, yaitu sistem operasi yang kebenarannya
+ditentukan oleh kebenaran dan waktu pengerjaan sebuah operasi. Sistem operasi yang digunakan untuk avionik memiliki
+beberapa kriteria yang wajib dipenuhi. Kriteria tersebut distandarkan oleh Aeronautical Radio, Incorporated (ARINC)
+dalam sebuah standar spesifikasi penerbangan bernama ARINC 653.
 
-Sudah banyak \textit{hypervisor} yang mengimplementasikan standar ARINC 653, namun sistem yang tersedia adalah sistem
-berbayar maupun sistem berlangganan. Hal ini mengakibatkan eksplorasi pengembangan aplikasi, \textit{benchmarking}, dan
-jaminan desain sulit untuk dilakukan tanpa investasi yang besar.
+Standar ARINC 653 menspesifikasikan partisi ruang dan waktu beserta \textit{API} pada sistem operasi \textit{real-time} agar avionik yang
+menggunakan sistem operasi tersebut \textit{safety-critical}. Pada sistem tersebut, setiap perangkat lunak disebut
+sebagai \textbf{partisi} dan memiliki ruang memori tersendiri. Arsitektur tersebut dapat disimulasikan dengan
+menggunakan \textit{hypervisor}. \textit{Hypervisor} adalah sebuah komponen yang membuat dan menjalankan \textit{virtual
+machine}. Setiap \textit{virtual machine} akan memiliki ruang memori tersendiri sehingga dapat digunakan untuk
+mengimplementasikan sebuah \textbf{partisi}.
+
+Pada saat penulisan, sudah banyak \textit{hypervisor} yang mengimplementasikan standar ARINC 653, namun sistem yang
+tersedia adalah sistem berbayar maupun sistem berlangganan. Hal ini mengakibatkan eksplorasi pengembangan aplikasi,
+\textit{benchmarking}, dan jaminan desain sulit untuk dilakukan tanpa investasi yang besar.
 
 \section{Rumusan Masalah}
 
 Perumusan masalah dari uraian latar belakang adalah tidak adanya implementasi \textit{hypervisor} yang memenuhi kriteria
-pada spesifikasi ARINC 653 yang \textit{free} dan \textit{open source}.
+pada spesifikasi ARINC 653 yang bersifat \textit{free} dan \textit{open source}.
 
 \section{Tujuan}
 
-Berdasarkan rumusan masalah yang ada, tujuan yang ingin dicapai adalah melakukan implementasi \textit{system call} yang
-memenuhi kriteria pada spesifikasi ARINC 653.
+Berdasarkan rumusan masalah yang ada, tujuan yang ingin dicapai adalah melakukan implementasi \textit{API} yang
+yang dispesifikasikan pada standar ARINC 653 pada \textit{hypervisor} yang bersifat \textit{free} dan \textit{open
+source}.
 
 \section{Batasan Masalah}
 
