@@ -1,10 +1,14 @@
-\documentclass{report}
+\documentclass[11pt, a4paper, oneside, draft]{report}
 
 \usepackage{titlesec}
 
 \renewcommand{\thechapter}{\Roman{chapter}}
 \renewcommand{\thesection}{\thechapter.\arabic{section}}
 \titleformat{\chapter}[display]{\bfseries\Large\filcenter}{BAB \thechapter}{0.0pt}{}
+
+\usepackage[top=3cm, bottom=3cm, left=4cm, right=3cm]{geometry}
+
+\linespread{2.0}
 
 \begin{document}
 
