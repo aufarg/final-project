@@ -1,0 +1,13 @@
+\documentclass{report}
+
+\usepackage{titlesec}
+
+\renewcommand{\thechapter}{\Roman{chapter}}
+\renewcommand{\thesection}{\thechapter.\arabic{section}}
+\titleformat{\chapter}[display]{\bfseries\Large\filcenter}{BAB \thechapter}{0.0pt}{}
+
+\begin{document}
+
+\input{./chapters/pendahuluan}
+
+\end{document}
