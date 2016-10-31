@@ -1,0 +1,30 @@
+\usepackage{graphicx}
+\usepackage{setspace}
+
+\doublespacing
+
+\setlength\parindent{0pt}
+
+\usepackage{caption}
+
+\captionsetup[table]{name=Tabel}
+
+\usepackage{chngcntr}
+
+\counterwithin{table}{section}
+
+\usepackage{pgfgantt}
+\usepackage{hyperref}
+
+\def\sectionautorefname{Subbab}
+\def\tableautorefname{Tabel}
+
+\usepackage{titlesec}
+
+\renewcommand{\thechapter}{\Roman{chapter}}
+\renewcommand{\thesection}{\thechapter.\arabic{section}}
+\titleformat{\chapter}[display]{\bfseries\Large\filcenter}{BAB \thechapter}{0.0pt}{}
+\titlespacing*{\chapter}{0pt}{0pt}{40pt}
+
+\usepackage[top=3cm, bottom=3cm, left=4cm, right=3cm]{geometry}
+

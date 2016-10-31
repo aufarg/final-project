@@ -9,13 +9,13 @@ dipasang pada pesawat terbang untuk melakukan fungsionalitas tersendiri.
 
 Avionik merupakan komponen penting dalam sebuah pesawat terbang dan merupakan \textit{safety-critical system}, yaitu
 sistem yang apabila mengalami kegagalan dapat mengakibatkan kematian, kerugian besar, atau kerusakan lingkungan. Avionik
-pada sebuah pesawat umumnya menggunakan sistem operasi \textit{real-time}, yaitu sistem operasi yang kebenarannya
-ditentukan oleh kebenaran dan waktu pengerjaan sebuah operasi. Sistem operasi yang digunakan untuk avionik memiliki
+pada sebuah pesawat umumnya menggunakan sistem berbasis \textit{real-time}, yaitu sistem yang kebenarannya
+ditentukan oleh kebenaran dan waktu pengerjaan sebuah operasi. Sistem yang digunakan untuk avionik memiliki
 beberapa kriteria yang wajib dipenuhi. Kriteria tersebut distandarkan oleh Aeronautical Radio, Incorporated (ARINC)
 dalam sebuah standar spesifikasi penerbangan bernama ARINC 653.
 
-Standar ARINC 653 menspesifikasikan partisi ruang dan waktu beserta \textit{API} pada sistem operasi \textit{real-time} agar avionik yang
-menggunakan sistem operasi tersebut \textit{safety-critical}. Pada sistem tersebut, setiap perangkat lunak disebut
+Standar ARINC 653 menspesifikasikan partisi ruang dan waktu beserta \textit{API} pada sistem berbasis \textit{real-time} agar avionik yang
+menggunakan sistem tersebut \textit{safety-critical}. Pada sistem tersebut, setiap perangkat lunak disebut
 sebagai \textbf{partisi} dan memiliki ruang memori tersendiri. Arsitektur tersebut dapat disimulasikan dengan
 menggunakan \textit{hypervisor}. \textit{Hypervisor} adalah sebuah komponen yang membuat dan menjalankan \textit{virtual
 machine}. Setiap \textit{virtual machine} akan memiliki ruang memori tersendiri sehingga dapat digunakan untuk
@@ -37,13 +37,114 @@ yang dispesifikasikan pada standar ARINC 653 pada \textit{hypervisor} yang bersi
 source}.
 
 \section{Batasan Masalah}
+\label{section:batasan_masalah}
 
-% Text Here %
+Berdasarkan rumusan masalah yang ada, terdapat beberapa asumsi terkait dengan sistem avionik yang akan
+dikembangkan yaitu:
+
+\begin{itemize}
+
+    \item \textit{Hypervisor} yang digunakan adalah \textit{hypervisor} tipe-1. \textit{Hypervisor} tipe-1 berbeda
+        dengan tipe-2 karena \textit{hypervisor} tipe-1 berjalan di atas perangkat lunak sedangkan \textit{hypervisor}
+        tipe-2 berjalan di atas sistem lain. Perbedaan ini mengakibatkan sistem yang dibangun di atas
+        \textit{hypervisor} tipe-1 tidak dapat berjalan pada \textit{hypervisor} tipe-2.
+
+    \item \textit{API} yang disediakan hanya akan diuji coba pada \textit{kernel} Linux. Hal ini mengakibatkan
+        \textbf{partisi} yang dijalankan tanpa menggunakan \textit{kernel} Linux akan memiliki perilaku yang tidak
+        terdefinisi.
+
+\end{itemize}
 
 \section{Metodologi}
 
-% Text Here %
+Metodologi yang akan digunakan dalam penilitian tugas akhir adalah sebagai berikut:
+
+\begin{enumerate}
+
+    \item Studi Literatur
+
+        Pengerjaan tugas akhir diawali dengan mempelajari referensi berupa jurnal ilmiah beserta sistem yang sudah
+        pernah dibuat sebelumnya yang dapat membantu pengembangan sistem yang dibuat pada tugas akhir ini.  Literatur
+        yang dicari dan dipelajari berkaitan dengan topik tugas akhir yaitu avionik, sistem berbasis \textit{real-time},
+        kesalahan yang pernah ditemukan sebelumnya, metode pengujian, metode penjaminan desain sistem, serta hal-hal
+        lain yang masih berkaitan dengan topik tugas akhir ini.
+
+    \item Analisis
+
+        Pada tahap ini dilakukan analisis permasalahan yang berkaitan dengan topik tugas akhir ini. Analisis
+        permasalahan meliputi penentuan spesifikasi dan arsitektur yang ada pada \textit{hypervisor} untuk kemudian
+        dijadikan sebagai solusi terhadap permasalahan.
+
+    \item Perancangan Solusi dan Pengujian
+
+        Pada tahap ini dilakukan perancangan sistem yang dapat menyelesaikan masalah\hyp{}masalah yang telah dijelaskan
+        pada \autoref{section:batasan_masalah} beserta \textit{tools} untuk pengujian sistem. Bagian perancangan ini
+        juga menjelaskan arsitektur yang digunakan untuk membangun sistem berdasarkan spesifikasi dan metode yang
+        digunakan.
+
+
+    \item Implementasi
+
+        Pada tahap ini dilakukan pembangunan sistem sesuai dengan hasil perancangan solusi. Selain sistem, pada tahap
+        ini juga dilakukan pembangunan \textit{tools} untuk pengujian sistem.
+
+    \item Pengujian dan Analisis Hasil
+
+        Pada tahap ini dilakukan pengujian dengan metodologi pengujian yang dibangun dari tahap pembangunan solusi dan
+        pengujian. Selanjutnya dilakukan pengujian hasil pengujian dan penarikan kesimpulan.
+
+\end{enumerate}
 
 \section{Jadwal Pelaksanaan Tugas Akhir}
 
-% Text Here %
+\newsavebox\mybox
+
+\begin{lrbox}{\mybox}
+    \begin{ganttchart}[
+            vgrid={*{6}{draw=none}, dotted},
+            x unit=.05cm,
+            y unit title=.6cm,
+            y unit chart=.6cm,
+            time slot format=isodate,
+        time slot format/start date=2016-09-01]{2016-09-01}{2017-04-30}
+        \ganttset{bar height=.6}
+        \gantttitlecalendar{year, month} \\
+        \ganttbar[bar/.append style={fill=black}]{Tahap 1}{2016-09-05}{2016-11-25}\\
+        \ganttbar[bar/.append style={fill=black}]{Tahap 2}{2016-10-05}{2016-11-20}\\
+        \ganttbar[bar/.append style={fill=black}]{Tahap 3}{2016-11-05}{2016-12-20}\\
+        \ganttbar[bar/.append style={fill=black}]{Tahap 4}{2016-12-15}{2017-03-05}\\
+        \ganttbar[bar/.append style={fill=black}]{Tahap 5}{2017-02-05}{2017-04-30}
+    \end{ganttchart}
+\end{lrbox}
+
+Pengerjaan tugas akhir direncanakan akan dimulai dari September 2016 sampai dengan April 2016. Pelaksanaan tugas akhir
+dibagi menjadi 5 tahap untuk masing-masing metodologi pengerjaan sebagai berikut,
+
+\begin{enumerate}
+
+    \item Tahap 1: Studi Literatur
+    \item Tahap 2: Analisis Masalah
+    \item Tahap 3: Perancangan Solusi
+    \item Tahap 4: Implementasi
+    \item Tahap 5: Pengujian dan Analisis Hasil
+
+\end{enumerate}
+
+Jadwal pelaksanaan tugas akhir berdasarkan metodologi pengerjaan tugas akhir dapat dilihat pada
+\autoref{table:gantt_chart_jadwal}.
+
+\begin{table}[h]
+    \centering
+    \caption{Gantt Chart jadwal pelaksanaan tugas akhir}
+    \label{table:gantt_chart_jadwal}
+    \tikz{
+        \node[inner sep=0pt,outer sep=0pt] (gantt)
+        {
+            \begin{tabular}{c}
+                \toprule
+                \resizebox{\textwidth}{!}{\usebox\mybox}\\
+                \bottomrule
+            \end{tabular}
+        };
+    }
+\end{table}
