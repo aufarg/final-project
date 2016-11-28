@@ -1,0 +1,94 @@
+\chapter{STUDI LITERATUR}
+
+\section{Komputasi \textit{Realtime}}
+
+Sistem operasi modern umumnya memfasilitasi \textit{multitasking}, yaitu dapat menjalankan dua atau lebih program secara
+bersamaan. Untuk dapat memfasilitasi \textit{multitasking}, proses-proses tersebut berjalan secara bergantian dengan
+cepat. Karena itu, sebuah sistem operasi harus memiliki suatu algoritma untuk memilih program yang akan berjalan pada
+suatu waktu. Proses penentuan urutan proses yang harus berjalan pada suatu waktu dinamakan \textit{scheduling}.
+
+Terdapat permasalahan yang harus diselesaikan oleh algoritma \textit{scheduling} sebuah sistem operasi apabila perangkat
+lunak yang berjalan pada sistem membutuhkan komputasi \textit{realtime}. Aplikasi yang membutuhkan komputasi
+\textit{realtime} memiliki \textit{deadline} dalam mengerjakan \textit{task}. Algoritma \textit{scheduling} yang baik
+harus mengatur agar setiap aplikasi dapat menyelesaikan \textit{task} sebelum \textit{deadline}. Sistem operasi yang
+menggunakan algoritma \textit{scheduling} untuk aplikasi \textit{realtime} disebut sebagai sistem operasi
+\textit{realtime}.
+
+\section{Virtualisasi}
+
+\subsection{Pengertian}
+
+Virtualisasi adalah konsep yang dilandaskan oleh emulasi. Pada emulasi, sistem berpura-pura menjadi sebuah sistem lain
+sedangkan pada virtualisasi sistemm berpura-pura menjadi dua atau lebih sistem yang berbeda.
+
+Sistem operasi modern sudah menggunakan konsep virtualisasi sederhana. Pada sebuah sistem operasi, dapat terdapat banyak
+proses yang berjalan pada saat yang bersamaan. Masing-masing proses dapat bekerja layaknya proses tersebut berjalan
+sendiri. \textit{Devices} yang dimiliki oleh sebuah mesin divirtualisasikan oleh sistem operasi. Beberapa
+\textit{device} yang divirtualisasikan oleh sistem operasi adalah CPU dan memori. Virtualisasi CPU dilakukan dengan
+melakukan \textit{preemption} pada proses yang ingin menggunakan CPU sepenuhnya. Virtualisasi memori dilakukan dengan
+melakukan pemetaan alamat memori virtual yang mampu memiliki kapasitas 2\textsuperscript{32} (2\textsuperscript{64} pada
+sistem 64-bit) ke alamat memori fisik yang memiliki kapasitas sesuai dengan perangkat keras mesin.  Kapasitas yang dapat
+digunakan oleh sebuah proses pada alamat memori fisik ditentukan dengan melakukan segmentasi, baik menggunakan
+\textit{paging} maupun tidak.
+
+Virtualisasi dilakukan dengan menjalan \textit{kernel} sistem operasi dibawah sistem yang disebut sebagai
+\textit{hypervisor}. \textit{Hypervisor} adalah sebuah perangkat lunak yang bertugas untuk menjalankan \textit{virtual
+machine}. Sistem yang menjalankan \textit{hypervisor} disebut \textit{host} dan sistem yang dijalankan oleh
+\textit{hypervisor} disebut \textit{guest}.
+
+\subsection{Permasalahan}
+
+Beberapa \textit{devices} pada sebuah mesin dapat divirtualisasikan dengan mudah, sebagai contoh pada memori
+virtualisasi dapat dicapai dengan melakukan segmentasi alamat memori. Namun, CPU memiliki tingkat kemudahan virtualisasi
+bergantung kepada arsitektur CPU tersebut. Sebagai contoh, arsitektur DEC Alpha adalah arsitektur CPU yang didesain
+untuk virtualisasi. Namun, beberapa arsitektur lain seperti arsitektur x86 yang populer tidak didesain untuk
+virtualisasi. Agar sebuah CPU dapat divirtualisasikan, Popek dan Goldberg mendefinisikan beberapa kebutuhan yang harus
+dipenuhi oleh arsitektur CPU tersebut pada karya tulisnya pada tahun 1974. Kebutuhan tersebut diawali dengan membagi
+jenis instruksi pada tiga buah kategori:
+
+\begin{itemize}
+
+    \item \textit{\textbf{Priviledged instructions}} adalah instruksi yang dijalankan pada \textit{privileged mode},
+        namun menghasilkan \textit{trap} apabila dijalankan di luar mode tersebut.
+
+    \item \textit{\textbf{Control sensitive instructions}} adalah instruksi yang berusaha mengubah konfigurasi
+        \textit{resources} pada sistem seperti memperbarui pemetaan memori virtual ke memori fisik, berbicara pada
+        \textit{devices}, atau memanipulasi konfigurasi \textit{register} global.
+
+    \item \textit{\textbf{Behavior sensitive instructions}} adalah insntruksi yang perilakunya bergantung pada
+        konfigurasi \textit{resources}.
+
+\end{itemize}
+
+Agar sebuah arsitektur dapat divirtualisasikan, maka seluruh \textit{sensitive instructions} harus merupakan
+\textit{privileged instructions}. Maka, sebuah \textit{hypervisor} harus mampu mengubah instruksi yang akan mengubah
+keadaan mesin dan berakibat pada proses lain.
+
+\subsection{Solusi}
+
+\subsubsection{\textit{Binary Rewriting}}
+
+Salah satu pendekatan yang populer digunakan adalah \textit{binary rewriting}. Pendekatan ini dilakukan dengan cara
+mengubah instruksi yang ditangkap menjadi instruksi versi emulasi. Implementasi dari pendekatan ini mirip seperti yang
+dilakukan oleh \textit{debugger}. Sebuah \textit{debugger} bekerja dengan cara memasang \textit{breakpoints} yang
+mengakibatkan proses tersebut memberikan \textit{interrupt} dan memungkinkan instruksi dicek pada kode
+\textit{userspace}. \textit{Hypervisor} yang menggunakan pendekatan ini bekerja dengan cara yang sama, yaitu memasang
+\textit{breakpoints} pada instruksi \textit{jump} untuk pemanggilan \textit{system call} yang tidak aman.
+
+\subsubsection{\textit{Paravirtualization}}
+
+Pendekatan \textit{paravirtualization} membuat \textit{guest} pada sebuah \textit{hypervisor} mengetahui bahwa dirinya
+berjalan diatas sebuah \textit{hypervisor}. Pada saat aplikasi pada \textit{guest} akan melakukan pemanggilan
+\textit{system call}, maka \textit{guest} harus meneruskan pemanggilan \textit{hypercall} tersebut kepada
+\textit{hypervisor}. \textit{Hypercall} secara konsep sama dengan \textit{system call} hanya saja pemanggilan dilakukan
+kepada \textit{hypervisor}. Pada perspektif sistem operasi, perbedaan dengan metode lainnya adalah pada metode
+\textit{paravirtualization} sistem operasi berjalan pada \textit{ring} 1 dan \textit{hypervisor} pada \textit{ring}
+0.
+
+\subsubsection{\textit{Hardware-Assisted Virtualization}}
+
+Pendekatan \textit{hardware-assisten virtualization} melakukan virtualisasi melalui bantuan perangkat lunak. Pendekatan
+ini dicapai dengan cara menambah "\textit{ring} -1" di atas \textit{ring} 0 pada arstitektur perangkat lunak. Penambahan
+\textit{ring} -1 mengakibatkan sistem operasi dapat berjalan pada \textit{ring} 0 sebagaimana seharusnya. Sistem operasi
+akan mendapatkan akses pada perangkat lunak secara langsung. CPU memberikan fasilitas untuk \textit{hypervisor}
+mengemulasikan instruksi yang dijalankan oleh sistem operasi.
