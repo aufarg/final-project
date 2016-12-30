@@ -2,36 +2,58 @@
 
 \section{Latar Belakang}
 
+% Avionik
 Sistem penerbangan atau avionik adalah sistem yang terdiri dari perangkat elektronik yang digunakan pada pesawat terbang
 atau satelit. Avionik berfungsi untuk memberikan fasilitas untuk mengoperasikan pesawat terbang. Sistem yang termasuk
 dalam avionik adalah sistem komunikasi, navigasi, \textit{dashboard} untuk manajemen sistem, dan sistem-sistem yang
 dipasang pada pesawat terbang untuk melakukan fungsionalitas tersendiri.
 
+%  Design-issues pada avionik
 Avionik merupakan komponen penting dalam sebuah pesawat terbang dan merupakan \textit{safety-critical system}, yaitu
-sistem yang apabila mengalami kegagalan dapat mengakibatkan kematian, kerugian besar, atau kerusakan lingkungan. Avionik
-pada sebuah pesawat umumnya menggunakan sistem berbasis \textit{real-time}, yaitu sistem yang kebenarannya
-ditentukan oleh kebenaran dan waktu pengerjaan sebuah operasi. Sistem yang digunakan untuk avionik memiliki
-beberapa kriteria yang wajib dipenuhi. Kriteria tersebut distandarkan oleh Aeronautical Radio, Incorporated (ARINC)
-dalam sebuah standar spesifikasi penerbangan bernama ARINC 653.
+sistem yang apabila mengalami kegagalan dapat mengakibatkan kematian, kerugian besar, atau kerusakan lingkungan. Sistem
+operasi yang digunakan oleh avionik pada sebuah pesawat umumnya merupakan sistem \textit{real-time}, yaitu sistem
+yang kebenaran komputasinya tidak hanya ditentukan oleh kebenaran hasil komputasi, tetapi juga waktu dimana hasil
+komputasi dapat digunakan. % TODO: Cite Shin, K.G for RTC
+Maka, manajemen waktu sangat mendasar pada sistem \textit{real-time}. Perangkat yang digunakan untuk avionik memiliki
+beberapa standar yang wajib dipenuhi.  Standar tersebut dibuat oleh Aeronautical Radio, Incorporated (ARINC) dalam
+sebuah seri standar ARINC 600. Buku ini akan mendalami lebih lanjut mengenai sistem operasi \textit{real-time} pada
+avionik yang dispesifikasikan pada penerbangan bernama ARINC 653.
 
-Standar ARINC 653 menspesifikasikan partisi ruang dan waktu beserta \textit{API} pada sistem berbasis \textit{real-time} agar avionik yang
-menggunakan sistem tersebut \textit{safety-critical}. Pada sistem tersebut, setiap perangkat lunak disebut
-sebagai \textbf{partisi} dan memiliki ruang memori tersendiri. Arsitektur tersebut dapat disimulasikan dengan
-menggunakan \textit{hypervisor}. \textit{Hypervisor} adalah sebuah komponen yang membuat dan menjalankan \textit{virtual
-machine}. Setiap \textit{virtual machine} akan memiliki ruang memori tersendiri sehingga dapat digunakan untuk
-mengimplementasikan sebuah \textbf{partisi}.
+% ARINC 653
+Standar ARINC 653 menspesifikasikan partisi ruang dan waktu pada sistem berbasis \textit{real-time} agar avionik yang
+menggunakan sistem tersebut \textit{safety-critical}. Setiap proses perangkat lunak disebut sebagai \textbf{partisi}.
+Selain spesifikasi \textbf{partisi}, ARINC 653 juga mendefinisikan API untuk memudahkan manajemen \textbf{partisi}.
+Sistem operasi yang memenuhi standar ARINC 653 berfungsi untuk memanajemeni beberapa \textbf{partisi} beserta
+komunikasi antar \textbf{partisi}. Manajemen yang dilakukan oleh meliputi \textit{resources} komputasi umum seperti CPU,
+\textit{timing}, memori, dan \textit{devices} serta \textit{resources} untuk komunikasi. Buku ini akan mendalami lebih
+lanjut mengenai manajemen CPU, khususnya proses \textit{scheduling}, yang dispesifikasikan oleh standar ARINC 653.
 
-Pada saat penulisan, sudah banyak \textit{hypervisor} yang mengimplementasikan standar ARINC 653, namun sistem yang
-tersedia adalah sistem berbayar maupun sistem berlangganan. Hal ini mengakibatkan eksplorasi pengembangan aplikasi,
-\textit{benchmarking}, dan jaminan desain sulit untuk dilakukan tanpa investasi yang besar.
+% Hypervisor
+Arsitektur komputer yang dispesifikasikan pada standar ARINC 653 dapat disimulasikan dengan menggunakan
+\textit{hypervisor}. \textit{Hypervisor} adalah sebuah komponen yang membuat dan menjalankan \textit{virtual machine}.
+Setiap \textit{virtual machine} akan memiliki ruang memori dan waktu tersendiri sehingga dapat digunakan untuk
+mengimplementasikan sebuah \textbf{partisi}. Pada saat penulisan, terdapat beberapa \textit{hypervisor} yang memenuhi
+standar ARINC 653.  Namun, \textit{hypervisor} ARINC 653 yang sudah matang relatif sangat mahal sehingga hanya
+pihak-pihak tertentu saja yang mampu mendapatkannya. Hal ini mengakibatkan eksplorasi pengembangan aplikasi, pengujian,
+dan jaminan desain pada \textit{hypervisor} tersebut sulit untuk dilakukan tanpa investasi yang besar. Terdapat sebuah
+prototipe \textit{hypervisor} ARINC 653 yang dinamakan ARLX. Prototipe dibangun diatas Xen, yaitu \textit{hypervisor}
+\textit{open-source} dengan lisensi GPL sehingga \textit{hypervisor} ARINC 653 tersebut juga \textit{open-source}.
+Namun, \textit{hypervisor} tersebut relatif baru dan tidak dapat dijamin kestabilannya.
+
+% Purpose
+Buku ini akan mendalami proses \textit{scheduling} ARINC 653 dengan melakukan eksperimen pada ARLX. Eksperimen akan
+dilakukan dengan melakukan perbandingan \textit{benchmark} antara \textit{scheduling} normal pada ARLX dengan
+\textit{scheduling} percobaan.
 
 \section{Rumusan Masalah}
 
+% TODO: Fix this
 Perumusan masalah dari uraian latar belakang adalah tidak adanya implementasi \textit{hypervisor} yang memenuhi kriteria
 pada spesifikasi ARINC 653 yang bersifat \textit{free} dan \textit{open source}.
 
 \section{Tujuan}
 
+% TODO: Fix this
 Berdasarkan rumusan masalah yang ada, tujuan yang ingin dicapai adalah melakukan implementasi \textit{API} yang
 yang dispesifikasikan pada standar ARINC 653 pada \textit{hypervisor} yang bersifat \textit{free} dan \textit{open
 source}.
