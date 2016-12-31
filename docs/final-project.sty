@@ -1,35 +1,39 @@
-\usepackage{setspace}
+%-------------------- FONTS --------------------%
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
 
-\doublespacing
+%-------------------- FORMAT --------------------%
+% Paper
+\usepackage[top=3cm, bottom=3cm, left=4cm, right=3cm]{geometry}
 
-\setlength\parindent{0pt}
-\setlength\parskip{1em}
-
-\usepackage{caption}
-
-\captionsetup[table]{name=Tabel}
-
-\usepackage{chngcntr}
-
-\counterwithin{table}{section}
-
-\usepackage{pgfgantt}
-\usepackage{hyperref}
-
-\def\sectionautorefname{Subbab}
-\def\tableautorefname{Tabel}
-
+% Titles & Caption
 \usepackage{titlesec}
-
+\usepackage{caption}
 \renewcommand{\thechapter}{\Roman{chapter}}
 \renewcommand{\thesection}{\thechapter.\arabic{section}}
 \titleformat{\chapter}[display]{\bfseries\Large\filcenter}{BAB \thechapter}{0.0pt}{}
-\titlespacing*{\chapter}{0pt}{0pt}{40pt}
+\captionsetup[table]{name=Tabel}
+\def\tableautorefname{Tabel}
+\def\sectionautorefname{Subbab}
+\titlespacing{\chapter}{0pt}{0pt}{40pt}
+\titlespacing{\section}{0pt}{0pt}{-10pt}
+\titlespacing{\subsection}{0pt}{0pt}{-10pt}
+\titlespacing{\subsubsection}{0pt}{0pt}{-10pt}
 
-\usepackage[top=3cm, bottom=3cm, left=4cm, right=3cm]{geometry}
+% Paragraphs
+\usepackage{setspace}
+\doublespacing
+\setlength\parindent{0pt}
+\setlength\parskip{1em}
 
-\DeclareGraphicsExtensions{.pdf,.png,.jpg}
-
+% Counters
+\usepackage{chngcntr}
 \setcounter{secnumdepth}{4}
+\counterwithin{table}{section}
+
+%-------------------- MISC --------------------%
+\usepackage{pgfgantt}
+\usepackage{hyperref}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
 
 % vim: tw=120
