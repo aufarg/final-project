@@ -1,9 +1,3 @@
-%-------------------- LOCALIZATION --------------------%
-\usepackage{csquotes}
-\usepackage{polyglossia}
-\setdefaultlanguage{bahasai}
-\setotherlanguage{english}
-
 %-------------------- FONT --------------------%
 \usepackage{fontspec}
 \setmainfont{Times New Roman}
@@ -16,10 +10,10 @@
 \usepackage{titlesec}
 \usepackage[justification=centering]{caption}
 \renewcommand{\abstractname}{ABSTRAK}
-\addto\captionsbahasai{\renewcommand{\contentsname}{DAFTAR ISI}}
-\addto\captionsbahasai{\renewcommand{\listfigurename}{DAFTAR GAMBAR}}
-\addto\captionsbahasai{\renewcommand{\listtablename}{DAFTAR TABEL}}
-\addto\captionsbahasai{\renewcommand{\thechapter}{\Roman{chapter}}}
+\renewcommand{\contentsname}{DAFTAR ISI}
+\renewcommand{\listfigurename}{DAFTAR GAMBAR}
+\renewcommand{\listtablename}{DAFTAR TABEL}
+\renewcommand{\thechapter}{\Roman{chapter}}
 \renewcommand{\thesection}{\thechapter.\arabic{section}}
 \titleformat{\chapter}[display]{\bfseries\Large\filcenter}{BAB \thechapter}{0.0pt}{}
 \captionsetup[table]{name=Tabel}
