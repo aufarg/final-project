@@ -5,9 +5,35 @@ file = {:home/dancinggrass/Books/ARINC 653P1-3.pdf:pdf},
 isbn = {ARINC Specification 653},
 journal = {Arinc 653},
 pages = {85},
-langid = {bahasai},
 title = {{653P1-3 Avionics Application Software Standard Interface Part 1 - Required Services}},
 year = {2012}
+}
+@article{Al-Omari2004,
+abstract = {In real-time systems, tasks have deadlines to be met despite the presence of faults. Primary-Backup (PB) scheme is one of the most important schemes that has been employed for fault-tolerant scheduling of real-time tasks, wherein each task has two versions and the versions are scheduled on two different processors with time exclusion. There have been techniques proposed for improving schedulability of the PB-based scheduling, of which Backup-Backup (BB) overloading is among the most popular ones. In this technique two or more backups can share/overlap in time on a processor. In this paper, we propose two new techniques that accommodate more tasks and/or tolerate faults effectively. In the first technique, called dynamic grouping, the processors are dynamically grouped into logical groups in order to achieve efficient overloading of tasks on resources, thereby improving the schedulability and the reliability of the system. In the second technique, called PB overloading, the primary of a task can share/overlap in time with the backup of another task on a processor. The intuition is that, for a primary (or backup), the PB-overloading can assign an earlier start time than that of the BB-overloading, thereby increasing the schedulability. We conduct schedulability and reliability analysis of the proposed techniques through simulation and analytical studies. Our studies show that dynamic grouping improves the schedulability more than static grouping, and offers graceful degradation with increasing faults. Also, PB-overloading improves the schedulability more than BB-overloading, and offers reliability comparable to that of BB-overloading. The proposed techniques are generic that they can be incorporated into many fault-tolerant non-preemptive scheduling algorithms. ?? 2004 Elsevier Inc. All rights reserved.},
+author = {Al-Omari, Ra'ed and Somani, Arun K. and Manimaran, G.},
+doi = {10.1016/j.jpdc.2004.03.015},
+file = {:home/dancinggrass/Downloads/alomari2004.pdf:pdf},
+issn = {07437315},
+journal = {Journal of Parallel and Distributed Computing},
+keywords = {Fault-tolerance,Multiprocessors,Real-time systems,Reliability,Schedulability,Scheduling},
+number = {5},
+pages = {629--648},
+title = {{Efficient overloading techniques for primary-backup scheduling in real-time systems}},
+volume = {64},
+year = {2004}
+}
+@inproceedings{Bertossi2006,
+abstract = {This paper presents several fault-tolerant extensions of the Rate-Monotonic First-Fit multiprocessor scheduling algorithm handling both active and passive task copies. In particular, the technique of backup phasing delay is used to reduce the portions of active task copies that must be always executed and to deallocate active task copies as soon as their primary task copies have been successfully executed. It is also shown how to employ this technique while considering passive task duplication so as to over-book each processor with many passive task copies, assigning tasks to processors in such a way that tasks with equal or multiple periods have a high chance to be assigned to the same processor, and partitioning the processors into groups to avoid the mix of primary, active, and passive task copies on the same processor. Extensive simulations reveal a remarkable saving of both the overall number of processors used and the total computation time of the schedulability test (achieved especially by two new algorithms, called ARR3 and S-PR-PASS) with respect to previously proposed algorithms},
+author = {Bertossi, Alan A. and Mancini, Luigi V. and Menapace, Alessandra},
+booktitle = {Proceedings - IEEE International Symposium on Distributed Simulation and Real-Time Applications, DS-RT},
+doi = {10.1109/DS-RT.2006.33},
+file = {:home/dancinggrass/Downloads/bertossi2006.pdf:pdf},
+isbn = {0769526977},
+issn = {15506525},
+keywords = {Fault-tolerance,Hard-real-time systems,Multi-processors,Periodic tasks,Rate-monotonic scheduling},
+pages = {107--116},
+title = {{Scheduling hard-real-time tasks with backup phasing delay}},
+year = {2006}
 }
 @book{Chisnall2014,
 abstract = {Xen is a virtualization tool, but what does this mean? In this chapter, we will explore some of the history of virtualization, and some of the reasons why people found, and continue to find, it useful. We will have a look in particular at the x86, or IA32, architecture, why it presents such a problem for virtualization, and some possible ways around these limitations from other virtualization systems and finally from Xen itself.},
@@ -55,13 +81,26 @@ title = {{Data access scheduling in firm real-time database systems}},
 volume = {4},
 year = {1992}
 }
-@article{Littlefield-Lawwill2008,
+@article{Jin2013,
+author = {Jin, Hyun-Wook and Hyun-Wook},
+doi = {10.1145/2583687.2583693},
+file = {:home/dancinggrass/Downloads/apres-3.pdf:pdf},
+issn = {15513688},
+journal = {ACM SIGBED Review},
+number = {4},
+pages = {25--28},
+title = {{Fault-tolerant hierarchical real-time scheduling with backup partitions on single processor}},
+url = {http://dl.acm.org/citation.cfm?doid=2583687.2583693},
+volume = {10},
+year = {2013}
+}
+@inproceedings{Littlefield-Lawwill2008,
 abstract = {Projeto de arquiteturas IMA considerando aspectos de particionamento (time-space partitioning)},
 author = {Littlefield-Lawwill, Justin and Kinnan, Larry},
+booktitle = {AIAA/IEEE Digital Avionics Systems Conference - Proceedings},
 doi = {10.1109/DASC.2008.4702751},
 file = {:home/dancinggrass/Downloads/littlefieldlawwill2008.pdf:pdf},
 isbn = {9781424422081},
-journal = {AIAA/IEEE Digital Avionics Systems Conference - Proceedings},
 pages = {1--11},
 title = {{System considerations for robust time and space partitioning in integrated modular avionics}},
 year = {2008}
@@ -102,3 +141,4 @@ issn = {2155-7195},
 title = {{ARINC 653 hypervisor}},
 year = {2010}
 }
+
