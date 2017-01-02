@@ -5,7 +5,24 @@
 \usepackage{final-project}
 \usepackage{idn-hyph}
 
-\bibliographystyle{plainnat}
+\usepackage[
+    backend=biber,
+    style=authoryear-icomp,
+    sortlocale=de_DE,
+    natbib=true,
+    url=false, 
+    doi=true,
+    eprint=false
+]{biblatex}
+
+\DefineBibliographyStrings{bahasai}{%
+    and = {dan},
+    in = {in},
+    pages = {pages},
+    volume = {volume}
+}
+
+\addbibresource{./final-project.bib}
 
 \begin{document}
 
@@ -14,8 +31,12 @@
 \input{./chapters/approval}
 \pagestyle{plain}
 
+\newpage
+\addcontentsline{toc}{chapter}{\contentsname}
 \tableofcontents
 
+\newpage
+\addcontentsline{toc}{chapter}{\listfigurename}
 \listoffigures
 
 \clearpage
@@ -26,7 +47,7 @@
 
 \input{./chapters/analysis}
 
-\bibliography{final-project}
+\printbibliography
 
 \end{document}
 

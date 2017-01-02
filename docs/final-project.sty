@@ -1,7 +1,8 @@
-\usepackage{natbib}
-
 %-------------------- LOCALIZATION --------------------%
-\usepackage[bahasai]{babel}
+\usepackage{csquotes}
+\usepackage{polyglossia}
+\setdefaultlanguage{bahasai}
+\setotherlanguage{english}
 
 %-------------------- FONT --------------------%
 \usepackage{fontspec}
@@ -12,14 +13,12 @@
 \usepackage[top=3cm, bottom=3cm, left=4cm, right=3cm]{geometry}
 
 % Titles & Caption
-\usepackage{tocbibind}
 \usepackage{titlesec}
 \usepackage[justification=centering]{caption}
 \renewcommand{\abstractname}{ABSTRAK}
 \addto\captionsbahasai{\renewcommand{\contentsname}{DAFTAR ISI}}
 \addto\captionsbahasai{\renewcommand{\listfigurename}{DAFTAR GAMBAR}}
 \addto\captionsbahasai{\renewcommand{\listtablename}{DAFTAR TABEL}}
-\addto\captionsbahasai{\renewcommand{\bibname}{DAFTAR REFERENSI}}
 \addto\captionsbahasai{\renewcommand{\thechapter}{\Roman{chapter}}}
 \renewcommand{\thesection}{\thechapter.\arabic{section}}
 \titleformat{\chapter}[display]{\bfseries\Large\filcenter}{BAB \thechapter}{0.0pt}{}
