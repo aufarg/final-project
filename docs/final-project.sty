@@ -1,4 +1,9 @@
-%-------------------- FONTS --------------------%
+\usepackage{natbib}
+
+%-------------------- LOCALIZATION --------------------%
+\usepackage[bahasai]{babel}
+
+%-------------------- FONT --------------------%
 \usepackage{fontspec}
 \setmainfont{Times New Roman}
 
@@ -7,33 +12,54 @@
 \usepackage[top=3cm, bottom=3cm, left=4cm, right=3cm]{geometry}
 
 % Titles & Caption
+\usepackage{tocbibind}
 \usepackage{titlesec}
-\usepackage{caption}
-\renewcommand{\thechapter}{\Roman{chapter}}
+\usepackage[justification=centering]{caption}
+\renewcommand{\abstractname}{ABSTRAK}
+\addto\captionsbahasai{\renewcommand{\contentsname}{DAFTAR ISI}}
+\addto\captionsbahasai{\renewcommand{\listfigurename}{DAFTAR GAMBAR}}
+\addto\captionsbahasai{\renewcommand{\listtablename}{DAFTAR TABEL}}
+\addto\captionsbahasai{\renewcommand{\bibname}{DAFTAR REFERENSI}}
+\addto\captionsbahasai{\renewcommand{\thechapter}{\Roman{chapter}}}
 \renewcommand{\thesection}{\thechapter.\arabic{section}}
 \titleformat{\chapter}[display]{\bfseries\Large\filcenter}{BAB \thechapter}{0.0pt}{}
 \captionsetup[table]{name=Tabel}
+\captionsetup[figure]{name=Gambar}
 \def\tableautorefname{Tabel}
+\def\figureautorefname{Gambar}
 \def\sectionautorefname{Subbab}
 \titlespacing{\chapter}{0pt}{0pt}{40pt}
-\titlespacing{\section}{0pt}{0pt}{-10pt}
-\titlespacing{\subsection}{0pt}{0pt}{-10pt}
-\titlespacing{\subsubsection}{0pt}{0pt}{-10pt}
+\titlespacing{\section}{0pt}{11pt}{0pt}
+\titlespacing{\subsection}{0pt}{11pt}{0pt}
+\titlespacing{\subsubsection}{0pt}{11pt}{0pt}
+\titlespacing{\subsubsubsection}{0pt}{11pt}{0pt}
 
 % Paragraphs
+\usepackage{parskip}
 \usepackage{setspace}
 \doublespacing
-\setlength\parindent{0pt}
-\setlength\parskip{1em}
 
 % Counters
 \usepackage{chngcntr}
 \setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{2}
 \counterwithin{table}{section}
 
 %-------------------- MISC --------------------%
+\usepackage{graphicx}
+\usepackage{subfig}
 \usepackage{pgfgantt}
 \usepackage{hyperref}
+\usepackage{siunitx}
+
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
+
+%-------------------- META --------------------%
+\newcommand{\judul}{Pengembangan ARINC 653 API pada Sistem Operasi RT-Xen}
+\newcommand{\penulis}{Aufar Gilbran}
+\newcommand{\nimpenulis}{13513015}
+\newcommand{\pembimbing}{Achmad Imam Kistijantoro, ST,M.Sc, Ph.D}
+\newcommand{\nippembimbing}{197308092006041001}
+\newcommand{\tanggal}{Januari 2017}
 
 % vim: tw=120

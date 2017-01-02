@@ -5,13 +5,28 @@
 \usepackage{final-project}
 \usepackage{idn-hyph}
 
+\bibliographystyle{plainnat}
+
 \begin{document}
 
+\pagenumbering{roman}
 \input{./chapters/cover}
+\input{./chapters/approval}
+\pagestyle{plain}
 
+\tableofcontents
+
+\listoffigures
+
+\clearpage
+\pagenumbering{arabic}
 \input{./chapters/introduction}
 
 \input{./chapters/literature_study}
+
+\input{./chapters/analysis}
+
+\bibliography{final-project}
 
 \end{document}
 

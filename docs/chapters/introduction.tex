@@ -2,78 +2,69 @@
 
 \section{Latar Belakang}
 
-% Avionik
-Sistem penerbangan atau avionik adalah sistem yang terdiri dari perangkat elektronik yang digunakan pada pesawat terbang
-atau satelit. Avionik berfungsi untuk memberikan fasilitas untuk mengoperasikan pesawat terbang. Sistem yang termasuk
-dalam avionik adalah sistem komunikasi, navigasi, \textit{dashboard} untuk manajemen sistem, dan sistem-sistem yang
-dipasang pada pesawat terbang untuk melakukan fungsionalitas tersendiri.
+% Avionik Sistem penerbangan atau avionik adalah sistem yang terdiri dari perangkat elektronik yang digunakan pada pesawat terbang atau satelit.
+Avionik berfungsi untuk memberikan fasilitas untuk mengoperasikan pesawat terbang.
+Sistem yang termasuk dalam avionik adalah sistem komunikasi, navigasi, \textit{dashboard} untuk manajemen sistem, dan sistem-sistem yang dipasang pada pesawat terbang untuk melakukan fungsionalitas tersendiri.
 
-%  Design-issues pada avionik
-Avionik merupakan komponen penting dalam sebuah pesawat terbang dan merupakan \textit{safety-critical system}, yaitu
-sistem yang apabila mengalami kegagalan dapat mengakibatkan kematian, kerugian besar, atau kerusakan lingkungan. Sistem
-operasi yang digunakan oleh avionik pada sebuah pesawat umumnya merupakan sistem \textit{real-time}, yaitu sistem
-yang kebenaran komputasinya tidak hanya ditentukan oleh kebenaran hasil komputasi, tetapi juga waktu dimana hasil
-komputasi dapat digunakan. % TODO: Cite Shin, K.G for RTC
-Maka, manajemen waktu sangat mendasar pada sistem \textit{real-time}. Perangkat yang digunakan untuk avionik memiliki
-beberapa standar yang wajib dipenuhi.  Standar tersebut dibuat oleh Aeronautical Radio, Incorporated (ARINC) dalam
-sebuah seri standar ARINC 600. Buku ini akan mendalami lebih lanjut mengenai sistem operasi \textit{real-time} pada
-avionik yang dispesifikasikan pada penerbangan bernama ARINC 653.
 
-% ARINC 653
-Standar ARINC 653 menspesifikasikan partisi ruang dan waktu pada sistem berbasis \textit{real-time} agar avionik yang
-menggunakan sistem tersebut \textit{safety-critical}. Setiap proses perangkat lunak disebut sebagai \textbf{partisi}.
+%  Design-issues pada avionik Avionik merupakan komponen penting dalam sebuah pesawat terbang dan merupakan \textit{safety\hyp critical system}, yaitu sistem yang apabila mengalami kegagalan dapat mengakibatkan kematian, kerugian besar, atau kerusakan lingkungan.
+Sistem operasi yang digunakan oleh avionik pada sebuah pesawat umumnya merupakan sistem \textit{real-time}, yaitu sistem yang kebenaran komputasinya tidak hanya ditentukan oleh kebenaran hasil komputasi secara logika, tetapi juga waktu dimana hasil komputasi dapat digunakan \citep[p.~6]{Shin1994}.
+Maka, manajemen waktu sangat mendasar pada sistem \textit{real-time}.
+Perangkat yang digunakan untuk avionik memiliki beberapa standar yang wajib dipenuhi.
+Standar tersebut dibuat oleh Aeronautical Radio, Incorporated (ARINC) dalam sebuah seri standar ARINC 600.
+Buku ini akan mendalami lebih lanjut mengenai sistem operasi \textit{real-time} pada avionik yang dispesifikasikan pada penerbangan bernama ARINC 653.
+
+
+% ARINC 653 Standar ARINC 653 menspesifikasikan partisi ruang dan waktu pada sistem berbasis \textit{real-time} agar avionik yang menggunakan sistem tersebut \textit{safety-critical}.
+Setiap proses aplikasi disebut sebagai \textbf{partisi}.
 Selain spesifikasi \textbf{partisi}, ARINC 653 juga mendefinisikan API untuk memudahkan manajemen \textbf{partisi}.
-Sistem operasi yang memenuhi standar ARINC 653 berfungsi untuk memanajemeni beberapa \textbf{partisi} beserta
-komunikasi antar \textbf{partisi}. Manajemen yang dilakukan oleh meliputi \textit{resources} komputasi umum seperti CPU,
-\textit{timing}, memori, dan \textit{devices} serta \textit{resources} untuk komunikasi. Buku ini akan mendalami lebih
-lanjut mengenai manajemen CPU, khususnya proses \textit{scheduling}, yang dispesifikasikan oleh standar ARINC 653.
+Sistem operasi yang memenuhi standar ARINC 653 berfungsi untuk memanajemeni beberapa \textbf{partisi} beserta komunikasi antar \textbf{partisi}.
+Manajemen yang dilakukan oleh meliputi \textit{resources} komputasi umum seperti CPU, \textit{timing}, memori, dan \textit{devices} serta \textit{resources} untuk komunikasi.
+Buku ini akan mendalami lebih lanjut mengenai manajemen CPU, khususnya proses \textit{scheduling}, yang dispesifikasikan oleh standar ARINC 653.
 
-% Hypervisor
-Arsitektur komputer yang dispesifikasikan pada standar ARINC 653 dapat disimulasikan dengan menggunakan
-\textit{hypervisor}. \textit{Hypervisor} adalah sebuah komponen yang membuat dan menjalankan \textit{virtual machine}.
-Setiap \textit{virtual machine} akan memiliki ruang memori dan waktu tersendiri sehingga dapat digunakan untuk
-mengimplementasikan sebuah \textbf{partisi}. Pada saat penulisan, terdapat beberapa \textit{hypervisor} yang memenuhi
-standar ARINC 653.  Namun, \textit{hypervisor} ARINC 653 yang sudah matang relatif sangat mahal sehingga hanya
-pihak-pihak tertentu saja yang mampu mendapatkannya. Hal ini mengakibatkan eksplorasi pengembangan aplikasi, pengujian,
-dan jaminan desain pada \textit{hypervisor} tersebut sulit untuk dilakukan tanpa investasi yang besar. Terdapat sebuah
-prototipe \textit{hypervisor} ARINC 653 yang dinamakan ARLX. Prototipe dibangun diatas Xen, yaitu \textit{hypervisor}
-\textit{open-source} dengan lisensi GPL sehingga \textit{hypervisor} ARINC 653 tersebut juga \textit{open-source}.
-Namun, \textit{hypervisor} tersebut relatif baru dan tidak dapat dijamin kestabilannya.
 
-% Purpose
-Buku ini akan mendalami proses \textit{scheduling} ARINC 653 dengan melakukan eksperimen pada ARLX. Eksperimen akan
-dilakukan dengan melakukan perbandingan \textit{benchmark} antara \textit{scheduling} normal pada ARLX dengan
-\textit{scheduling} percobaan.
+% Hypervisor Arsitektur komputer yang dispesifikasikan pada standar ARINC 653 dapat disimulasikan dengan menggunakan \textit{hypervisor}.
+\textit{Hypervisor} adalah sebuah komponen yang membuat dan menjalankan \textit{virtual machine}.
+Setiap \textit{virtual machine} akan memiliki ruang memori dan waktu tersendiri sehingga dapat digunakan untuk mengimplementasikan sebuah \textbf{partisi}.
+Pada saat penulisan, terdapat sebuah prototipe sistem ARINC 653 yang menggunakan \textit{hypervisor} yang dinamakan ARLX.
+Prototipe sistem tersebut dibangun diatas Xen, yaitu \textit{hypervisor} \textit{open-source} dengan lisensi GPL sehingga \textit{hypervisor} ARINC 653 tersebut juga \textit{open-source}.
+Solusi open-source akan mempermudah pengembang aplikasi dan peneliti untuk mencoba lingkungan ARINC 653.
+Namun, sistem tersebut relatif baru dan tidak dapat dijamin kestabilannya karena pengujian yang tersedia hanya berfungsi untuk menguji Xen dan tidak dapat digunakan untuk menguji ARLX.
+Hal ini mengakibatkan sulitnya pengambilan hasil eksperimen pada ARLX.
+Karena itu, perlu adanya pengujian khusus untuk ARLX yang menjamin lingkungan ARINC 653 yang ditawarkan sesuai dengan yang lingkungan 653 yang seharusnya.
+
+
+% Purpose Buku ini akan mendalami proses \textit{scheduling} ARINC 653 dengan cara melakukan eksperimen pada ARLX.
+Eksperimen akan dilakukan dengan melakukan perbandingan hasil pengujian apabila menggunakan proses \textit{scheduling} normal pada ARLX dengan proses \textit{scheduling} eksperimen.
+
 
 \section{Rumusan Masalah}
 
 % TODO: Fix this
-Perumusan masalah dari uraian latar belakang adalah tidak adanya implementasi \textit{hypervisor} yang memenuhi kriteria
-pada spesifikasi ARINC 653 yang bersifat \textit{free} dan \textit{open source}.
+Perumusan masalah dari uraian latar belakang adalah perlunya pengujian sistem ARLX guna menjamin lingkungan ARINC 653 yang ditawarkan oleh ARLX agar sesuai dengan lingkungan ARINC 653 yang seharusnya.
+
 
 \section{Tujuan}
 
 % TODO: Fix this
-Berdasarkan rumusan masalah yang ada, tujuan yang ingin dicapai adalah melakukan implementasi \textit{API} yang
-yang dispesifikasikan pada standar ARINC 653 pada \textit{hypervisor} yang bersifat \textit{free} dan \textit{open
-source}.
+Berdasarkan rumusan masalah yang ada, tujuan yang ingin dicapai adalah menjamin lingkungan ARINC 653 yang ditawarkan oleh ARLX sesuai dengan lingkungan ARINC 653 yang seharusnya.
+
 
 \section{Batasan Masalah}
 \label{section:batasan_masalah}
 
-Berdasarkan rumusan masalah yang ada, terdapat beberapa asumsi terkait dengan sistem avionik yang akan
-dikembangkan yaitu:
+Berdasarkan rumusan masalah yang ada, terdapat beberapa asumsi terkait dengan sistem avionik yang akan dikembangkan yaitu:
 
 \begin{itemize}
 
-    \item \textit{Hypervisor} yang digunakan adalah \textit{hypervisor} tipe-1. \textit{Hypervisor} tipe-1 berbeda
-        dengan tipe-2 karena \textit{hypervisor} tipe-1 berjalan di atas perangkat lunak sedangkan \textit{hypervisor}
-        tipe-2 berjalan di atas sistem lain. Perbedaan ini mengakibatkan sistem yang dibangun di atas
-        \textit{hypervisor} tipe-1 tidak dapat berjalan pada \textit{hypervisor} tipe-2.
+    \item \textit{Hypervisor} yang digunakan adalah Xen.  Xen merupakan \textit{hypervisor} tipe-1, sehingga mungkin berbeda dengan \textit{hypervisor} tipe-2 karena \textit{hypervisor} tipe-1 berjalan langsung di atas perangkat keras sedangkan \textit{hypervisor} tipe-2 berjalan di atas sistem lain.
+        Perbedaan ini mengakibatkan sistem yang dibangun di atas \textit{hypervisor} tipe-1 tidak dapat berjalan pada \textit{hypervisor} tipe-2.
+        Penggunaan \textit{hypervisor} tipe-1 lainnya mungkin akan memberikan perilaku yang berbeda dengan perilaku yang terjadi pada Xen.
 
-    \item \textit{API} yang disediakan hanya akan diuji coba pada \textit{kernel} Linux. Hal ini mengakibatkan
-        \textbf{partisi} yang dijalankan tanpa menggunakan \textit{kernel} Linux akan memiliki perilaku yang tidak
-        terdefinisi.
+
+    \item Pengujian dan eksperimen yang dilakukan hanya akan diuji coba dengan menggunakan \textit{kernel} Linux untuk setiap \textbf{partisi}-nya.
+        Hal ini mengakibatkan \textbf{partisi} yang tidak menggunakan \textit{kernel} Linux mungkin memiliki perilaku yang berbeda.
+
 
 \end{itemize}
 
@@ -85,62 +76,40 @@ Metodologi yang akan digunakan dalam penilitian tugas akhir adalah sebagai berik
 
     \item Studi Literatur
 
-        Pengerjaan tugas akhir diawali dengan mempelajari referensi berupa jurnal ilmiah beserta sistem yang sudah
-        pernah dibuat sebelumnya yang dapat membantu pengembangan sistem yang dibuat pada tugas akhir ini.  Literatur
-        yang dicari dan dipelajari berkaitan dengan topik tugas akhir yaitu avionik, sistem berbasis \textit{real-time},
-        kesalahan yang pernah ditemukan sebelumnya, metode pengujian, metode penjaminan desain sistem, serta hal-hal
-        lain yang masih berkaitan dengan topik tugas akhir ini.
+        Pengerjaan tugas akhir diawali dengan mempelajari referensi berupa jurnal ilmiah dan dokumen resmi terkait dengan spesifikasi ARINC 653, dan arsitektur Xen dan ARLX.
+        Pembelajaran mengenai spesifikasi ARINC 653 dilakukan untuk dapat mengetahui kriteria penilaian yang akan digunakan sebagai patokan dalam pembuatan kerangka pengujian.
+        Pembelajaran arsitektur Xen dan ARLX dilakukan untuk mengetahui cara memodifikasi ARLX untuk mencari tahu bagaimana eksperimen pada ARLX akan dilakukan.
+
 
     \item Analisis
 
-        Pada tahap ini dilakukan analisis permasalahan yang berkaitan dengan topik tugas akhir ini. Analisis
-        permasalahan meliputi penentuan spesifikasi dan arsitektur yang ada pada \textit{hypervisor} untuk kemudian
-        dijadikan sebagai solusi terhadap permasalahan.
+        Pada tahap ini dilakukan analisis permasalahan yang berkaitan dengan topik tugas akhir ini.
+        Analisis permasalahan akan membahas spesifikasi ARINC 653, arsitektur Xen dan ARLX untuk kemudian dijadikan sebagai solusi terhadap permasalahan.
+
 
     \item Perancangan Solusi dan Pengujian
 
-        Pada tahap ini dilakukan perancangan sistem yang dapat menyelesaikan masalah\hyp{}masalah yang telah dijelaskan
-        pada \autoref{section:batasan_masalah} beserta \textit{tools} untuk pengujian sistem. Bagian perancangan ini
-        juga menjelaskan arsitektur yang digunakan untuk membangun sistem berdasarkan spesifikasi dan metode yang
-        digunakan.
+        Pada tahap ini dilakukan perancangan pengujian serta eksperimen yang akan dilakukan yang dapat menyelesaikan masalah\hyp{}masalah yang telah dijelaskan pada \autoref{section:batasan_masalah}.
+
 
 
     \item Implementasi
 
-        Pada tahap ini dilakukan pembangunan sistem sesuai dengan hasil perancangan solusi. Selain sistem, pada tahap
-        ini juga dilakukan pembangunan \textit{tools} untuk pengujian sistem.
+        Pada tahap ini dilakukan pembangunan sistem pengujian serta implementasi modul eksperimen pada ARLX.
+
 
     \item Pengujian dan Analisis Hasil
 
-        Pada tahap ini dilakukan pengujian dengan metodologi pengujian yang dibangun dari tahap pembangunan solusi dan
-        pengujian. Selanjutnya dilakukan pengujian hasil pengujian dan penarikan kesimpulan.
+        Pada tahap ini dilakukan pengujian dengan metodologi pengujian yang dibangun dari tahap pembangunan solusi dan pengujian.
+        Selanjutnya dilakukan pengujian hasil pengujian dan penarikan kesimpulan.
+
 
 \end{enumerate}
 
 \section{Jadwal Pelaksanaan Tugas Akhir}
 
-\newsavebox\mybox
-
-\begin{lrbox}{\mybox}
-    \begin{ganttchart}[
-            vgrid={*{6}{draw=none}, dotted},
-            x unit=.05cm,
-            y unit title=.6cm,
-            y unit chart=.6cm,
-            time slot format=isodate,
-        time slot format/start date=2016-09-01]{2016-09-01}{2017-04-30}
-        \ganttset{bar height=.6}
-        \gantttitlecalendar{year, month} \\
-        \ganttbar[bar/.append style={fill=black}]{Tahap 1}{2016-09-05}{2016-11-25}\\
-        \ganttbar[bar/.append style={fill=black}]{Tahap 2}{2016-10-05}{2016-11-20}\\
-        \ganttbar[bar/.append style={fill=black}]{Tahap 3}{2016-11-05}{2016-12-20}\\
-        \ganttbar[bar/.append style={fill=black}]{Tahap 4}{2016-12-15}{2017-03-05}\\
-        \ganttbar[bar/.append style={fill=black}]{Tahap 5}{2017-02-05}{2017-04-30}
-    \end{ganttchart}
-\end{lrbox}
-
-Pengerjaan tugas akhir direncanakan akan dimulai dari September 2016 sampai dengan April 2016. Pelaksanaan tugas akhir
-dibagi menjadi 5 tahap untuk masing-masing metodologi pengerjaan sebagai berikut,
+Pengerjaan tugas akhir direncanakan akan dimulai dari September 2016 sampai dengan April 2016.
+Pelaksanaan tugas akhir dibagi menjadi 5 tahap untuk masing-masing metodologi pengerjaan sebagai berikut:
 
 \begin{enumerate}
 
@@ -153,22 +122,31 @@ dibagi menjadi 5 tahap untuk masing-masing metodologi pengerjaan sebagai berikut
 \end{enumerate}
 
 Jadwal pelaksanaan tugas akhir berdasarkan metodologi pengerjaan tugas akhir dapat dilihat pada
-\autoref{table:gantt_chart_jadwal}.
+\autoref{figure:gantt_chart_jadwal}.
 
-\begin{table}[h]
-    \centering
-    \tikz{
-        \node[inner sep=0pt,outer sep=0pt] (gantt)
-        {
-            \begin{tabular}{c}
-                \toprule
-                \resizebox{\textwidth}{!}{\usebox\mybox}\\
-                \bottomrule
-            \end{tabular}
-        };
-    }
+
+\begin{figure}[htbp]
+    \begin{center}
+        \begin{ganttchart}[
+                vgrid={*{12}{draw=none}, dotted},
+                hgrid,
+                x unit=.05cm,
+                y unit title=.6cm,
+                y unit chart=.6cm,
+                time slot format=isodate,
+                bar/.append style={fill=black},
+            time slot format/start date=2016-09-01]{2016-09-01}{2017-04-30}
+            \ganttset{bar height=.6}
+            \gantttitlecalendar{year, month} \\
+            \ganttbar{Tahap 1}{2016-09-05}{2016-11-25}\\
+            \ganttbar{Tahap 2}{2016-10-05}{2016-11-20}\\
+            \ganttbar{Tahap 3}{2016-11-05}{2016-12-20}\\
+            \ganttbar{Tahap 4}{2016-12-15}{2017-03-05}\\
+            \ganttbar{Tahap 5}{2017-02-05}{2017-04-30}
+        \end{ganttchart}
+    \end{center}
     \caption{Gantt Chart jadwal pelaksanaan tugas akhir}
-    \label{table:gantt_chart_jadwal}
-\end{table}
+    \label{figure:gantt_chart_jadwal}
+\end{figure}
 
-% vim: tw=120
+% vim: wrap
