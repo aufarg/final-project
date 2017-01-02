@@ -8,6 +8,7 @@
 
 % Titles & Caption
 \usepackage{titlesec}
+\usepackage{titletoc}
 \usepackage[justification=centering]{caption}
 \renewcommand{\abstractname}{ABSTRAK}
 \renewcommand{\contentsname}{DAFTAR ISI}
@@ -17,6 +18,10 @@
 \newcommand{\thebibname}{DAFTAR REFERENSI}
 \renewcommand{\thechapter}{\Roman{chapter}}
 \renewcommand{\thesection}{\thechapter.\arabic{section}}
+\newcommand{\tocdotswidth}{0.28em}
+\titlecontents{chapter}{\addvspace{1.0pc}}{\bfseries BAB \thecontentslabel. }{\bfseries}{\bfseries\titlerule*[\tocdotswidth]{.}\contentspage}
+\titlecontents{section}[3.8em]{}{\contentslabel{2.3em}}{\hspace*{-2.3em}}{\titlerule*[\tocdotswidth]{.}\contentspage}
+\titlecontents{subsection}[7.0em]{}{\contentslabel{3.2em}}{\hspace*{-2.3em}}{\titlerule*[\tocdotswidth]{.}\contentspage}
 \titleformat{\chapter}[display]{\bfseries\Large\filcenter}{BAB \thechapter}{0.0pt}{}
 \captionsetup[table]{name=Tabel}
 \captionsetup[figure]{name=Gambar}
