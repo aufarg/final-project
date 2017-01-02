@@ -24,12 +24,8 @@
 \input{./chapters/approval}
 \pagestyle{plain}
 
-\newpage
-\addcontentsline{toc}{chapter}{\contentsname}
 \tableofcontents
 
-\newpage
-\addcontentsline{toc}{chapter}{\listfigurename}
 \listoffigures
 
 \clearpage
@@ -40,7 +36,7 @@
 
 \input{./chapters/analysis}
 
-\printbibliography
+\printbibliography[heading=bibintoc, title=\thebibname]
 
 \end{document}
 

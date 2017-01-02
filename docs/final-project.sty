@@ -13,6 +13,8 @@
 \renewcommand{\contentsname}{DAFTAR ISI}
 \renewcommand{\listfigurename}{DAFTAR GAMBAR}
 \renewcommand{\listtablename}{DAFTAR TABEL}
+\renewcommand{\bibname}{DAFTAR REFERENSI}
+\newcommand{\thebibname}{DAFTAR REFERENSI}
 \renewcommand{\thechapter}{\Roman{chapter}}
 \renewcommand{\thesection}{\thechapter.\arabic{section}}
 \titleformat{\chapter}[display]{\bfseries\Large\filcenter}{BAB \thechapter}{0.0pt}{}
@@ -39,6 +41,7 @@
 \counterwithin{table}{section}
 
 %-------------------- MISC --------------------%
+\usepackage[numbib]{tocbibind}
 \usepackage{graphicx}
 \usepackage{subfig}
 \usepackage{pgfgantt}
