@@ -2,18 +2,16 @@
 
 \section{ARINC 653}
 
-\subsection{Pengantar}
-
 Standar ARINC 653 menspesifikasikan partisi ruang dan waktu pada sistem operasi \textit{real-time} avionik.
 Avionik adalah sebuah perangkat elektronik yang berfungsi untuk memberikan fasilitas untuk mengoperasikan pesawat terbang.
-Avionik umumnya merupakan sistem \textit{safety-critical}, yang berarti kegagalan pada sistem dapat mengakibatkan:
+Avionik umumnya merupakan sistem \textit{safety\hyp critical}, yang berarti kegagalan pada sistem dapat mengakibatkan:
 \begin{itemize}
     \item Kematian atau cedera serius pada manusia
     \item Hilangnya atau rusaknya perlengkapan atau properti
     \item Kerusakan lingkungan
 \end{itemize}
 
-Pada avionik, \textit{Integrated Modular Avionics} (IMA) merupakan sebuah konsep yang bertujuan memperkecil penggunaan daya dan memperingan perangkat \citep[p.~2.A.2-1]{Garside2009}.
+Pada avionik, \textit{Integrated Modular Avionics} (IMA) merupakan sebuah konsep yang bertujuan memperkecil penggunaan daya dan meringankan perangkat \citep[p.~2.A.2-1]{Garside2009}.
 Dalam arsitektur IMA, fungsionalitas avionik yang diharapkan menggunakan \textit{resources} yang sama.
 Arsitektur IMA melakukan optimasi dengan cara memberikan \textit{resource} seminimum mungkin pada masing-masing fungsionalitas avionik.
 Arsitektur ini memungkinkan eksekusi beberapa aplikasi avionik pada sebuah komputer yang sama.
@@ -24,18 +22,18 @@ Sebuah \textit{core module} terdiri atas \textit{core software} dan \textit{core
 Pada buku ini, istilah \textit{integrated module} dan \textit{core software} dapat dipertukarkan dengan \textit{module} dan sistem operasi.
 
 Standar ARINC 653 bertujuan untuk mengurangi biaya pengembangan, ukuran sistem, dan biaya sertifikasi dengan cara menggabungkan beberapa aplikasi pada satu komputer namun tetap menjaga aplikasi-aplikasi tersebut saling terisolasi \citep[pp.~3-30]{AirlinesElectronicEngineeringCommittee2012}.
-Untuk mencapai tujuan tersebut, ARINC 653 mendefinisikan \textit{interface} yang disebut sebagai \textit{Application Executive} (APEX) untuk manajemen partisi, proses dan timing, komunikasi antar proses/partisi, dan penanganan \textit{error} pada arsitektur IMA.
+Untuk mencapai tujuan tersebut, ARINC 653 mendefinisikan \textit{interface} yang disebut sebagai \textit{Application Executive} (APEX) untuk manajemen partisi, proses dan \textit{timing}, komunikasi antar proses/partisi, dan penanganan \textit{error} pada arsitektur IMA.
 Pada ARINC 653, satu unit partisi aplikasi disebut sebagai partisi.
 
 Setiap partisi pada dasarnya sama seperti sistem dengan satu aplikasi karena partisi memiliki \textit{device}, aktuator, konteks, dan data tersendiri.
 Hal tersebut mengakibatkan partisi ruang dan waktu yang kuat.
-Proses dalam sebuah partisi diperbolehkan untuk melakukan multitasking.
+Proses dalam sebuah partisi diperbolehkan untuk melakukan \textit{multitasking}.
 
 Perangkat lunak pada \textit{platform} ARINC 653 meliputi:
 \begin{itemize}
-    \item Partisi aplikasi avionik yang dispesifikasikan secara langsung oleh ARINC 653. Partisi aplikasi adalah target utama dari partisi ruang dan waktu dan dibatas hanya menggunakan \textit{system-call} yang telah disediakan oleh ARINC 653.
+    \item Partisi aplikasi avionik yang dispesifikasikan secara langsung oleh ARINC 653. Partisi aplikasi adalah target utama dari partisi ruang dan waktu dan dibatasi hanya menggunakan \textit{system-call} yang telah disediakan oleh ARINC 653.
     \item Sebuah \textit{kernel} sistem operasi yang menyediakan \textit{interface} dan perilaku yang telah dispesifikasikan oleh standar ARINC 653. \textit{Kernel} harus menyediakan lingkungan eksekusi standar untuk menjalankan aplikasi.
-    \item Partisi sistem untuk melakukan fungsi diluar lingkup APEX. Fungsi yang dilakukan partisi sistem meliputi manajemen komunikasi antar \textit{device} perangkat lunak maupun manajemen \textit{fault}.
+    \item Partisi sistem untuk melakukan fungsi di luar lingkup APEX. Fungsi yang dilakukan partisi sistem meliputi manajemen komunikasi antar \textit{device} perangkat lunak maupun manajemen \textit{fault}.
     \item Fungsi spesifik sistem seperti \textit{device driver}, \textit{debug}, dan \textit{test}.
 \end{itemize}
 
@@ -59,11 +57,11 @@ Sebagai contoh, pintu pesawat dibuka dengan menekan tombol untuk membuka pintu p
 Namun, \textit{aperiodic task} juga dapat memiliki \textit{deadline} seperti \textit{periodic task}.
 Maka, \textit{aperiodic task} demikian harus diselesaikan sebelum \textit{deadline}-nya.
 
-Berdasarkan penjelasan diatas, \textit{deadline} dari sebuah sistem \textit{real-time} dapat diklasifikasikan menjadi \textit{hard}, \textit{firm}, dan \textit{soft}.
+Berdasarkan penjelasan di atas, \textit{deadline} dari sebuah sistem \textit{real-time} dapat diklasifikasikan menjadi \textit{hard}, \textit{firm}, dan \textit{soft}.
 Sebuah deadline dikatakan \textit{hard} apabila konsekuensi kegagalan penyelesaiannya fatal.
 Pada umumnya, \textit{periodic task} memiliki \textit{hard deadline}.
 Sebuah deadline dikatakan \textit{hard} apabila konsekuensi kegagalan penyelesaiannya fatal.
-Kebanyakan jenis \textit{aperiodic task} yang memiliki deadline termasuk dalam kategori \textit{firm deadline}, seperti transaksi pada sistem database \citep[pp.~203-241]{Haritsa1992}.
+Kebanyakan jenis \textit{aperiodic task} yang memiliki deadline termasuk dalam kategori \textit{firm deadline}, seperti transaksi pada sistem basis data \citep[pp.~203-241]{Haritsa1992}.
 
 Penentuan \textit{deadline} suatu aplikasi datang dari aplikasi itu sendiri.
 Sebagai contoh, pada sistem pengaturan kekuatan mesin, kekuatan mesin harus dapat diregulasi setiap \SI{50}{\milli\second}.
@@ -71,8 +69,8 @@ Sebagai contoh, pada sistem pengaturan kekuatan mesin, kekuatan mesin harus dapa
 Sebagai contoh, perhitungan jumlah bahan bakar harus diselesaikan dalam waktu \SI{5}{\milli\second} dan pemberian bahan bakar harus diselesaikan dalam waktu \SI{20}{\milli\second}.
 \textit{Deadline} tersebut akan menjatuhkan \textit{deadline} pada \textit{subtask} masing-masing, dan seterusnya.
 
-Dari gambaran diatas, karena pengaturan kekuatan mesin harus dapat diselesaikan tanpa terkecuali, terlihat bahwa sebuah sistem \textit{real-time} harus dapat diprediksi.
-Sebuah sistem \textit{real-time} dikatakan dapat diprediksi apabila pada saat desain dapat ditunjukkan bahwa seluruh \textit{deadline} \textit{task} aplikasi dapat dipenuhi selama beberapa asumsi mengenenai sistem tersebut terpenuhi.
+Dari gambaran di atas, karena pengaturan kekuatan mesin harus dapat diselesaikan tanpa terkecuali, terlihat bahwa sebuah sistem \textit{real-time} harus dapat diprediksi.
+Sebuah sistem \textit{real-time} dikatakan dapat diprediksi apabila pada saat desain dapat ditunjukkan bahwa seluruh \textit{deadline} \textit{task} aplikasi dapat dipenuhi selama beberapa asumsi mengenai sistem tersebut terpenuhi.
 Sebagai contoh, apabila asumsi mengenai sistem adalah \textit{disk fault} hanya terjadi maksimal sebanyak $f$ selama $t$ detik.
 Maka, sistem tersebut dapat diprediksi apabila dapat ditunjukkan pada saat desain bahwa seluruh \textit{deadline} \textit{task} aplikasi dapat dipenuhi selama \textit{disk fault} yang terjadi tidak lebih dari $f$ selama $t$ detik.
 Asumsi tersebut mengakibatkan penentuan sebuah sistem dapat diprediksi ditentukan oleh aplikasi yang dijalankan pada sistem tersebut.
@@ -109,12 +107,12 @@ Demikian juga beberapa algoritma dibuat untuk \textit{preemptible task} sedangka
 Algoritma \textit{scheduling} dipengaruhi oleh faktor-faktor seperti tingkat kekritisan, keterkaitan, \textit{resource}, dan \textit{deadline} aplikasi.
 
 Algoritma \textit{scheduling} juga berbeda tergantung komputer tempat sistem akan dijalankan.
-Beberapa faktor komputer yang mempengaruhi algoritma \textit{scheduling} adalah jenis \textit{processor} (\textit{uniprocessor} atau \textit{multiprocessor}), metode komunikasi \textit{shared memory} atau \textit{message-passing}, dan jaringan.
+Beberapa faktor komputer yang memengaruhi algoritma \textit{scheduling} adalah jenis \textit{processor} (\textit{uniprocessor} atau \textit{multiprocessor}), metode komunikasi \textit{shared memory} atau \textit{message-passing}, dan jaringan.
 
 \subsection{Arsitektur Sistem}
 
 Standar ARINC 653 menspesifikasikan arsitektur sistem menggunakan arsitektur IMA.
-Setiap \textit{core module} dapat memiliki satu atau lebih \textit{processor}. Arsitektur dari \textit{core module} mempengaruhi implementasi sistem operasi, namun tidak mempengaruhi \textit{interface} APEX yang digunakan oleh \textit{aplikasi} pada masing-masing partisi.
+Setiap \textit{core module} dapat memiliki satu atau lebih \textit{processor}. Arsitektur dari \textit{core module} memengaruhi implementasi sistem operasi, namun tidak memengaruhi \textit{interface} APEX yang digunakan oleh \textit{aplikasi} pada masing-masing partisi.
 Aplikasi harus mudah dipindahkan antar \textit{core module} dan antar \textit{processor} dari sebuah \textit{core module} tanpa perlu adanya modifikasi \textit{interface} dengan sistem operasi.
 \autoref{figure:arinc653_module_architecture} menunjukkan contoh arsitektur sistem ARINC 653 serta komunikasi antar komponen pada sistem.
 
@@ -127,16 +125,16 @@ Aplikasi harus mudah dipindahkan antar \textit{core module} dan antar \textit{pr
 
 \subsection{Fungsionalitas Sistem}
 
-Pada tingkat \textit{core module}, sistem operasi memanajemeni partisi dan komunikasi antar partisi, yang mana mungkin dilakukan didalam maupun antar \textit{module}.
+Pada tingkat \textit{core module}, sistem operasi memanajemeni partisi dan komunikasi antar partisi, yang mana mungkin dilakukan di dalam maupun antar \textit{module}.
 Pada tingkat partisi, sistem operasi memanajemeni proses aplikasi dalam sebuah partisi dan komunikasi antar proses dalam partisi tersebut.
 Sistem operasi menyediakan fasilitas pada kedua level tersebut, namun memiliki perbedaan pada fungsi dan konten tergantung pada lingkup operasinya.
 Maka, definisi dari fasilitas yang diberikan sistem operasi membedakan pada tingkat apa fasilitas tersebut beroperasi.
 
 Pada setiap saat, sebuah \textit{module} berada dalam keadaan inisialisasi, operasional, atau diam.
 Pada saat dinyalakan, \textit{module} memulai eksekusinya dalam keadaan inisialisasi.
-Setelah inisialisiasi berhasil, \textit{module} masuk kedalam keadaan operasional.
+Setelah inisialisasi berhasil, \textit{module} masuk ke dalam keadaan operasional.
 Selama \textit{module} dalam keadaan operasional, sistem operasi memanajemeni partisi, proses aplikasi, dan komunikasi.
-\textit{Module} akan terus berada pada keadaan operasional sampai dimatikan atau fungsi \textit{health monitoring} pada \textit{module} memerintahkan \textit{module} untuk masuk kedalam keadaan inisialisasi kembali atau keadaan diam.
+\textit{Module} akan terus berada pada keadaan operasional sampai dimatikan atau fungsi \textit{health monitoring} pada \textit{module} memerintahkan \textit{module} untuk masuk ke dalam keadaan inisialisasi kembali atau keadaan diam.
 
 Berikut adalah fungsionalitas sistem yang dispesifikasikan oleh standar ARINC 653:
 \begin{itemize}
@@ -155,7 +153,7 @@ Inti dari standar ARINC 653 adalah konsep partisi, dimana aplikasi yang beropera
 Sebuah partisi dapat dikatakan sebagai satu unit aplikasi yang didesain untuk memenuhi batasan-batasan partisi.
 
 Sistem operasi pada dasarnya sudah cara untuk melakukan partisi.
-Sistem dengan partisi yang kuat memungkinkan partisi dengan tingkat kekritisan yang berbeda berjalan pada satu \textit{module} yang sama tanpa mempengaruhi partisi lain secara \textit{ruang} dan waktu.
+Sistem dengan partisi yang kuat memungkinkan partisi dengan tingkat kekritisan yang berbeda berjalan pada satu \textit{module} yang sama tanpa memengaruhi partisi lain secara \textit{ruang} dan waktu.
 Bagian dari sistem operasi yang bekerja pada tingkat \textit{core module} bertanggung jawab untuk memaksakan partisi dilakukan dan manajemen partisi dalam \textit{module} tersebut.
 
 Partisi ditentukan urutannya dengan melakukan \textit{scheduling} secara melingkar dan tetap.
@@ -173,7 +171,7 @@ Periode pengerjaan masing-masing partisi harus terpenuhi dengan mengatur frekuen
 \subsubsection{Manajemen Waktu}
 
 Manajemen waktu adalah proses penting yang menjadi karakteristik sebuah sistem operasi yang digunakan untuk sistem \textit{real-time}.
-Waktu harus unik dan tidak bergantung pada eksekusi partisi apapun dalam \textit{module}.
+Waktu harus unik dan tidak bergantung pada eksekusi partisi apa pun dalam \textit{module}.
 Seluruh nilai waktu yang digunakan harus terkait dengan waktu unik tersebut.
 Sistem operasi menyediakan \textit{time-slicing} untuk \textit{scheduling}, \textit{deadline}, \textit{periodicity} dari sebuah partisi.
 
@@ -185,7 +183,7 @@ Selama proses tersebut selesai dikerjakan tanpa melebihi \textit{time capacity}-
 
 \section{\textit{Primary-Backup Scheduling}}
 
-Studi untuk membuat sistem \textit{real-time} menjadi \textit{fault-tolerant} telah banyak dilakukan \citep{Campbell1986} \citep{Bertossi2006}. \citet{Campbell1986} menunjukkan bahwa penambahan \textit{deadline} pada setiap \textit{task} akan menghasilkan sistem yang \textit{fault-tolerant}.
+Studi untuk membuat sistem \textit{real-time} menjadi \textit{fault-tolerant} telah banyak dilakukan \citep{Campbell1986} \citep{Bertossi2006}. \citet{Campbell1986} menunjukkan penambahan \textit{deadline} pada setiap \textit{task} akan menghasilkan sistem yang \textit{fault-tolerant}.
 Meski demikian, penambahan \textit{deadline} hanya menjamin waktu \textit{response} sistem terhadap permintaan aplikasi dan hanya berfungsi sebagai indikator pada saat melakukan verifikasi sistem.
 \textit{Fault} yang dialami aplikasi tidak hanya berupa waktu \textit{response} saja, sehingga metode tersebut hanya membuat sistem menjadi \textit{fault-tolerant} secara parsial.
 Untuk dapat mengatasi \textit{fault} yang tidak terduga pada saat verifikasi maupun \textit{fault} pada proses verifikasi itu sendiri, salah satu solusi yang diusulkan adalah dengan menggunakan \textit{primary-backup scheduling}.
@@ -195,7 +193,7 @@ Pendekatan paling sederhana untuk melakukan \textit{primary-backup scheduling} a
 Namun, pendekatan tersebut tidak efisien karena memerlukan banyak \textit{processor} tambahan \citep{Oh1994}.
 \citet{Bertossi2006} menunjukkan bagaimana cara mengimplementasikan \textit{primary-backup scheduling} yang lebih efisien pada sistem \textit{real-time} yang menggunakan algoritma \textit{scheduling} \textit{Rate- Monotonic-First-Fit} (RMFF).
 Implementasi tersebut memberikan \textit{task} \textit{salinan} pada \textit{scheduler} jika dan hanya jika \textit{task} utama mengalami kegagalan.
-\citet{Jin2013} berhasil membuktikan bahwa penggunaan \textit{primary-backup scheduling} dapat dilakukan pada sistem yang terpartisi dengan melakukan peluasan model \textit{resource}.
+\citet{Jin2013} berhasil membuktikan bahwa penggunaan \textit{primary-backup scheduling} dapat dilakukan pada sistem yang terpartisi dengan melakukan perluasan model \textit{resource}.
 
 \section{Virtualisasi}
 
@@ -216,12 +214,18 @@ Kapasitas yang dapat digunakan oleh sebuah proses pada alamat memori fisik serta
 \textit{Devices} yang dimiliki oleh sebuah komputer juga divirtualisasikan oleh sistem operasi.
 Contoh \textit{device} yang divirtualisasikan oleh sistem operasi adalah \textit{storage}.
 
+Salah satu kegunaan metode virtualisasi pada ranah komputasi adalah untuk membuat \textit{virtual machine}.
+Sebuah \textit{virtual machine} adalah representasi mesin secara logika yang memiliki \textit{resources} layaknya mesin biasa.
+Umumnya, \textit{virtual machine} digunakan untuk memberikan ilusi sebuah komputer sehingga dari sudut pandang perangkat lunak yang berjalan di atasnya, perangkat lunak tersebut seakan berjalan satu buah komputer fisik tanpa ada pembagian \textit{resources}.
+Tentunya hal tersebut hanya berlaku untuk sistem operasi atau perangkat lunak yang berjalan langsung di atas perangkat keras.
+Sebuah komputer dapat direpresentasikan menjadi beberapa \textit{virtual machine} sehingga memungkinkan beberapa sistem operasi beroperasi secara bersamaan pada komputer tersebut.
+
 \section{\textit{Hypervisor}}
 
 Virtualisasi dilakukan menggunakan perangkat lunak virtualisasi yang disebut sebagai \textit{hypervisor}.
-\textit{Hypervisor} adalah sebuah perangkat lunak yang bertugas untuk menjalankan beberapa \textit{virtual machine}.
+\textit{Hypervisor} adalah sebuah perangkat lunak yang bertugas untuk membuat dan menjalankan beberapa \textit{virtual machine}.
 \textit{Hypervisor} berfungsi untuk memanajemeni \textit{resources} fisik yang tersedia untuk digunakan oleh \textit{virtual machine} yang berjalan di bawah \textit{hypervisor} tersebut.
-Dengan demikian, \textit{hypervisor} memiliki peran sama seperti sistem operasi, hanya saja ketimbang memanajameni \textit{resources} fisik untuk digunakan oleh proses perangkat lunak, \textit{hypervisor} memanajemeni \textit{resources} untuk sebuah proses yang juga mengatur \textit{resources} yang diberikan pada proses tersebut untuk proses perangkat lunak yang berjalan di bawahnya.
+Dengan demikian, \textit{hypervisor} memiliki peran sama seperti sistem operasi, hanya saja ketimbang memanajemeni \textit{resources} fisik untuk digunakan oleh proses perangkat lunak, \textit{hypervisor} memanajemeni \textit{resources} untuk sebuah proses yang juga mengatur \textit{resources} yang diberikan pada proses tersebut untuk proses perangkat lunak yang berjalan di bawahnya.
 Istilah \textit{hypervisor} didapatkan karena \textit{hypervisor} membawahkan \textit{supervisor}, pada kasus ini \textit{supervisor}-nya merupakan sistem operasi.
 
 \section{Xen}
@@ -234,7 +238,7 @@ Pada Xen, \textit{kernel} sebuah sistem operasi tidak lagi beroperasi pada \text
 \textit{Ring} 0 digunakan oleh \textit{hypervisor} yang akan mengatur \textit{resources} yang akan diberikan pada \textit{virtual machine} di bawahnya.
 Dimana \textit{kernel} sistem operasi dijalankan bergantung pada arsitektur \textit{processor}-nya.
 Sebagai contoh, pada sistem IA32, \textit{kernel} sistem operasi berjalan pada \textit{ring} 1 seperti pada \autoref{figure:xen_ring}.
-Hal tersebut mengakibatkan \textit{kernel} yang berjalan diatas Xen tetap dapat mengakses memori yang teralokasi untuk aplikasi yang berjalan diatas kernel tersebut, namun tetap tidak dapat diakses oleh aplikasi maupun \textit{kernel} lain.
+Hal tersebut mengakibatkan \textit{kernel} yang berjalan di atas Xen tetap dapat mengakses memori yang teralokasi untuk aplikasi yang berjalan di atas kernel tersebut, namun tetap tidak dapat diakses oleh aplikasi maupun \textit{kernel} lain.
 \textit{Hypervisor}, yang berjalan pada \textit{ring} 0, terproteksi dari \textit{kernel} yang berjalan pada \textit{ring} 1 dan aplikasi yang berjalan pada \textit{ring} 3.
 Karena \textit{kernel} berjalan pada \textit{ring} 1, \textit{kernel} tidak dapat menjalankan \textit{privileged instructions} seperti biasanya.
 \textit{Hypervisor} pada Xen menyediakan \textit{hypercall} sebagai pengganti \textit{privileged instructions}.
@@ -263,14 +267,14 @@ Penggunaan \textit{shared memory} seperti ilustrasi tersebut banyak digunakan pa
 \end{figure}
 
 Salah satu kelebihan Xen sebagai \textit{hypervisor} adalah Xen memudahkan pengembang untuk menuliskan komponen sesuai dengan kebutuhan.
-Xen menjelaskan secara rinci bagaimana proses penulisan komponen dan memberikan \textit{iterface} yang relatif mudah.
+Xen menjelaskan secara rinci bagaimana proses penulisan komponen dan memberikan \textit{interface} yang relatif mudah.
 Xen juga merupakan \textit{hypervisor} \textit{open-source}, sehingga eksplorasi keseluruhan sistem lebih mudah dilakukan.
 Fokus utama pada buku ini adalah, Xen menyediakan \textit{interface} untuk membuat \textit{scheduler} baru.
 \textit{Scheduler} dalam kasus ini tidak bekerja pada proses, melainkan bekerja pada \textit{domain}.
 
 \subsection{Xen ARINC 653}
 
-Xen ARINC 653 merupakan prototipe sistem ARINC 653 yang dibangun diatas Xen.
+Xen ARINC 653 merupakan prototipe sistem ARINC 653 yang dibangun di atas Xen.
 Prototipe dibangun dengan membuat \textit{scheduler} seperti pada spesifikasi standar ARINC 653 pada Xen.
 Selain itu, prototipe tersebut memberikan beberapa modul \textit{kernel} untuk menangani \textit{device} yang terpartisi sesuai dengan spesifikasi ARINC 653.
 Dalam melakukan partisi memori, prototipe tersebut memanfaatkan mekanisme partisi memori menggunakan MMU yang sudah merupakan mekanisme bawaan pada Xen.

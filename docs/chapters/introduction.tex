@@ -27,7 +27,7 @@ Penelitian ini akan mendalami lebih lanjut mengenai manajemen CPU, khususnya pro
 
 
 % Primary Backup
-Partisi pada standar ARINC 653 dapat membuat eksekusi dan pembaharuan perangkat lunak pada sistem tersebut lebih terpercaya dan fleksibel \citep{Jin2013}.
+Partisi pada standar ARINC 653 dapat membuat eksekusi dan pembaharuan perangkat lunak pada sistem tersebut lebih tepercaya dan fleksibel \citep{Jin2013}.
 Partisi dapat diganti atau ditambahkan selama partisi tersebut lolos pengujian \textit{scheduling}.
 Sebagai contoh, aplikasi navigasi yang dijalankan pada suatu partisi tertentu pada avionik dapat diganti dengan versi terbaru yang menggunakan algoritma navigasi yang lebih baik tanpa mengganggu partisi lain.
 Namun, standar ARINC 653 tidak menghasilkan sistem yang \textit{fault-tolerant}.
@@ -36,11 +36,11 @@ Hal tersebut akan mengakibatkan kegagalan sistem yang berakibat fatal karena sis
 
 Untuk menghindari permasalahan yang akan muncul akibat partisi \textit{primary} yang gagal, \textit{scheduler} dapat menjalankan partisi \textit{backup} yang bersesuaian.
 Fungsionalitas yang diberikan partisi \textit{backup} akan identik dengan fungsionalitas yang diberikan oleh partisi \textit{primary}.
-Apabila partisi \textit{primary} mengalami kegagalan ketika menjalankan \textit{task}, partisi \textit{backup} akan memproteksi sistem dengan mengambil alih \textit{task} milik partisi \textit{primary}.
+Apabila partisi \textit{primary} mengalami kegagalan ketika menjalankan \textit{task}, partisi \textit{backup} akan melindungi sistem dengan mengambil alih \textit{task} milik partisi \textit{primary}.
 Solusi ini dapat diimplementasikan dengan cara melakukan \textit{scheduling} pada partisi \textit{primary} terlebih dahulu.
 Jika \textit{task} dari sebuah partisi \textit{primay} gagal dikerjakan, maka \textit{scheduler} akan menerima sinyal dan akan melakukan \textit{scheduling} pada partisi \textit{backup} yang bersesuaian.
 Hal tersebut mengakibatkan fungsi yang disediakan oleh aplikasi yang mengalami \textit{fault} akan tetap tersedia dan sistem akan tetap berjalan sebagaimana seharusnya, sehingga sistem dapat dikatakan menjadi lebih \textit{fault-tolerant}.
-Meski demikian, peningkatan tersebut hanya terlihat secara teoritis dan belum ada studi mengenai penggunaan \textit{primary-backup scheduling} pada sistem ARINC 653.
+Meski demikian, peningkatan tersebut hanya terlihat secara teoretis dan belum ada studi mengenai penggunaan \textit{primary-backup scheduling} pada sistem ARINC 653.
 Untuk dapat melihat perbandingan antara \textit{primary-backup scheduling} dengan \textit{scheduling} normal, perlu dilakukan pengujian pada sistem ARINC 653 yang dapat menggunakan keduanya.
 
 % Hypervisor
@@ -48,7 +48,7 @@ Arsitektur komputer yang dispesifikasikan pada standar ARINC 653 dapat divirtual
 \textit{Hypervisor} adalah sebuah komponen yang membuat dan menjalankan \textit{virtual machine}.
 Setiap \textit{virtual machine} akan memiliki ruang memori dan waktu tersendiri sehingga dapat digunakan untuk mengimplementasikan sebuah partisi.
 Salah satu solusi sistem ARINC 653 yang menggunakan \textit{hypervisor} adalah Xen ARINC 653.
-Xen ARINC 653 adalah sebuah prototipe sistem ARINC 653 yang dibangun diatas Xen, yaitu \textit{hypervisor} \textit{open-source} dengan lisensi GPL sehingga Xen ARINC 653 juga \textit{open-source}.
+Xen ARINC 653 adalah sebuah prototipe sistem ARINC 653 yang dibangun di atas Xen, yaitu \textit{hypervisor} \textit{open-source} dengan lisensi GPL sehingga Xen ARINC 653 juga \textit{open-source}.
 Solusi \textit{open-source} akan mempermudah pengembang aplikasi dan peneliti untuk melakukan pengembangan dan percobaan pada lingkungan ARINC 653 sebelum membeli solusi berbayar.
 Xen ARINC 653 merupakan solusi yang sangat tepat untuk melakukan perbandingan antara \textit{primary-backup scheduling} dengan \textit{scheduling} normal.
 Sayangnya, prototipe tersebut tidak menggunakan metode \textit{primary-backup scheduling} sehingga perlu metode tersebut perlu diimplementasikan pada prototipe sebelum dapat dibandingkan.
@@ -58,7 +58,7 @@ Sayangnya, prototipe tersebut tidak menggunakan metode \textit{primary-backup sc
 Permasalahan yang terjadi berdasarkan uraian latar belakang adalah standar ARINC 653 tidak membuat sistem menjadi \textit{fault-tolerant}.
 Padahal, fungsi dari standar ARINC 653 adalah sebagai panduan pengembangan sistem operasi \textit{real-time} pada \textit{safety-critical system}.
 Masalah tersebut dapat diselesaikan dengan menggunakan \textit{primary-backup scheduling}.
-Meski \textit{primary-backup scheduling} membuat sistem menjadi \textit{fault-tolerant} secara teoritis, perlu adanya studi lebih lanjut apakah metode \textit{primay-backup scheduling} dapat digunakan pada sistem ARINC 653.
+Meski \textit{primary-backup scheduling} membuat sistem menjadi \textit{fault-tolerant} secara teoretis, perlu adanya studi lebih lanjut apakah metode \textit{primay-backup scheduling} dapat digunakan pada sistem ARINC 653.
 Selain itu, perlu adanya perbandingan antara \textit{scheduling} normal dengan \textit{primary-backup scheduling} pada ARINC 653 untuk melihat kemungkinan peningkatan atau penurunan efisiensi sistem.
 
 Berikut adalah pertanyaan permasalahan yang akan dijawab dan diselesaikan pada tugas akhir ini:
@@ -94,14 +94,14 @@ Berdasarkan rumusan masalah yang ada, terdapat beberapa asumsi terkait dengan si
 
 \section{Metodologi}
 
-Metodologi yang akan digunakan dalam penilitian tugas akhir adalah sebagai berikut:
+Metodologi yang akan digunakan dalam penelitian tugas akhir adalah sebagai berikut:
 
 \begin{enumerate}
     \item Studi Literatur
 
         Pengerjaan tugas akhir diawali dengan mempelajari referensi berupa jurnal ilmiah dan dokumen resmi terkait dengan spesifikasi ARINC 653, arsitektur Xen, dan cara kerja Xen ARINC 653.
         Pembelajaran mengenai spesifikasi ARINC 653 dilakukan untuk dapat mengetahui kriteria penilaian yang akan digunakan sebagai patokan dalam pembuatan kerangka pengujian.
-        Pembelajaran arsitektur Xen dilakukan untuk mengetahui cara memodifikasi Xen ARINC 653 untuk mencari tahu bagaimana eksperimen pada protitipe tersebut akan dilakukan.
+        Pembelajaran arsitektur Xen dilakukan untuk mengetahui cara memodifikasi Xen ARINC 653 untuk mencari tahu bagaimana eksperimen pada prototipe tersebut akan dilakukan.
 
     \item Analisis
 

@@ -68,11 +68,11 @@ Pengujian \textit{fault-tolerancy} akan dilakukan oleh aplikasi pengujian dengan
 \textit{Request} yang dilakukan harus sebuah pekerjaan yang dapat divalidasi kebenaran hasilnya oleh aplikasi penguji.
 Alur pengujian \textit{fault-tolerancy} dilakukan sebagai berikut:
 \begin{enumerate}
-    \item Aplikasi pengujian akan meminta proses subjek untuk menghitung suatu nilai berdasarkan input tertentu (misal menghitung nilai $\sqrt{n}$).
+    \item Aplikasi pengujian akan meminta proses subjek untuk menghitung suatu nilai berdasarkan masukan tertentu (misal menghitung nilai $\sqrt{n}$).
     \item Proses subjek akan mengambil nilai semi-acak, berdasarkan nilai tersebut proses dapat melakukan salah satu dari:
         \begin{itemize}
             \item Proses subjek akan menghitung nilai $\sqrt{n}$ dan memberikan \textit{response} berupa hasil perhitungan.
-            \item Proses subjek akan mengakitvasikan mekanisme \textit{fault detection}.
+            \item Proses subjek akan mengaktivasikan mekanisme \textit{fault detection}.
         \end{itemize}
     \item Aplikasi pengujian akan melakukan validasi kebenaran hasil perhitungan.
 \end{enumerate}
