@@ -2,52 +2,73 @@
 
 \section{Latar Belakang}
 
-% Avionik Sistem penerbangan atau avionik adalah sistem yang terdiri dari perangkat elektronik yang digunakan pada pesawat terbang atau satelit.
+% Avionik
+Sistem penerbangan atau avionik adalah sistem yang terdiri dari perangkat elektronik yang digunakan pada pesawat terbang atau satelit.
 Avionik berfungsi untuk memberikan fasilitas untuk mengoperasikan pesawat terbang.
 Sistem yang termasuk dalam avionik adalah sistem komunikasi, navigasi, \textit{dashboard} untuk manajemen sistem, dan sistem-sistem yang dipasang pada pesawat terbang untuk melakukan fungsionalitas tersendiri.
 
 
-%  Design-issues pada avionik Avionik merupakan komponen penting dalam sebuah pesawat terbang dan merupakan \textit{safety\hyp critical system}, yaitu sistem yang apabila mengalami kegagalan dapat mengakibatkan kematian, kerugian besar, atau kerusakan lingkungan.
+%  Design-issues pada avionik
+Avionik merupakan komponen penting dalam sebuah pesawat terbang dan merupakan \textit{safety\hyp critical system}, yaitu sistem yang apabila mengalami kegagalan dapat mengakibatkan kematian, kerugian besar, atau kerusakan lingkungan.
 Sistem operasi yang digunakan oleh avionik pada sebuah pesawat umumnya merupakan sistem \textit{real-time}, yaitu sistem yang kebenaran komputasinya tidak hanya ditentukan oleh kebenaran hasil komputasi secara logika, tetapi juga waktu dimana hasil komputasi dapat digunakan \citep[p.~6]{Shin1994}.
 Maka, manajemen waktu sangat mendasar pada sistem \textit{real-time}.
 Perangkat yang digunakan untuk avionik memiliki beberapa standar yang wajib dipenuhi.
 Standar tersebut dibuat oleh Aeronautical Radio, Incorporated (ARINC) dalam sebuah seri standar ARINC 600.
-Buku ini akan mendalami lebih lanjut mengenai sistem operasi \textit{real-time} pada avionik yang dispesifikasikan pada penerbangan bernama ARINC 653.
+Penelitian ini akan mendalami lebih lanjut mengenai sistem operasi \textit{real-time} pada avionik yang dispesifikasikan pada penerbangan bernama ARINC 653.
 
 
-% ARINC 653 Standar ARINC 653 menspesifikasikan partisi ruang dan waktu pada sistem berbasis \textit{real-time} agar avionik yang menggunakan sistem tersebut \textit{safety-critical}.
-Setiap proses aplikasi disebut sebagai \textbf{partisi}.
-Selain spesifikasi \textbf{partisi}, ARINC 653 juga mendefinisikan API untuk memudahkan manajemen \textbf{partisi}.
-Sistem operasi yang memenuhi standar ARINC 653 berfungsi untuk memanajemeni beberapa \textbf{partisi} beserta komunikasi antar \textbf{partisi}.
+% ARINC 653
+Standar ARINC 653 menspesifikasikan partisi ruang dan waktu pada sistem operasi \textit{real-time} agar avionik yang menggunakan sistem operasi tersebut \textit{safety-critical}.
+Setiap proses aplikasi disebut sebagai partisi.
+Selain spesifikasi partisi, ARINC 653 juga mendefinisikan API untuk memudahkan manajemen partisi.
+Sistem operasi yang memenuhi standar ARINC 653 berfungsi untuk memanajemeni beberapa partisi beserta komunikasi antar partisi.
 Manajemen yang dilakukan oleh meliputi \textit{resources} komputasi umum seperti CPU, \textit{timing}, memori, dan \textit{devices} serta \textit{resources} untuk komunikasi.
-Buku ini akan mendalami lebih lanjut mengenai manajemen CPU, khususnya proses \textit{scheduling}, yang dispesifikasikan oleh standar ARINC 653.
+Penelitian ini akan mendalami lebih lanjut mengenai manajemen CPU, khususnya proses \textit{scheduling}, yang dispesifikasikan oleh standar ARINC 653.
 
 
-% Hypervisor Arsitektur komputer yang dispesifikasikan pada standar ARINC 653 dapat disimulasikan dengan menggunakan \textit{hypervisor}.
+% Primary Backup
+Partisi pada standar ARINC 653 dapat membuat eksekusi dan pembaharuan perangkat lunak pada sistem tersebut lebih terpercaya dan fleksibel.
+Partisi dapat diganti atau ditambahkan selama partisi tersebut lolos pengujian \textit{scheduling}.
+Sebagai contoh, aplikasi navigasi yang dijalankan pada suatu partisi tertentu pada avionik dapat diganti dengan versi terbaru yang menggunakan algoritma navigasi yang lebih baik tanpa mengganggu partisi lain.
+Namun, standar ARINC 653 tidak menghasilkan sistem yang \textit{fault-tolerant}.
+Akan terdapat kemungkinan terjadinya \textit{fault} akibat perangkat lunak selama sistem beroperasi, meskipun keamanan dan kebenaran perangkat lunak tersebut sudah terverifikasi secara formal.
+Hal tersebut akan mengakibatkan kegagalan sistem yang berakibat fatal karena sistem yang memenuhi standar ARINC 653 umumnya adalah \textit{safety-critical system}.
+
+Untuk menghindari permasalahan akibat partisi yang gagal terverifikasi secara penuh adalah dengan menjalankan partisi \textit{backup}.
+Partisi \textit{backup} akan menjalankan perangkat lunak versi yang sudah terverifikasi lebih stabil secara jangka panjang, meskipun mungkin memiliki fitur yang lebih sedikit ataupun menggunakan algoritma yang lebih tidak efisien.
+Fungsionalitas yang diberikan partisi \textit{backup} akan identik dengan fungsionalitas yang diberikan oleh partisi \textit{primary}.
+Apabila partisi \textit{primary} mengalami kegagalan ketika menjalankan \textit{task}, partisi \textit{backup} akan memproteksi sistem dengan mengambil alih \textit{task} milik partisi \textit{primary}.
+Solusi ini dapat diimplementasikan dengan cara melakukan \textit{scheduling} pada partisi \textit{primary} terlebih dahulu.
+Jika \textit{task} dari sebuah partisi \textit{primay} gagal dikerjakan, maka \textit{scheduler} akan menerima sinyal dan akan melakukan \textit{scheduling} pada partisi \textit{backup} yang bersesuaian.
+
+% Hypervisor
+Arsitektur komputer yang dispesifikasikan pada standar ARINC 653 dapat divirtualisasikan dengan menggunakan \textit{hypervisor}.
 \textit{Hypervisor} adalah sebuah komponen yang membuat dan menjalankan \textit{virtual machine}.
-Setiap \textit{virtual machine} akan memiliki ruang memori dan waktu tersendiri sehingga dapat digunakan untuk mengimplementasikan sebuah \textbf{partisi}.
-Pada saat penulisan, terdapat sebuah prototipe sistem ARINC 653 yang menggunakan \textit{hypervisor} yang dinamakan ARLX.
-Prototipe sistem tersebut dibangun diatas Xen, yaitu \textit{hypervisor} \textit{open-source} dengan lisensi GPL sehingga \textit{hypervisor} ARINC 653 tersebut juga \textit{open-source}.
-Solusi open-source akan mempermudah pengembang aplikasi dan peneliti untuk mencoba lingkungan ARINC 653.
-Namun, sistem tersebut relatif baru dan tidak dapat dijamin kestabilannya karena pengujian yang tersedia hanya berfungsi untuk menguji Xen dan tidak dapat digunakan untuk menguji ARLX.
-Hal ini mengakibatkan sulitnya pengambilan hasil eksperimen pada ARLX.
-Karena itu, perlu adanya pengujian khusus untuk ARLX yang menjamin lingkungan ARINC 653 yang ditawarkan sesuai dengan yang lingkungan 653 yang seharusnya.
-
-
-% Purpose Buku ini akan mendalami proses \textit{scheduling} ARINC 653 dengan cara melakukan eksperimen pada ARLX.
-Eksperimen akan dilakukan dengan melakukan perbandingan hasil pengujian apabila menggunakan proses \textit{scheduling} normal pada ARLX dengan proses \textit{scheduling} eksperimen.
-
+Setiap \textit{virtual machine} akan memiliki ruang memori dan waktu tersendiri sehingga dapat digunakan untuk mengimplementasikan sebuah partisi.
+Pada saat penulisan, terdapat sebuah prototipe sistem ARINC 653 yang menggunakan \textit{hypervisor} dan \textit{open-source}.
+Prototipe tersebut dibangun diatas Xen, yaitu \textit{hypervisor} \textit{open-source} dengan lisensi GPL sehingga \textit{hypervisor} ARINC 653 tersebut juga \textit{open-source}.
+Solusi \textit{open-source} akan mempermudah pengembang aplikasi dan peneliti untuk melakukan pengembangan dan percobaan pada lingkungan ARINC 653 sebelum membeli solusi berbayar.
+Sayangnya, prototipe tersebut tidak menggunakan metode \textit{scheduling} partisi \textit{backup}.
 
 \section{Rumusan Masalah}
 
-% TODO: Fix this
-Perumusan masalah dari uraian latar belakang adalah perlunya pengujian sistem ARLX guna menjamin lingkungan ARINC 653 yang ditawarkan oleh ARLX agar sesuai dengan lingkungan ARINC 653 yang seharusnya.
+Permasalahan yang terjadi berdasarkan uraian latar belakang adalah standar ARINC 653 tidak membuat sistem menjadi \textit{fault-tolerant}.
+Padahal, fungsi dari standar ARINC 653 adalah sebagai panduan pengembangan sistem operasi \textit{real-time} pada \textit{safety-critical system}.
+Masalah tersebut dapat diselesaikan dengan menggunakan \textit{primary-backup scheduling}.
+Meski \textit{primary-backup scheduling} membuat sistem menjadi \textit{fault-tolerant} secara teoritis, perlu adanya studi lebih lanjut apakah metode \textit{primay-backup scheduling} dapat digunakan pada sistem ARINC 653.
+Selain itu, perlu adanya perbandingan antara \textit{scheduling} normal dengan \textit{primary-backup scheduling} pada ARINC 653 untuk melihat kemungkinan peningkatan atau penurunan efisiensi sistem.
+Berikut adalah pertanyaan permasalahan yang akan dijawab dan diselesaikan pada tugas akhir ini:
 
+\begin{itemize}
+    \item Bagaimana cara mengimplementasikan \textit{primary-backup scheduling} pada prototipe ARINC 653 pada Xen?
+    \item Bagaimana cara melakukan pengujian \textit{scheduling} pada prototipe sistem ARINC 653 pada Xen?
+    \item Apakah penggunaan \textit{primary-backup scheduling} pada sistem yang memenuhi standar ARINC 653 menghasilkan sistem yang lebih \textit{fault-tolerant}?
+    \item Apakah terdapat peningkatan atau penurunan kinerja akibat penggunaan \textit{primary-backup scheduling} pada sistem yang memenuhi standar ARINC 653?
+\end{itemize}
 
 \section{Tujuan}
 
-% TODO: Fix this
-Berdasarkan rumusan masalah yang ada, tujuan yang ingin dicapai adalah menjamin lingkungan ARINC 653 yang ditawarkan oleh ARLX sesuai dengan lingkungan ARINC 653 yang seharusnya.
+Berdasarkan rumusan masalah, tujuan yang ingin dicapai adalah mengimplementasikan \textit{primary-backup scheduling} pada prototipe sistem ARINC 653 pada Xen beserta pengujian dan perbandingan hasil \textit{scheduling} normal dengan \textit{primary-backup scheduling.}
 
 
 \section{Batasan Masalah}
@@ -57,14 +78,12 @@ Berdasarkan rumusan masalah yang ada, terdapat beberapa asumsi terkait dengan si
 
 \begin{itemize}
 
+    \item Pengujian dan eksperimen yang dilakukan hanya akan diuji coba pada sistem dengan arsitektur IA-32.
     \item \textit{Hypervisor} yang digunakan adalah Xen.  Xen merupakan \textit{hypervisor} tipe-1, sehingga mungkin berbeda dengan \textit{hypervisor} tipe-2 karena \textit{hypervisor} tipe-1 berjalan langsung di atas perangkat keras sedangkan \textit{hypervisor} tipe-2 berjalan di atas sistem lain.
         Perbedaan ini mengakibatkan sistem yang dibangun di atas \textit{hypervisor} tipe-1 tidak dapat berjalan pada \textit{hypervisor} tipe-2.
         Penggunaan \textit{hypervisor} tipe-1 lainnya mungkin akan memberikan perilaku yang berbeda dengan perilaku yang terjadi pada Xen.
-
-
-    \item Pengujian dan eksperimen yang dilakukan hanya akan diuji coba dengan menggunakan \textit{kernel} Linux untuk setiap \textbf{partisi}-nya.
-        Hal ini mengakibatkan \textbf{partisi} yang tidak menggunakan \textit{kernel} Linux mungkin memiliki perilaku yang berbeda.
-
+    \item Pengujian dan eksperimen yang dilakukan hanya akan diuji coba dengan menggunakan \textit{kernel} Linux untuk setiap partisi-nya.
+        Hal ini mengakibatkan partisi yang tidak menggunakan \textit{kernel} Linux mungkin memiliki perilaku yang berbeda.
 
 \end{itemize}
 
@@ -73,37 +92,29 @@ Berdasarkan rumusan masalah yang ada, terdapat beberapa asumsi terkait dengan si
 Metodologi yang akan digunakan dalam penilitian tugas akhir adalah sebagai berikut:
 
 \begin{enumerate}
-
     \item Studi Literatur
 
-        Pengerjaan tugas akhir diawali dengan mempelajari referensi berupa jurnal ilmiah dan dokumen resmi terkait dengan spesifikasi ARINC 653, dan arsitektur Xen dan ARLX.
+        Pengerjaan tugas akhir diawali dengan mempelajari referensi berupa jurnal ilmiah dan dokumen resmi terkait dengan spesifikasi ARINC 653, arsitektur Xen, dan cara kerja prototipe sistem ARINC 653 pada Xen.
         Pembelajaran mengenai spesifikasi ARINC 653 dilakukan untuk dapat mengetahui kriteria penilaian yang akan digunakan sebagai patokan dalam pembuatan kerangka pengujian.
-        Pembelajaran arsitektur Xen dan ARLX dilakukan untuk mengetahui cara memodifikasi ARLX untuk mencari tahu bagaimana eksperimen pada ARLX akan dilakukan.
-
+        Pembelajaran arsitektur Xen dilakukan untuk mengetahui cara memodifikasi prototipe sistem ARINC 653 pada Xen untuk mencari tahu bagaimana eksperimen pada protitipe tersebut akan dilakukan.
 
     \item Analisis
 
         Pada tahap ini dilakukan analisis permasalahan yang berkaitan dengan topik tugas akhir ini.
-        Analisis permasalahan akan membahas spesifikasi ARINC 653, arsitektur Xen dan ARLX untuk kemudian dijadikan sebagai solusi terhadap permasalahan.
-
+        Analisis permasalahan akan membahas spesifikasi ARINC 653 dan arsitektur Xen untuk kemudian dijadikan sebagai solusi terhadap permasalahan.
 
     \item Perancangan Solusi dan Pengujian
 
         Pada tahap ini dilakukan perancangan pengujian serta eksperimen yang akan dilakukan yang dapat menyelesaikan masalah\hyp{}masalah yang telah dijelaskan pada \autoref{section:batasan_masalah}.
 
-
-
     \item Implementasi
 
-        Pada tahap ini dilakukan pembangunan sistem pengujian serta implementasi modul eksperimen pada ARLX.
-
+        Pada tahap ini dilakukan pembangunan sistem pengujian serta implementasi modul eksperimen pada prototipe sistem ARINC 653.
 
     \item Pengujian dan Analisis Hasil
 
         Pada tahap ini dilakukan pengujian dengan metodologi pengujian yang dibangun dari tahap pembangunan solusi dan pengujian.
         Selanjutnya dilakukan pengujian hasil pengujian dan penarikan kesimpulan.
-
-
 \end{enumerate}
 
 \section{Jadwal Pelaksanaan Tugas Akhir}
@@ -113,11 +124,11 @@ Pelaksanaan tugas akhir dibagi menjadi 5 tahap untuk masing-masing metodologi pe
 
 \begin{enumerate}
 
-    \item Tahap 1: Studi Literatur
-    \item Tahap 2: Analisis Masalah
-    \item Tahap 3: Perancangan Solusi
-    \item Tahap 4: Implementasi
-    \item Tahap 5: Pengujian dan Analisis Hasil
+    \item Studi Literatur
+    \item Analisis Masalah
+    \item Perancangan Solusi
+    \item Implementasi
+    \item Pengujian dan Analisis Hasil
 
 \end{enumerate}
 

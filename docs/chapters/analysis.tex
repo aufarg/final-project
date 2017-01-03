@@ -28,17 +28,17 @@ Hal ini dikarenakan prototipe tersebut tersedia gratis dan \textit{open-source},
 
 Pada Xen, sebuah \textit{domain} hanya dapat dibuat oleh dom0 saja.
 Aplikasi maupun \textit{scheduler} tidak dapat membuat \textit{domain} baru apabila aplikasi tersebut mengalami \textit{fault}.
-Agar \textbf{partisi} \textit{backup} dapat berjalan apabila \textbf{partisi} \textit{primary} mengalami \textit{fault}, maka \textbf{partisi} \textit{backup} sudah harus dibuat oleh dom0 pada tahap inisialisasi.
-\textit{Scheduler} akan memasukkan sebuah \textbf{partisi} pada \textit{major time frame} pada tahap \textit{scheduling} jika dan hanya jika \textbf{partisi} tersebut merupakan \textit{primary} dan belum mengalami kegagalan.
-Jika terjadi kegagalan pada \textbf{partisi} \textit{primary}, maka \textit{scheduler} akan memasukkan \textbf{partisi} \textit{backup} yang bersesuaian pada \textit{major time frame}.
-Karena itu, untuk dapat mengimplementasikan \textit{primary-backup scheduling} pada prototipe ARINC 653, \textit{scheduler} harus dapat mengetahui \textbf{partisi} mana yang merupakan \textit{primary} atau \textit{backup} agar dapat melakukan \textit{scheduling}.
+Agar partisi \textit{backup} dapat berjalan apabila partisi \textit{primary} mengalami \textit{fault}, maka partisi \textit{backup} sudah harus dibuat oleh dom0 pada tahap inisialisasi.
+\textit{Scheduler} akan memasukkan sebuah partisi pada \textit{major time frame} pada tahap \textit{scheduling} jika dan hanya jika partisi tersebut merupakan \textit{primary} dan belum mengalami kegagalan.
+Jika terjadi kegagalan pada partisi \textit{primary}, maka \textit{scheduler} akan memasukkan partisi \textit{backup} yang bersesuaian pada \textit{major time frame}.
+Karena itu, untuk dapat mengimplementasikan \textit{primary-backup scheduling} pada prototipe ARINC 653, \textit{scheduler} harus dapat mengetahui partisi mana yang merupakan \textit{primary} atau \textit{backup} agar dapat melakukan \textit{scheduling}.
 
-Selain itu, \textit{scheduler} juga perlu mengetahui kapan sebuah \textbf{partisi} \textit{primary} dikategorikan mengalami kegagalan.
+Selain itu, \textit{scheduler} juga perlu mengetahui kapan sebuah partisi \textit{primary} dikategorikan mengalami kegagalan.
 Karena itu, perlu ada mekanisme untuk mendeteksi \textit{fault}, dan memberikan informasi tersebut kepada \textit{scheduler}.
 
-\subsubsection{Rancangan Solusi untuk Mengenali Jenis \textbf{Partisi}}
+\subsubsection{Rancangan Solusi untuk Mengenali Jenis Partisi}
 
-Jenis \textbf{partisi} dapat dikenali dengan menambahkan properti \textit{partition\_type} pada konfigurasi \textit{domain}, sehingga \textbf{partisi} juga mempunyai properti tersebut.
+Jenis partisi dapat dikenali dengan menambahkan properti \textit{partition\_type} pada konfigurasi \textit{domain}, sehingga partisi juga mempunyai properti tersebut.
 Konfigurasi \textit{domain} pada Xen dapat dilakukan dengan menggunakan \textit{xl}, salah \textit{tools} untuk melakukan manajemen \textit{domain} yang tersedia pada \textit{toolstack} milik Xen.
 Fungsi untuk melakukan pengaturan dapat ditambahkan dengan memanfaatkan XAPI, yaitu \textit{interface} yang disediakan oleh Xen untuk menambahkan fungsionalitas.
 Fungsionalitas yang akan ditambahkan adalah fungsionalitas untuk mendefinisikan \textit{partition\_type} pada \textit{xl}.
