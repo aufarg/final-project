@@ -4,11 +4,13 @@
 
 %-------------------- FORMAT --------------------%
 % Paper
+\special{papersize=210mm,297mm}
 \usepackage[top=3cm, bottom=3cm, left=4cm, right=3cm]{geometry}
 
 % Titles & Caption
 \usepackage{titlesec}
 \usepackage{titletoc}
+\usepackage{etoolbox}% http://ctan.org/pkg/etoolbox
 \usepackage[justification=centering]{caption}
 \def\chapterautorefname{Bab}
 \def\tableautorefname{Tabel}
@@ -30,8 +32,9 @@
 \titlecontents{subsection}[5.6em]{}{\contentslabel{3.2em}}{}{\titlerule*[\tocdotswidth]{.}\contentspage}
 \titlecontents{figure}{\addvspace{1.0pc}}{\figureautorefname\ \thecontentslabel.\ }{}{\titlerule*[\tocdotswidth]{.}\contentspage}
 \titleformat{\chapter}[display]{\bfseries\Large\filcenter}{\MakeUppercase{\chapterautorefname} \thechapter}{0.0pt}{}
-\titleformat{\section}{\bfseries\large}{\thesection}{1.0em}{}
-\titleformat{\subsection}{\bfseries\large}{\thesubsection}{1.0em}{}
+\titleformat{\section}{\bfseries\normalsize}{\thesection}{1.0em}{}
+\titleformat{\subsection}{\bfseries\normalsize}{\thesubsection}{1.0em}{}
+\titleformat{\subsubsection}{\bfseries\normalsize}{\thesubsection}{1.0em}{}
 \titlespacing{\chapter}{0pt}{-40pt}{40pt}
 \titlespacing{\section}{0pt}{11pt}{0pt}
 \titlespacing{\subsection}{0pt}{11pt}{0pt}
