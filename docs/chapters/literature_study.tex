@@ -182,6 +182,21 @@ Sebuah \textit{time capacity} terasosiasi dengan setiap proses.
 Selama proses tersebut selesai dikerjakan tanpa melebihi \textit{time capacity}-nya, \textit{deadline} proses tersebut terpenuhi. Jika tidak, maka \textit{deadline} proses tersebut tidak terpenuhi dan sistem akan menghasilkan \textit{error}.
 \textit{Error} hasil \textit{deadline} yang tidak terpenuhi menjadi acuan bahwa sistem tidak berhasil menjamin 100\% \textit{realtime}.
 
+
+\section{\textit{Primary-Backup Scheduling}}
+
+Studi untuk membuat sistem \textit{real-time} menjadi \textit{fault-tolerant} telah banyak dilakukan \citep{Campbell1986} \citep{Bertossi2006}. \citet{Campbell1986} menunjukkan bahwa penambahan \textit{deadline} pada setiap \textit{task} akan menghasilkan sistem yang \textit{fault-tolerant}.
+Meski demikian, penambahan \textit{deadline} hanya menjamin waktu \textit{response} sistem terhadap permintaan aplikasi dan hanya berfungsi sebagai indikator pada saat melakukan verifikasi sistem.
+\textit{Fault} yang dialami aplikasi tidak hanya berupa waktu \textit{response} saja, sehingga metode tersebut hanya membuat sistem menjadi \textit{fault-tolerant} secara parsial.
+Untuk dapat mengatasi \textit{fault} yang tidak terduga pada saat verifikasi maupun \textit{fault} pada proses verifikasi itu sendiri, salah satu solusi yang diusulkan adalah dengan menggunakan \textit{primary-backup scheduling}.
+
+\textit{Primary-backup scheduling} merupakan proses \textit{scheduling} yang terinspirasi oleh metode replikasi data.
+Pendekatan paling sederhana untuk melakukan \textit{primary-backup scheduling} adalah dengan memberikan salinan untuk setiap \textit{task}, dan memberikan salinan tersebut pada \textit{processor} yang berbeda dengan \textit{task} aslinya.
+Namun, pendekatan tersebut tidak efisien karena memerlukan banyak \textit{processor} tambahan \citep{Oh1994}.
+\citet{Bertossi2006} menunjukkan bagaimana cara mengimplementasikan \textit{primary-backup scheduling} yang lebih efisien pada sistem \textit{real-time} yang menggunakan algoritma \textit{scheduling} \textit{Rate- Monotonic-First-Fit} (RMFF).
+Implementasi tersebut memberikan \textit{task} \textit{salinan} pada \textit{scheduler} jika dan hanya jika \textit{task} utama mengalami kegagalan.
+\citet{Jin2013} berhasil membuktikan bahwa penggunaan \textit{primary-backup scheduling} dapat dilakukan pada sistem yang terpartisi dengan melakukan peluasan model \textit{resource}.
+
 \section{Virtualisasi}
 
 Dalam ranah komputasi, virtualisasi adalah tindakan untuk membuat versi virtual dari suatu hal.
@@ -193,6 +208,7 @@ Sebagai contoh, sistem operasi modern sudah menggunakan konsep virtualisasi sede
 Sebuah sistem operasi dapat mengatasi banyak aplikasi yang berjalan pada saat yang bersamaan yang mana masing-masing membutuhkan \textit{resources} agar dapat berjalan sebagaimana seharusnya.
 Dalam kasus ini, sistem operasi memberikan ilusi kepada masing-masing proses bahwa proses tersebut memiliki seluruh \textit{resources} yang terdapat pada komputer tersebut.
 Namun, yang terjadi adalah sistem operasi membagi \textit{resources} komputer dengan metode sedemikian rupa sehingga pemakaian \textit{resources} tetap konsisten dengan ilusi yang diberikan oleh sistem operasi kepada masing-masing proses.
+
 Sebagai contoh, virtualisasi CPU dilakukan dengan melakukan \textit{preemption} pada proses yang sedang menggunakan CPU sehingga memberikan kesempatan bagi proses lain untuk menggunakan CPU.
 Sistem operasi melakukan melakukan \textit{context switch} pada proses yang terkena \textit{preemption} sehingga pada proses saat tersebut mendapatkan CPU pada giliran selanjutnya, proses tersebut dapat melanjutkan apa yang dikerjakan sebelumnya.
 Sementara itu, virtualisasi memori yang dilakukan dengan melakukan pemetaan alamat memori virtual yang mampu memiliki kapasitas 2\textsuperscript{32} (2\textsuperscript{64} pada sistem 64-bit) ke alamat memori fisik yang memiliki kapasitas sesuai dengan perangkat keras komputer.
@@ -252,9 +268,10 @@ Xen juga merupakan \textit{hypervisor} \textit{open-source}, sehingga eksplorasi
 Fokus utama pada buku ini adalah, Xen menyediakan \textit{interface} untuk membuat \textit{scheduler} baru.
 \textit{Scheduler} dalam kasus ini tidak bekerja pada proses, melainkan bekerja pada \textit{domain}.
 
-\subsection{Prototipe Xen ARINC 653}
+\subsection{Xen ARINC 653}
 
-Prototipe ARINC 653 dibangun dengan membuat \textit{scheduler} seperti pada spesifikasi standar ARINC 653 pada Xen.
+Xen ARINC 653 merupakan prototipe sistem ARINC 653 yang dibangun diatas Xen.
+Prototipe dibangun dengan membuat \textit{scheduler} seperti pada spesifikasi standar ARINC 653 pada Xen.
 Selain itu, prototipe tersebut memberikan beberapa modul \textit{kernel} untuk menangani \textit{device} yang terpartisi sesuai dengan spesifikasi ARINC 653.
 Dalam melakukan partisi memori, prototipe tersebut memanfaatkan mekanisme partisi memori menggunakan MMU yang sudah merupakan mekanisme bawaan pada Xen.
 
@@ -278,8 +295,5 @@ Karena itu, \textit{scheduling} yang dilakukan secara berkala akan dom0 pada \te
     \caption{\textit{Schedule} partisi pada Xen ARINC 653}
     \label{figure:xen_arinc653_partitions_schedule}
 \end{figure}
-
-% TODO
-% \section{\textit{Primary-Backup Scheduling}}
 
 % vim: wrap

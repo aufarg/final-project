@@ -27,7 +27,7 @@ Penelitian ini akan mendalami lebih lanjut mengenai manajemen CPU, khususnya pro
 
 
 % Primary Backup
-Partisi pada standar ARINC 653 dapat membuat eksekusi dan pembaharuan perangkat lunak pada sistem tersebut lebih terpercaya dan fleksibel.
+Partisi pada standar ARINC 653 dapat membuat eksekusi dan pembaharuan perangkat lunak pada sistem tersebut lebih terpercaya dan fleksibel \citep{Jin2013}.
 Partisi dapat diganti atau ditambahkan selama partisi tersebut lolos pengujian \textit{scheduling}.
 Sebagai contoh, aplikasi navigasi yang dijalankan pada suatu partisi tertentu pada avionik dapat diganti dengan versi terbaru yang menggunakan algoritma navigasi yang lebih baik tanpa mengganggu partisi lain.
 Namun, standar ARINC 653 tidak menghasilkan sistem yang \textit{fault-tolerant}.
@@ -72,7 +72,7 @@ Berikut adalah pertanyaan permasalahan yang akan dijawab dan diselesaikan pada t
 
 \section{Tujuan}
 
-Berdasarkan rumusan masalah, tujuan yang ingin dicapai adalah mengimplementasikan \textit{primary-backup scheduling} pada Xen ARINC 653 beserta pengujian dan perbandingan hasil \textit{scheduling} normal dengan \textit{primary-backup scheduling.}
+Berdasarkan uraian pada rumusan masalah, tujuan yang ingin dicapai adalah mengimplementasikan \textit{primary-backup} \textit{scheduling} pada Xen ARINC 653 beserta pengujian dan perbandingan hasil \textit{scheduling} normal dengan \textit{primary-backup scheduling.}
 
 
 \section{Batasan Masalah}
@@ -82,8 +82,9 @@ Berdasarkan rumusan masalah yang ada, terdapat beberapa asumsi terkait dengan si
 
 \begin{itemize}
 
-    \item Pengujian dan eksperimen yang dilakukan hanya akan diuji coba pada sistem dengan arsitektur IA-32.
-    \item \textit{Hypervisor} yang digunakan adalah Xen.  Xen merupakan \textit{hypervisor} tipe-1, sehingga mungkin berbeda dengan \textit{hypervisor} tipe-2 karena \textit{hypervisor} tipe-1 berjalan langsung di atas perangkat keras sedangkan \textit{hypervisor} tipe-2 berjalan di atas sistem lain.
+    \item Pengujian dan eksperimen yang dilakukan hanya akan diuji coba pada sistem dengan arsitektur x86-64.
+    \item \textit{Hypervisor} yang digunakan adalah Xen.
+        Xen merupakan \textit{hypervisor} tipe-1, sehingga mungkin berbeda dengan \textit{hypervisor} tipe-2 karena \textit{hypervisor} tipe-1 berjalan langsung di atas perangkat keras sedangkan \textit{hypervisor} tipe-2 berjalan di atas sistem lain.
         Perbedaan ini mengakibatkan sistem yang dibangun di atas \textit{hypervisor} tipe-1 tidak dapat berjalan pada \textit{hypervisor} tipe-2.
         Penggunaan \textit{hypervisor} tipe-1 lainnya mungkin akan memberikan perilaku yang berbeda dengan perilaku yang terjadi pada Xen.
     \item Pengujian dan eksperimen yang dilakukan hanya akan diuji coba dengan menggunakan \textit{kernel} Linux untuk setiap partisi-nya.
