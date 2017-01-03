@@ -99,7 +99,7 @@ Namun, apabila sistem merupakan sistem \textit{real-time}, dan \textit{task} B d
     \subfloat[]{\label{subfigure:scheduling_comparison_a}\includegraphics[scale=0.6]{resources/scheduling-normal.png}}\\
     \vspace{18pt}\hspace{24pt}
     \subfloat[]{\label{subfigure:scheduling_comparison_b}\includegraphics[scale=0.6]{resources/scheduling-realtime.png}}
-    \caption[Ilustrasi perbedaan permasalahan \textit{scheduling} pada aplikasi \textit{real-time} dan \textit{non-real-time}]{Ilustrasi perbedaan permasalahan \textit{scheduling} pada aplikasi \textit{real-time} dan \textit{non-real-time}. (a) \textit{Scheduling} aplikasi \textit{real-time} (b) \textit{Scheduling} aplikasi \textit{real-time}}
+    \caption[Ilustrasi perbedaan permasalahan \textit{scheduling} pada aplikasi \textit{real-time} dan \textit{non-real-time}]{Ilustrasi perbedaan permasalahan \textit{scheduling} pada aplikasi \textit{real-time} dan \textit{non-real-time}. (a) \textit{Scheduling} aplikasi \textit{non-real-time} (b) \textit{Scheduling} aplikasi \textit{real-time}}
     \label{figure:scheduling_comparison}
 \end{figure}
 
@@ -147,7 +147,7 @@ Berikut adalah fungsionalitas sistem yang dispesifikasikan oleh standar ARINC 65
     \item Komunikasi Antar Partisi
     \item Komunikasi Dalam Partisi
 \end{itemize}
-Buku ini hanya akan membahas manajemen \textbf{partisi} dan manajemen waktu yang dilakukan oleh ARINC 653.
+Penelitian ini hanya akan membahas manajemen \textbf{partisi} dan manajemen waktu yang dilakukan oleh ARINC 653.
 
 \subsubsection[Manajemen Partisi]{Manajemen \textbf{Partisi}}
 
@@ -251,5 +251,35 @@ Xen menjelaskan secara rinci bagaimana proses penulisan komponen dan memberikan 
 Xen juga merupakan \textit{hypervisor} \textit{open-source}, sehingga eksplorasi keseluruhan sistem lebih mudah dilakukan.
 Fokus utama pada buku ini adalah, Xen menyediakan \textit{interface} untuk membuat \textit{scheduler} baru.
 \textit{Scheduler} dalam kasus ini tidak bekerja pada proses, melainkan bekerja pada \textit{domain}.
+
+\subsection{Analisis Arsitektur Prototipe ARINC 653}
+
+Prototipe ARINC 653 dibangun dengan membuat \textit{scheduler} seperti pada spesifikasi standar ARINC 653 pada Xen.
+Selain itu, prototipe tersebut memberikan beberapa modul \textit{kernel} untuk menangani \textit{device} yang terpartisi sesuai dengan spesifikasi ARINC 653.
+Dalam melakukan partisi memori, prototipe tersebut memanfaatkan mekanisme partisi memori menggunakan MMU yang sudah merupakan mekanisme bawaan pada Xen.
+
+Setiap \textbf{partisi} akan direpresentasikan dengan menggunakan \textit{domain} pada Xen.
+Dom0 pada Xen akan digunakan sebagai \textbf{partisi} tempat APEX dan \textit{device driver} berada, sedangkan \textbf{partisi} untuk aplikasi avionik akan direpresentasikan menggunakan domU seperti pada \autoref{figure:xen_arinc653_partitions}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[scale=0.6]{resources/xen-arinc653-partitions.png}
+    \caption{\textit{Hypervisor} Xen ARINC 653}
+    \label{figure:xen_arinc653_partitions}
+\end{figure}
+
+\textit{Scheduling} dilakukan dengan metode seperti pada spesifikasi ARINC 653.
+\textit{Task} sebuah aplikasi akan dimasukkan pada \textit{major time frame} pada saat \textit{scheduling}.
+Pada Xen, hanya dom0 yang dapat memproses IRQ untuk diteruskan kepada \textit{hypervisor} atau \textit{device driver}.
+Karena itu, \textit{scheduling} yang dilakukan secara berkala akan dom0 pada \textit{major time frame} seperti pada \autoref{figure:xen_arinc653_partitions_schedule}.
+
+\begin{figure}[htbp]
+    \includegraphics[scale=0.6]{resources/xen-arinc653-partition-schedule.png}
+    \caption{\textit{Schedule} partisi pada Xen ARINC 653}
+    \label{figure:xen_arinc653_partitions_schedule}
+\end{figure}
+
+% TODO
+% \section{\textit{Primary-Backup Scheduling}}
 
 % vim: wrap
