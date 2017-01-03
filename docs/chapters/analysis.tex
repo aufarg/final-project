@@ -64,16 +64,17 @@ Pengujian \textit{real-time} akan dilakukan dengan melakukan \textit{stress-test
 \textit{Stress-testing} dilakukan dengan menggunakan aplikasi yang akan menjalankan sebuah proses subjek dan menjalankan beberapa proses \textit{background} (mungkin nol).
 Proses subjek akan memberikan laporan secara berkala pada aplikasi penguji apakah \textit{deadline} dari \textit{task} yang dibutuhkan terpenuhi atau tidak.
 
-Pengujian \textit{fault-tolerancy} akan dilakukan dengan melakukan \textit{question-answering} antara aplikasi dengan proses subjek.
-\textit{Question-answering} dilakukan sebagai berikut:
+Pengujian \textit{fault-tolerancy} akan dilakukan oleh aplikasi pengujian dengan cara memberikan \textit{request} pada proses subjek, kemudian memvalidasi \textit{response} yang diterima dari proses subjek.
+\textit{Request} yang dilakukan harus sebuah pekerjaan yang dapat divalidasi kebenaran hasilnya oleh aplikasi penguji.
+Alur pengujian \textit{fault-tolerancy} dilakukan sebagai berikut:
 \begin{enumerate}
-    \item Aplikasi pengujian akan meminta proses subjek untuk menghitung suatu nilai berdasarkan input tertentu (misal menghitung nilai $sqrt{n}$).
+    \item Aplikasi pengujian akan meminta proses subjek untuk menghitung suatu nilai berdasarkan input tertentu (misal menghitung nilai $\sqrt{n}$).
     \item Proses subjek akan mengambil nilai semi-acak, berdasarkan nilai tersebut proses dapat melakukan salah satu dari:
         \begin{itemize}
-            \item Proses subjek akan menghitung nilai tersebut dan memberikan
+            \item Proses subjek akan menghitung nilai $\sqrt{n}$ dan memberikan \textit{response} berupa hasil perhitungan.
             \item Proses subjek akan mengakitvasikan mekanisme \textit{fault detection}.
         \end{itemize}
-    \item Aplikasi pengujian akan melakukan validasi kebenaran hasil perhitungan
+    \item Aplikasi pengujian akan melakukan validasi kebenaran hasil perhitungan.
 \end{enumerate}
 Untuk pengujian ini, aplikasi pengujian tidak akan menjalankan proses \textit{background} sama sekali.
 
