@@ -20,15 +20,19 @@
 \begin{document}
 
 \pagenumbering{roman}
+
+% Front Matter
 \input{./chapters/cover}
 \input{./chapters/approval}
-\pagestyle{plain}
 
+\pagestyle{plain}
 \tableofcontents
 
 \listoffigures
 
+% Main Matter
 \clearpage
+\pagestyle{plain}
 \pagenumbering{arabic}
 \input{./chapters/introduction}
 
