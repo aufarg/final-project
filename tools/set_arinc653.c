@@ -13,19 +13,11 @@ struct sched_entry {
 	int runtime;
 };
 
-
-/* struct sched_entry sched_entries[] = { */
-/* 	{ "00000000-0000-0000-0000-000000000000", 0, 10000 }, */
-/* 	{ "1bd9c815-a3e1-4233-b0f8-24606ce090b0", 0, 50000 } */
-/* }; */
-
-
 int main(int argc, char *argv[])
 {
 	struct xen_sysctl_arinc653_schedule sched;
 	libxl_ctx *ctx;
 	libxl_dominfo *dominfo;
-	// xentoollog_logger lg;
 	int nb_domain;
 	int i, ret;
 
