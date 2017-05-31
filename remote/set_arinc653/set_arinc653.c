@@ -3,14 +3,16 @@
 #include <libxl.h>
 #include <uuid/uuid.h>
 
+#define MILLISECS(_ms)  ((_ms) * 1000000ULL)
+
 #define SCHED_POOLID 0
 #define VCPU_ID 0
-#define RUNTIME 50000
+#define RUNTIME MILLISECS(10)
 
 struct sched_entry {
 	const char *uuid;
 	int vcpu_id;
-	int runtime;
+	int64_t runtime;
 };
 
 int main(int argc, char *argv[])
@@ -38,9 +40,11 @@ int main(int argc, char *argv[])
 		printf("- %s\n", uuid_str);
 		sched.sched_entries[i].vcpu_id = VCPU_ID;
 		sched.sched_entries[i].runtime = RUNTIME;
+		printf("Domain runtime is %lu\n", sched.sched_entries[i].runtime);
 		sched.major_frame += sched.sched_entries[i].runtime;
 	}
 
+	printf("Major frame is %lu\n", sched.major_frame);
 	ret = xc_sched_arinc653_schedule_set(xci, SCHED_POOLID, &sched);
 
 	if (ret) {
