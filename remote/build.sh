@@ -1,6 +1,5 @@
 #!/bin/sh
 
-set -e
 cd "$REMOTEDIR"/xen
 mkdir -p "$REMOTEDIR"/log
 make $MAKEOPT debball

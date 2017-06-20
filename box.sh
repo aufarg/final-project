@@ -1,36 +1,37 @@
 #!/bin/sh
 set -e
 
+PROJECTROOT="$(dirname $0)"
 REMOTEADDR=root@localhost
 REMOTEPORT=3022
-REMOTEDIR=/root/final-project
-MAKEOPT="-j6"
 SSHOPT="-Tp $REMOTEPORT -o BatchMode=yes -i $HOME/.ssh/vm"
 
 function remote_exec()
 {
 	if [ x$1 != x ]; then
-		ssh $SSHOPT $REMOTEADDR < $1
+		local action=$1
+		cat "$PROJECTROOT/remote/"{config,$action}".sh" | \
+		ssh $SSHOPT $REMOTEADDR
 	fi
 }
 
 function main()
 {
-	local root="$(dirname $0)"
 	local action=$1
 
 	case "$action" in
 		'update')
 			# update xen folder
-			rsync   -luptrv --rsh="ssh $SSHOPT" \
-				"$root/xen" "$REMOTEADDR":"$REMOTEDIR/xen"
+			source ./remote/config.sh
+			rsync --progress  -luptrv --rsh="ssh $SSHOPT" \
+				"$PROJECTROOT/xen/" "$REMOTEADDR":"$REMOTEDIR/xen"
 
 			# update remote tools folder
-			rsync   --del -lptrv --rsh="ssh $SSHOPT" \
-				"$root/remote" "$REMOTEADDR":"$REMOTEDIR/remote"
+			rsync --progress  --del -lptrv --rsh="ssh $SSHOPT" \
+				"$PROJECTROOT/remote/" "$REMOTEADDR":"$REMOTEDIR/remote"
 			;;
 		'configure'|'distclean'|'build')
-			remote_exec "$root/remote/$action.sh"
+			remote_exec "$action"
 			;;
 		'*')
 			echo "$action not supported"
