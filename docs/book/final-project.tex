@@ -2,7 +2,6 @@
 
 \usepackage{final-project}
 \usepackage{idn-hyph}
-
 \usepackage[
     backend=biber,
     style=authoryear-icomp,
@@ -12,34 +11,27 @@
     doi=true,
     eprint=false
 ]{biblatex}
-
 \addbibresource{./final-project.bib}
 
 \begin{document}
-
 \pagenumbering{roman}
 
 % Front Matter
 \input{./chapters/cover}
 \input{./chapters/approval}
-
 \pagestyle{plain}
 \tableofcontents
-
 \listoffigures
 
 % Main Matter
 \clearpage
 \pagestyle{plain}
 \pagenumbering{arabic}
-\input{./chapters/introduction}
-
-\input{./chapters/literature_study}
-
-\input{./chapters/analysis}
-
+\input{./chapters/introduction.tex}
+\input{./chapters/literature_study.tex}
+\input{./chapters/analysis.tex}
+\input{./chapters/devtest.tex}
 \printbibliography[heading=bibintoc, title=\thebibname]
-
+\input{./chapters/appendix.tex}
 \end{document}
-
 % vim: tw=120

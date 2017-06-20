@@ -10,31 +10,38 @@
 % Titles & Caption
 \usepackage{titlesec}
 \usepackage{titletoc}
-\usepackage{etoolbox}% http://ctan.org/pkg/etoolbox
+\usepackage{etoolbox}
 \usepackage[justification=centering]{caption}
+
 \def\chapterautorefname{Bab}
 \def\tableautorefname{Tabel}
 \def\figureautorefname{Gambar}
 \def\sectionautorefname{Subbab}
+
 \renewcommand{\abstractname}{ABSTRAK}
 \renewcommand{\contentsname}{DAFTAR ISI}
 \renewcommand{\listfigurename}{DAFTAR GAMBAR}
 \renewcommand{\listtablename}{DAFTAR TABEL}
 \renewcommand{\bibname}{DAFTAR REFERENSI}
 \newcommand{\thebibname}{DAFTAR REFERENSI}
+
 \captionsetup[table]{name=\tableautorefname}
 \captionsetup[figure]{name=\figureautorefname}
+
 \renewcommand{\thechapter}{\Roman{chapter}}
 \renewcommand{\thesection}{\thechapter.\arabic{section}}
+
 \newcommand{\tocdotswidth}{0.28em}
-\titlecontents{chapter}{\addvspace{0.5pc}}{\bfseries\MakeUppercase{\chapterautorefname}\ \thecontentslabel.\ }{\bfseries}{\bfseries\titlerule*[\tocdotswidth]{.}\contentspage}
+\titlecontents{chapter}[0.0em]{\addvspace{0.5pc}}{\bfseries\MakeUppercase{\chapterautorefname}\ \thecontentslabel.\ }{\bfseries}{\bfseries\titlerule*[\tocdotswidth]{.}\contentspage}
 \titlecontents{section}[3.8em]{}{\contentslabel{2.3em}}{}{\titlerule*[\tocdotswidth]{.}\contentspage}
 \titlecontents{subsection}[5.6em]{}{\contentslabel{3.2em}}{}{\titlerule*[\tocdotswidth]{.}\contentspage}
-\titlecontents{figure}{\addvspace{0.5pc}}{\figureautorefname\ \thecontentslabel.\ }{}{\titlerule*[\tocdotswidth]{.}\contentspage}
+\titlecontents{figure}[0.0em]{\addvspace{0.5pc}}{\figureautorefname\ \thecontentslabel.\ }{}{\titlerule*[\tocdotswidth]{.}\contentspage}
+
 \titleformat{\chapter}[display]{\bfseries\Large\filcenter}{\MakeUppercase{\chapterautorefname} \thechapter}{0.0pt}{}
 \titleformat{\section}{\bfseries\normalsize}{\thesection}{1.0em}{}
 \titleformat{\subsection}{\bfseries\normalsize}{\thesubsection}{1.0em}{}
 \titleformat{\subsubsection}{\bfseries\normalsize}{\thesubsubsection}{1.0em}{}
+
 \titlespacing{\chapter}{0pt}{-40pt}{40pt}
 \titlespacing{\section}{0pt}{11pt}{0pt}
 \titlespacing{\subsection}{0pt}{11pt}{0pt}
@@ -59,11 +66,24 @@
 \usepackage{pgfgantt}
 \usepackage{hyperref}
 \usepackage{siunitx}
+\usepackage{listings}
+\lstset{
+	aboveskip=2em,
+	belowskip=2em,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\scriptsize\ttfamily},
+	breaklines=true,
+	breakatwhitespace=true,
+	lineskip=-1pt,
+	captionpos=b,
+	frame=single,
+}
 
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
 
 %-------------------- META --------------------%
-\newcommand{\judul}{Implementasi \textit{Primary-Backup Scheduling} pada Xen ARINC 653}
+\newcommand{\judul}{Pengembangan \textit{Primary-Backup Scheduling} pada Xen ARINC 653}
 \newcommand{\penulis}{Aufar Gilbran}
 \newcommand{\nimpenulis}{13513015}
 \newcommand{\pembimbing}{Achmad Imam Kistijantoro, ST,M.Sc, Ph.D}
@@ -71,5 +91,12 @@
 \newcommand{\tanggal}{4}
 \newcommand{\bulan}{Januari}
 \newcommand{\tahun}{2017}
+
+%-------------------- DEBUG  ------------------%
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\filename}{\code}
+\newcommand{\debugmode}{
+    \overfullrule=2cm
+}
 
 % vim: tw=120
