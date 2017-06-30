@@ -52,6 +52,11 @@
 
 
 \documentclass[conference]{IEEEtran}
+
+% Uncomment \blindtrue for double-blind review
+\newif\ifblind
+\blindtrue
+
 % Some/most Computer Society conferences require the compsoc mode option,
 % but others may want the standard conference format.
 %
@@ -60,7 +65,9 @@
 % \documentclass[conference,compsoc]{../sty/IEEEtran}
 
 
-
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric}
 
 
 % Some very useful LaTeX packages include:
@@ -231,11 +238,11 @@
 
 
 % *** SUBFIGURE PACKAGES ***
-%\ifCLASSOPTIONcompsoc
-%  \usepackage[caption=false,font=footnotesize,labelfont=sf,textfont=sf]{subfig}
-%\else
-%  \usepackage[caption=false,font=footnotesize]{subfig}
-%\fi
+\ifCLASSOPTIONcompsoc
+  \usepackage[caption=false,font=small,labelfont=sf,textfont=sf]{subfig}
+\else
+  \usepackage[caption=false,font=small]{subfig}
+\fi
 % subfig.sty, written by Steven Douglas Cochran, is the modern replacement
 % for subfigure.sty, the latter of which is no longer maintained and is
 % incompatible with some LaTeX packages including fixltx2e. However,
@@ -323,7 +330,7 @@
 
 
 % correct bad hyphenation here
-\hyphenation{op-tical net-works semi-conduc-tor}
+\hyphenation{DornerWorks pri-ma-ry}
 
 
 \begin{document}
@@ -334,23 +341,26 @@
 % not capitalized unless they are the first or last word of the title.
 % Linebreaks \\ can be used within to get better formatting as desired.
 % Do not put math or special symbols in the title.
-\title{Primary-Backup Scheduling on ARLX Hypervisor}
+\title{Improving ARINC 653 System Reliability by\\Using Fault-Tolerant Partition Scheduling}
 
 
 % author names and affiliations
 % use a multiple column layout for up to three different
 % affiliations
+\ifblind
+\else
 \author{\IEEEauthorblockN{Aufar Gilbran}
-\IEEEauthorblockA{School of Electrical and\\Computer Engineering\\
-Institut Teknologi Bandung\\
-Bandung, Indonesia\\
-Email: aufargilbran@gmail.com}
-\and
-\IEEEauthorblockN{Achmad Imam Kistijantoro}
-\IEEEauthorblockA{School of Electrical and\\Computer Engineering\\
-Institut Teknologi Bandung\\
-Bandung, Indonesia\\
-Email: homer@thesimpsons.com}}
+	\IEEEauthorblockA{School of Electrical Engineering\\and Informatics\\
+		Institut Teknologi Bandung\\
+		Bandung, Indonesia\\
+	Email: aufargilbran@gmail.com}
+	\and
+	\IEEEauthorblockN{Achmad Imam Kistijantoro}
+	\IEEEauthorblockA{School of Electrical Engineering\\and Informatics\\
+		Institut Teknologi Bandung\\
+		Bandung, Indonesia\\
+Email: imam@stei.itb.ac.id}}
+\fi
 
 % conference papers do not typically use \thanks and this command
 % is locked out in conference mode. If really needed, such as for
@@ -391,12 +401,21 @@ Email: homer@thesimpsons.com}}
 % As a general rule, do not put math, special symbols or citations
 % in the abstract
 \begin{abstract}
+	The ARINC 653 specifies multiple operating system components to provide isolation
+	between partitions. This means failure on one partition does not affect any other
+	partition.  While each partition cannot affect the other partitions, the failure still
+	happens and possibly leads to failure to the whole system. In this paper, we extend the
+	partition scheduler on ARINC 653 compliant hypervisor called ARLX to use primary-backup
+	scheme. The resulting scheduler will be able to provide the needed service on failed
+	partitions through their backup partitions.
 \end{abstract}
 
-% no keywords
+\vspace{10pt}
 
-
-
+\renewcommand\IEEEkeywordsname{Keywords}
+\begin{IEEEkeywords}
+	hierarchical, real-time systems, scheduling, reliability, fault-tolerance
+\end{IEEEkeywords}
 
 % For peer review papers, you can put extra information on the cover
 % page as needed:
@@ -417,24 +436,24 @@ Email: homer@thesimpsons.com}}
 
 ARINC 653 is a software specification which primary purpose is to provide isolation or
 partitioning of application domains. The specified partitioning scheme in ARINC 653 will prevent
-one domain affecting other domains. This could be achieved by making sure each domain have
-their own portion of shared resource, including, but not limited to CPU time, memory, and
-I/O bandwidth.
+one domain to affect other domains by any means. This could be achieved by making sure each
+domain has their own portion of shared resources, including, but not limited to CPU time,
+memory, and I/O bandwidth.
 
-Isolation and partitioning is important in aviation, as it allows multiple application each with
-their own possibly different level of certification to be run in different partitions on the
-same platform. An example of such platform is Integrated Modular Avionics (IMA) systems. These
-systems were created to supersede federated systems, which maintain application isolations by
-having separated platform for each application. ARINC 653 was created to standardized operating
-systems for these platforms.
+Isolation and partitioning is important in aviation \cite{Rushby2000}, as it allows multiple
+application each with their own possibly different level of certification to be run in different
+partitions on the same platform. An example of such platform is Integrated Modular Avionics
+(IMA) systems. These systems were created to supersede federated systems, which maintain
+application isolation by having separated platform for each application. ARINC 653 was created
+to standardized operating systems for these platforms.
 
-ARINC 653 protect each application from the fault that is experienced by other applications in
-different partition. Despite of being protected of fault from other domains, any fault the
-application experienced from it's own partition will still happen. It might be the case that
-the faulty application or partition is a safety-critical system or part of such system. Failure
-of such application or partition leads to significant increase of the safety risk for the
-people and/or partition involved. This leads to the need of system reliability in the platform
-or operating system to reduce the safety risk in case of failure.
+ARINC 653 specification protect each application from the fault that is experienced by other
+applications in different partition. Despite being protected of fault from other domains, any
+fault the application experienced from its own partition will still happen. It might be the case
+that the faulty application or partition is a safety-critical system or part of such system.
+Failure of such application or partition leads to a significant increase of the safety risk for
+the people and/or partition involved. This leads to the need of system reliability in the
+platform or operating system to reduce the safety risk in case of failure.
 
 There are several ways to achieve system reliability in ARINC 653 operating systems. One way is
 to make sure the application and its partition would continue to operate even when it has
@@ -442,22 +461,22 @@ failed. This could be done by having domains that have the same applications and
 replace the faulty domain. These domains are called backup domains and the replaced domain is
 called the primary domain. In normal situations, the backup domains will not be given any CPU
 time and will reside in background. Once the hypervisor detect that the primary domain
-experienced a fault, one of the backup domains will its replace place to provide service that is
+experienced a fault, one of the backup domains will replace it to provide service that is
 compatible with the required services. The described scheduling algorithm is called
 primary-backup scheduling.
 
 The primary-backup scheduling algorithm is implemented on ARINC 653 compliant hypervisor called
 ARLX. The ARLX hypervisor is an ARINC 653 compliant extension to the open-source Xen hypervisor
-and is developed, by DornerWorks, according to the strict safety assurance directed by DO-178.
-It is created to increase the pace of innovation and reduce development of ARINC 653 operating
+and is developed by DornerWorks, according to the strict safety assurance directed by DO-178.
+It is created to increases the pace of innovation and reduce development of ARINC 653 operating
 systems by giving researchers access to working prototype and engineers the freedom of open
 source license. Since the ARLX hypervisor already provide ARINC 653 scheduler with ARINC 653
-compliant scheduling algorithm, we only need to modify the current ARINC 653 scheduler
+compliant scheduling algorithm, we only need to extend the current ARINC 653 scheduler
 scheduling algorithm to support picking between primary and backup domains.
 
-This paper will focused on developing primary-backup scheduling algorithm on ARINC 653 compliant
-hypervisor. The main topic of this paper includes describing the primary-backup ARINC 653
-scheduling algorithm and analysis of the resulting scheduler in different scenarios.
+This paper will focus on the implementation of primary-backup scheduling algorithm on ARINC 653
+compliant hypervisor. The main topic of this paper includes describing the primary-backup ARINC
+653 scheduling algorithm and analysis of the resulting scheduler in different scenarios.
 
 The rest of this paper is organized as follows. In Section II, we will cover the current
 implementation of ARINC 653 scheduler in ARLX and primary-backup scheduling algorithm. In
@@ -533,7 +552,7 @@ scenarios.
 % captions serve much like titles, are usually capitalized except for words
 % such as a, an, and, as, at, but, by, for, in, nor, of, on, or, the, to
 % and up, which are usually not capitalized unless they are the first or
-% last word of the caption. Table text will default to \footnotesize as
+% last word of the caption. Table text will default to \small as
 % the IEEE normally uses this smaller font for tables.
 % The \label must come after \caption as always.
 %
@@ -570,53 +589,181 @@ scenarios.
 
 
 
-\section{Some Section}
-
-\subsection{ARINC 653 Scheduler in ARLX}
+\section{ARINC 653 Scheduler}
 
 The primary goal of ARINC 653 specification is to manage contended resources across many domains
-with safety and fault isolation for users of these resources. This can be achieved by
-partitioning these resources according to resource users' needs. Partition is done on basic
-subsystem resources, including, but not limited to, CPU time, memory, and I/O bandwidth. These
-partitioning is already implemented on ARLX. In this paper, we will improve the scheduling
-algorithm on ARLX to support primary-backup scheme which we will discuss later.
+with safety and fault isolation for users of these resources
+\cite{AirlinesElectronicEngineeringCommittee2012}. This can be achieved by partitioning these
+resources according to resource users' needs. Partition is done on basic subsystem resources,
+including, but not limited to, CPU time, memory, and I/O bandwidth. These partitioning is
+already implemented on ARLX. In this paper, we will improve the scheduling algorithm on ARLX to
+support primary-backup scheme which we will discuss later.
 
-ARINC 653 partition scheduler is a periodically repeating fixed timeslice scheduler for
-partitions. The scheduler only concerned with the scheduling of partitions, in this case Xen
-domains. Process scheduling for real-time processes inside each partitions are handled by its
-process scheduler. In this paper, we interchange the term partition scheduler with scheduler
-since we will not cover process scheduler at all.  The scheduler is implemented based on ARINC
-653 partition scheduling specification. Every partition to be scheduled has their own fixed
-timeslice.  So the partition will be activated at a certain timespan. The partition scheduling
-algorithm is predetermined, repetitive with a fixed periodicity.  This period is called the
-major time frame.  The major time frame should be big enough to run all the timespan to be
-scheduled. Each partition can be configured to take at least one the time-slot within the major
-time frame.  Partitions do not have a priority assigned to them so there is no preemption within
-the scheduling algorithm except for system calls (hypercalls in hypervisor context) or
-interrupts. This has been implemented in ARLX hypervisor.
+\subsection{Base ARINC 653 Scheduler}
 
-There are some differences between standard ARINC 653 scheduler and ARLX. Currently in ARLX, the
-schedule is configured manually with hypercalls instead of being generated by time-based
-activation. It is the engineer responsibility to make determine how much CPU time being
-allocated to each partition. Multicore support for partition scheduling is not yet implemented,
-so we only deal with uniprocessor architecture.
+ARINC 653 specification specifies two type of scheduler, partition scheduler and process
+scheduler. Partition scheduling is used to schedule which partitions should be given the CPU
+time at current time. Process scheduling is used to schedule which process inside the partition
+should be given the VCPU time at current time. In this paper, we interchange the term partition
+scheduler with scheduler since we will not use process scheduler that much. Each of these
+schedulers works on a different context. The partition scheduler is a periodically repeating
+fixed timeslice scheduler for partitions. Every partition to be scheduled has their own fixed
+timeslice. So the partition will be activated at a certain time window. This window is called
+minor frame. The partition scheduling algorithm is predetermined, repetitive with a fixed
+periodicity. This period is called the major time frame. The major time frame should be big
+enough to run all the minor frame to be scheduled. Each partition can be configured to take at
+least one the time-slot within the major time frame. Partitions do not have a priority assigned
+to them so there is no preemption within the scheduling algorithm except for system calls
+(hypercalls in hypervisor context) or interrupts.
 
-\subsection{Primary-Backup Scheduling Algorithm}
+\begin{figure}
+	\centering
+	\begin{tikzpicture}[scale=1]
+		{
+			\def\boxh{50pt}
+			\def\lineh{20pt}
+			\def\off{110pt}
+			\def\nodestyle{node[pos=0.5,font=\small]}
+			\foreach \o in {0,...,1}
+			{
+				\pgfmathtruncatemacro{\mtlabel}{\o + 1}
+
+				\path (\off*\o+00pt, \boxh+\lineh+10pt) -- ++(\off, 0pt) \nodestyle {Minor Frame};
+				\draw (\off*\o+00pt, \boxh+5pt) -- ++(0pt, \lineh);
+				\path (\off*\o+00pt, \boxh+5pt) -- ++(70pt, \lineh) \nodestyle
+					(min\o) {1};
+
+				\draw (\off*\o+70pt, \boxh+5pt) -- ++(0pt, \lineh);
+				\path (\off*\o+70pt, \boxh+5pt) -- ++(40pt, \lineh)
+				\nodestyle (min\o) {2};
+
+				\draw (\off*\o+\off, \boxh+5pt) -- ++(0pt, \lineh);
+
+				\draw[thick, fill=gray, fill opacity=0.10, text opacity=1.0] (\off*\o+00pt,0pt) rectangle +(70pt,\boxh) \nodestyle {P1};
+				\draw[thick, fill=gray, fill opacity=0.10, text opacity=1.0] (\off*\o+70pt,0pt) rectangle +(40pt,\boxh) \nodestyle {P2};
+
+				\path (\off*\o+0pt,-\lineh-5pt) -- ++(\off, \lineh) \nodestyle (mt\o) {Major Time
+				Frame \mtlabel};
+				\draw (\off*\o+0pt,-\lineh-5pt) -- ++(0pt, \lineh);
+				\draw (\off*\o+\off,-\lineh-5pt) -- ++(0pt, \lineh);
+			}
+			\draw[thick, ->] (-5pt,-\lineh-12pt) -- (2*\off+5pt, -\lineh-12pt)
+			node[pos=0.98,below] {time};
+		}
+	\end{tikzpicture}
+	\caption{Partition scheduling}
+	\label{figure:partition_scheduling}
+\end{figure}
+
+ARINC 653 partition scheduler and process scheduler handle tasks differently. Process scheduler
+needs to handle tasks depending whether the task is periodic or aperiodic. Meanwhile, partition
+scheduler works as described regardless of whether the task is periodic or aperiodic. For
+example, \figurename ~\ref{figure:partition_scheduling} illustrates one case in which we have 2
+partitions to be scheduled. Each partition have their own minor frame which spans for a
+determined time. After the first major time frame executed, the scheduler then do the next major
+time frame. For aperiodic tasks, it should be sufficient to just make sure the major time frame
+is less than the deadline. This makes sure that the partition with this task would be selected
+at least once to do the task. For periodic tasks, the scheduler need to be configured properly.
+\figurename ~\ref{figure:periodic_task_scheduling} illustrates periodic tasks scheduling.
+Suppose that we have 3 domains with minor frames of 5, 6, 10 ms and the worst case running times
+of these partitions are 1 ms, 2 ms, and 3 ms respectively. The major frame should be set to the
+least common multiples of these minor frames, which is 30 ms, so that the deadline for each of
+these partitions can be met.
+
+\begin{figure}
+	\def\run{black}
+	\centering
+	\subfloat{
+		\begin{tabular}{|r|c|c|c|}
+			\hline
+			ms & P1 & P2 & P3 \\ \hline
+			0&&&\cellcolor{\run}\\ \hline
+			1&&&\cellcolor{\run}\\ \hline
+			2&&&\cellcolor{\run}\\ \hline
+			3&\cellcolor{\run}&&\\ \hline
+			4&&\cellcolor{\run}&\\ \hline
+			5&&\cellcolor{\run}&\\ \hline
+			6&&&\\ \hline
+			7&\cellcolor{\run}&&\\ \hline
+			8&&\cellcolor{\run}&\\ \hline
+			9&&\cellcolor{\run}&\\ \hline
+			10&&&\cellcolor{\run}\\ \hline
+			11&&&\cellcolor{\run}\\ \hline
+			12&&&\cellcolor{\run}\\ \hline
+			13&\cellcolor{\run}&&\\ \hline
+			14&&\cellcolor{\run}&\\ \hline
+		\end{tabular}
+	}
+	\subfloat{
+		\begin{tabular}{|r|c|c|c|}
+			\hline
+			ms & P1 & P2 & P3 \\ \hline
+			15&&\cellcolor{\run}&\\ \hline
+			16&&&\\ \hline
+			17&\cellcolor{\run}&&\\ \hline
+			18&&\cellcolor{\run}&\\ \hline
+			19&&\cellcolor{\run}&\\ \hline
+			20&&&\cellcolor{\run}\\ \hline
+			21&&&\cellcolor{\run}\\ \hline
+			22&&&\cellcolor{\run}\\ \hline
+			23&\cellcolor{\run}&&\\ \hline
+			24&&\cellcolor{\run}&\\ \hline
+			25&&\cellcolor{\run}&\\ \hline
+			26&&&\\ \hline
+			27&\cellcolor{\run}&&\\ \hline
+			28&&&\\ \hline
+			29&&&\\ \hline
+		\end{tabular}
+	}
+	\caption{Periodic tasks scheduling}
+	\label{figure:periodic_task_scheduling}
+\end{figure}
+
+\subsection{ARLX ARINC 653 Scheduler}
+ARINC 653 scheduler on ARLX selects one of the runnable partition from a fixed partition list
+given by hypercall \cite{VanderLeest2010}. The list consists of partition, its supposed run
+time, and assigned VCPU identification to execute the domain. The scheduler then selects the
+partition in round-robin fashion. It assigns the corresponding VCPU responsible for the
+partition to run if the VCPU is awake and runnable. The order of partitions to be selected is
+fixed and is the same as the partition list.
+
+There are some differences between standard ARINC 653 scheduler and ARLX.
+
+\begin{itemize}
+	\item In ARLX, the schedule is configured manually with hypercalls instead of
+		being generated by time-based activation. It is the engineer responsibility to
+		determine how much CPU time being allocated to each partition.
+
+	\item ARLX only modifies Xen hypervisor code and it only concerns with the hypervisor
+		aspects, so it only provides partition scheduler that is compliant to ARINC 653
+		specification. Process scheduling for real-time processes inside of each
+		partition are handled by operating system on that partition.
+
+	\item Multicore support for partition scheduling is not yet implemented, so we only deal
+		with uniprocessor architecture.
+\end{itemize}
+
+\section{Improving Service Reliability}
 
 The problem with faulty partition is that the service it provides will cease to work and/or give
 incorrect result. In avionics, this could lead to incorrect calculation of control systems, thus
-significantly increase safety-risk for people and/or environment involved. We assume that there
+significantly increases safety-risk for people and/or environment involved. We assume that there
 is one-to-one relationship between service and partition. The simplest way to bring back the
 service is by restarting the faulty partition. In general cases, there is no way to know whether
 restarting faulty partition could bring back said service as the cause of fault could be
 persistent.
 
-To improve service reliability, one solution that have been studied many times is by
-using primary-backup scheme. Common primary-backup schemes make sure that each partition have
-replicas that is identical service-wise to the primary partition before being operational. When
-said partition experienced a failure, one of its replicas could take over its place and provide
-the same service. While this scheme can seamlessly handle persistent failure on partitions,
-identical partitions means the exact same failure in primary are bound to happen in replicas.
+To improve service reliability in real-time systems, one solution is to have the scheduler to be
+fault-tolerant \cite{Campbell1986} \cite{Han2003} \cite{Shin2008}. A study shows that a
+hierarchical scheduler like ARINC 653 scheduler, which has at least two levels of scheduling,
+can be made fault-tolerant with primary-backup scheme \cite{Jin2013}. When a partition
+experienced failure, the scheduler can keeps the service running by having backup partition
+running in place of the faulty primary partition. Common primary-backup schemes make sure that
+each partition have replicas that is identical service-wise to the primary partition before
+being operational. When said partition experienced a failure, one of its replicas could take
+over its place and provide the same service. While this scheme can seamlessly handle persistent
+failure on partitions, identical partitions means the exact same failure in primary are bound to
+happen in replicas.
 
 For primary-backup scheme on partition scheduler to work indefinitely, replica partitions should
 not be identical to their corresponding primary partition. We could think of replicas as
@@ -629,10 +776,8 @@ still have the option to use identical replicas.
 
 \section{Primary-Backup ARINC 653 Scheduler}
 
-In this section, we will look at some of the mechanisms which makes primary-backup scheme on
-ARINC 653 scheduler possible. Then we will look at various primary-backup ARINC 653
-scheduler usage and analyze <some metrics here>.
-% TODO : what metrics %
+In this section, we will look at some implementation details which make primary-backup scheme on
+ARINC 653 scheduler possible. Then we will do availability testing for the resulting scheduler.
 
 \subsection{Partition Information}
 
@@ -641,7 +786,7 @@ partition is currently okay to run. We will call such information as partition s
 scheduler also needs information about the service provided in a partition, so the scheduler
 does not confuse which primary partition that each backup partition corresponds to. This can be
 done by giving service identification and make sure each partition keep its service
-identification.  Since we already assume one-to-one relationship between service and partition,
+identification. Since we already assume one-to-one relationship between service and partition,
 service identification can use partition identification, which already provided by default in
 ARLX.
 
@@ -653,21 +798,247 @@ implement and offer flexibility for configuration. From base ARINC 653 scheduler
 implement partition information in domain private data. We also implement scheduler hypercalls
 on domain-specific context.
 
-\subsection{Scheduling Algorithm}
+\subsection{The Scheduling Strategy}
 
-The scheduler selects one of the runnable partition such that the its status is healthy and
-there are no partitions that have provided the service corresponding to its service id.
+To keep the scheduling deterministic, we need to make sure that the algorithm will not depend on
+external sources. The input of the scheduling algorithm is partition information which already
+discussed in the last part. The scheduler selects one of the runnable partition such that its
+status is healthy and there are no partitions that have provided the service corresponding to
+its service identification. When the scheduler scans the schedule list, we extend it to also
+check whether the partition satisfies said conditions.
 
-\subsection{Analysis}
+It is trivial to check whether the partition is healthy. To check whether the service it
+provides have been provided before, we need a flag for possible service identification value.
+The flag is initialized to zero for all services at first. When a partition already exhausted
+its quantum, the scheduler then toggle the flag for the corresponding service. This is feasible
+without changing the required space complexity for the scheduler. Since service identification
+value corresponds to partition identification, thus its value is incremental from $1$ to $N$
+with $N$ is the number of partitions available. Thus, the extra space in the scheduler we need
+for the flag is linear to the number of partitions, which is the same as the schedule list
+itself.
 
-We tested the primary-backup ARINC 653 scheduler on multiple scenarios and measure duration and
-failure rate of each partitions.
+\begin{figure}[ht]
+	\centering
+	\begin{tikzpicture}[
+		partition-done/.style={fill=gray, fill opacity=0.10, text opacity=1.0},
+		partition-healthy/.style={fill=green, fill opacity=0.30, text
+		opacity=1.0},
+		partition-failed/.style={fill=red, fill opacity=0.40, text opacity=1.0},
+		candidate/.style={very thick},
+		]
+
+		\def\boxs{30pt}
+		\def\legends{10pt}
+		\def\off{10pt}
+		\def\loff{2pt}
+		\def\shape{rectangle +(\boxs,\boxs)}
+		\def\partnode{node[pos=0.5,font=\small]}
+		\def\lshape{rectangle +(\legends,\legends)}
+		\newcommand\lnode[1]{node[pos=0.5,align=right,label={[anchor=west,font=\footnotesize]right:#1}] {}}
+
+		\draw[partition-healthy]           (0*\boxs,{0*(-\boxs-\off)}) \shape \partnode {P1-SA};
+		\draw[partition-healthy]           (1*\boxs,{0*(-\boxs-\off)}) \shape \partnode {P2-SA};
+		\draw[partition-failed]            (2*\boxs,{0*(-\boxs-\off)}) \shape \partnode {P3-SB};
+		\draw[partition-healthy]           (3*\boxs,{0*(-\boxs-\off)}) \shape \partnode {P4-SB};
+		\draw[partition-healthy]           (4*\boxs,{0*(-\boxs-\off)}) \shape \partnode {P5-SB};
+
+		\draw[partition-healthy,candidate] (0*\boxs,{1*(-\boxs-\off)}) \shape \partnode {P1-SA};
+		\draw[partition-healthy]           (1*\boxs,{1*(-\boxs-\off)}) \shape \partnode {P2-SA};
+		\draw[partition-failed]            (2*\boxs,{1*(-\boxs-\off)}) \shape \partnode {P3-SB};
+		\draw[partition-healthy]           (3*\boxs,{1*(-\boxs-\off)}) \shape \partnode {P4-SB};
+		\draw[partition-healthy]           (4*\boxs,{1*(-\boxs-\off)}) \shape \partnode {P5-SB};
+
+		\draw[partition-done]              (0*\boxs,{2*(-\boxs-\off)}) \shape \partnode {P1-SA};
+		\draw[partition-done,candidate]    (1*\boxs,{2*(-\boxs-\off)}) \shape \partnode {P2-SA};
+		\draw[partition-failed]            (2*\boxs,{2*(-\boxs-\off)}) \shape \partnode {P3-SB};
+		\draw[partition-healthy]           (3*\boxs,{2*(-\boxs-\off)}) \shape \partnode {P4-SB};
+		\draw[partition-healthy]           (4*\boxs,{2*(-\boxs-\off)}) \shape \partnode {P5-SB};
+
+		\draw[partition-done]              (0*\boxs,{3*(-\boxs-\off)}) \shape \partnode {P1-SA};
+		\draw[partition-done]              (1*\boxs,{3*(-\boxs-\off)}) \shape \partnode {P2-SA};
+		\draw[partition-failed,candidate]  (2*\boxs,{3*(-\boxs-\off)}) \shape \partnode {P3-SB};
+		\draw[partition-healthy]           (3*\boxs,{3*(-\boxs-\off)}) \shape \partnode {P4-SB};
+		\draw[partition-healthy]           (4*\boxs,{3*(-\boxs-\off)}) \shape \partnode {P5-SB};
+
+		\draw[partition-done]              (0*\boxs,{4*(-\boxs-\off)}) \shape \partnode {P1-SA};
+		\draw[partition-done]              (1*\boxs,{4*(-\boxs-\off)}) \shape \partnode {P2-SA};
+		\draw[partition-failed]            (2*\boxs,{4*(-\boxs-\off)}) \shape \partnode {P3-SB};
+		\draw[partition-healthy,candidate] (3*\boxs,{4*(-\boxs-\off)}) \shape \partnode {P4-SB};
+		\draw[partition-healthy]           (4*\boxs,{4*(-\boxs-\off)}) \shape \partnode {P5-SB};
+
+		\draw[partition-done]              (0*\boxs,{5*(-\boxs-\off)}) \shape \partnode {P1-SA};
+		\draw[partition-done]              (1*\boxs,{5*(-\boxs-\off)}) \shape \partnode {P2-SA};
+		\draw[partition-done]              (2*\boxs,{5*(-\boxs-\off)}) \shape \partnode {P3-SB};
+		\draw[partition-done]              (3*\boxs,{5*(-\boxs-\off)}) \shape \partnode {P4-SB};
+		\draw[partition-done,candidate]    (4*\boxs,{5*(-\boxs-\off)}) \shape \partnode {P5-SB};
+
+		\draw[partition-done]              (0*\boxs,{6*(-\boxs-\off)}) \shape \partnode {P1-SA};
+		\draw[partition-done]              (1*\boxs,{6*(-\boxs-\off)}) \shape \partnode {P2-SA};
+		\draw[partition-done]              (2*\boxs,{6*(-\boxs-\off)}) \shape \partnode {P3-SB};
+		\draw[partition-done]              (3*\boxs,{6*(-\boxs-\off)}) \shape \partnode {P4-SB};
+		\draw[partition-done]              (4*\boxs,{6*(-\boxs-\off)}) \shape \partnode {P5-SB};
+
+		% legends
+		\draw[candidate] (0pt,{6*(-\boxs-\off)-0*(\legends+\loff)-\legends-\off}) \lshape
+		\lnode{Candidate partition};
+
+		\draw[partition-healthy]
+		(0pt,{6*(-\boxs-\off)-1*(\legends+\loff)-\legends-\off}) \lshape
+		\lnode{Partition healthy};
+
+		\draw[partition-failed]
+		(0pt,{6*(-\boxs-\off)-2*(\legends+\loff)-\legends-\off}) \lshape
+		\lnode{Partition failed};
+
+		\draw[partition-done]
+		(0pt,{6*(-\boxs-\off)-3*(\legends+\loff)-\legends-\off}) \lshape
+		\lnode{Service on partition already provided};
+
+	\end{tikzpicture}
+	\caption{Primary-backup scheduling}
+	\label{figure:pb_scheduling}
+\end{figure}
+
+We illustrate how primary-backup ARINC 653 scheduler work in \figurename
+~\ref{figure:pb_scheduling}. The scheduler has a list of partitions to be scheduled. These
+partition each have current status (healthy/failed) and service identification. When the
+scheduler should determine whether the candidate partition will be given CPU time or not, the
+scheduler will check if the partition is healthy and the service corresponding to service
+identification is not provided yet. In \figurename ~\ref{figure:pb_scheduling}, the partition
+label has the format P$X$-S$Y$, which means partition $X$ will provide service $Y$ if given CPU
+time. On a particular major time frame, the algorithm will work as follows:
+
+\begin{itemize}
+
+	\item On partition P1, the partition is healthy and service $A$ is not yet provided, so
+		the partition is given the CPU time,
+
+	\item Partition P2 however, is not given the CPU time, as when partition P1 exhausted
+		its quantum, service $A$ is already provided.
+
+	\item For partition P3, the corresponding service is not yet provided, but the partition
+		is currently failed, thus is not given the CPU time.
+
+	\item Partition P4 is healthy, and since partition P3 is not given the CPU time, the
+		corresponding service has not yet provided. Since all condition is satisfied,
+		partition P4 is given CPU time.
+
+	\item Partition P5 is not given the CPU time, as the corresponding service, service $B$
+		is already provided by partition P4.
+
+\end{itemize}
+
+At the end of the major time frame, this algorithm ensures that given a service will be provided
+if there is at least one partition providing the service that is healthy. The algorithm will
+restart this process if current major time frame is elapsed. This whole process will be done
+indefinitely.
+
+\subsection{Reliability Testing}
+
+To measure whether the proposed scheduler improve system reliability, the system is to be tested
+for its reliability while using the scheduler. The primary goal of this reliability testing is
+to measure mean time to failure for the system. We can assume that the system will always fail
+when any service is failed and the service is the most unreliable component of the system, thus
+the system mean time to failure is the same as the minimum mean time to failure of all services.
+Since we want to prolong the system mean time to failure, we want to maximize the mean time to
+failure for all services. The testing result can also be used to validate whether the algorithm
+works as intended.
+
+Reliability testing is done by checking whether each partition can successfully pass heartbeat
+check. The partition is said to be successfully pass heartbeat check when it sends heartbeat if
+and only if the partition satisfies the running condition. One simple way to do this is by
+creating a testing framework with server-client architecture. Each partition is a client, and we
+can have any machine as the server, as long as all the partitions is connected to the server
+machine by any means. Each partition then sends heartbeat with its service identification and
+partition identification to the server on a fixed interval. The server makes sure that each
+service is provided, while noting which partition provides the service.
+
+We tested the primary-backup ARINC 653 scheduler by having five partitions, named as P1 to P5.
+The first two partitions (P1 and P2) provide service $A$ and the last three partitions (P3, P4,
+and P5) provide service $B$. The testing scenarios on these partitions, including the expected
+outcome, are as follows:
+
+\begin{enumerate}
+	\item Initially, all five partitions are healthy. In this scenario, the scheduler are
+		supposed to selects partition P1 and partition P3.
+
+	\item Partition P3 experienced a failure. In this scenario, the scheduler are supposed
+		to selects partition P1 and partition P4. This scenario is exactly the same as
+		illustrated in \figurename ~\ref{figure:pb_scheduling}.
+
+	\item Partition P2, P3, and P5 then experienced a failure. In this scenario, the
+		scheduler are supposed to selects partition P1 and partition P5. This scenario is
+		done to test the scheduler behavior. The scheduler should still choose a
+		candidate which meets the running conddition, even when there are backup
+		partitions, which to be scheduled later than the candidate experienced a
+		failure. 
+\end{enumerate}
+
+In the first scenario, when all partitions are healthy, the server receive service $A$ from
+partition P1 and service P2 from partition P3. For the second scenario, the server receives
+heartbeat from partition P1 for service $A$ and from partition P4 for service $B$. This means
+the service still functioning correctly even when the original partition which provides the
+service experiencing a failure. On the third scenario, the server still receives heartbeat for
+service $A$ from partition P1 and service $B$ from partition P4. This means failured experienced
+by backup partitions later than the supposed selected partitions do not affect scheduler
+selection.
+
+In all of these scenarios, all the service required is provided, even though partitions can
+still experience failures as base ARINC 653 scheduler. This means, while this scheme does not
+increases the mean time to failure for each partition, it does increases mean time to failure
+for each service. 
 
 \section{Conclusion}
-The conclusion goes here.
 
+In this paper, we proposed a way to increases the reliability of ARINC 653 operating systems by
+using primary-backup scheme on ARINC 653 partition scheduler. The scheduler works by giving CPU
+time to candidate partition only when it is currently healthy and the corresponding service has
+not provided yet. In order to let the scheduler know partition status, we define a new hypercall
+to modify information associated to a partition. Using primary-backup scheme on ARINC 653
+scheduler increases the reliability for each service and thus prolong the mean time to failure
+for any service. Since we assume that services reliability is the most unreliable component on the
+system, this means the proposed scheduler also increases the whole system reliability.
 
+While the result of the reliability testing is already good, the testing is done without regards
+of processes' deadline inside of each partition. We intend to do some improvement on the testing
+method so it also considers the deadline of each process inside of each partition. Doing so will
+make the result more relevant to the actual use case of the system. We also plan to have
+another type of test to measure performance difference caused by the overhead of the scheduler
+and analyze the effect of the difference on the system.
 
+As the paper proposed a new scheduler, there are some issues which need to be solved such as:
+
+\begin{itemize}
+
+	\item \textit{Space redundancy minimization}: Having backup partitions require extra
+		space linear to the average redundancy rate of primary partitions for the
+		system. On the assumption that the mean time to failure for each service to be
+		reasonably long, we might be able to reduce system required space in overall at
+		the cost of performance on rare events.
+
+	\item \textit{Automatic partition failure detection}: Telling the scheduler whether the
+		service on a partition is healthy or not can already be done by means of
+		hypercalls. This cannot be done if the environment on said partition does not
+		functions properly, which can be caused by transient or inherent problems. The
+		hypervisor must be able detect such cases automatically so the scheduler could
+		properly select one of the backup partitions.
+
+	\item \textit{Multicore support}: Some of the inherent problems that could happen is
+		failure of the CPU core which the partition is supposed to run.
+		Having some other cores could help the scheduler schedule the backup partitions
+		on different core than the primary to keep the service running.
+
+		\newpage
+
+	\item \textit{Automatic schedule list generator}: It is up to the engineer to provide a
+		schedule list which satisfies the deadline and runtime constraints. Since the
+		schedule list might need to be adjusted when a partition failure occurs, the
+		scheduler list should still satisfies the deadline and runtime constraints on
+		any possible partitions state. This proves to be a daunting task for the
+		engineer since there will be many cases (up to $2^N$ possible cases, $N$ is the
+		number of partitions).
+
+\end{itemize}
 
 % conference papers do not normally have an appendix
 
@@ -676,14 +1047,14 @@ The conclusion goes here.
 % use section* for acknowledgment
 \ifCLASSOPTIONcompsoc
   % The Computer Society usually uses the plural form
-  \section*{Acknowledgments}
+  % \section*{Acknowledgments}
 \else
   % regular IEEE prefers the singular form
-  \section*{Acknowledgment}
+  % \section*{Acknowledgment}
 \fi
 
 
-The authors would like to thank...
+% The authors would like to thank...
 
 
 
@@ -711,14 +1082,57 @@ The authors would like to thank...
 % <OR> manually copy in the resultant .bbl file
 % set second argument of \begin to the number of references
 % (used to reserve space for the reference number labels box)
+% \begin{thebibliography}{1}
+
 \begin{thebibliography}{1}
 
-\bibitem{IEEEhowto:kopka}
-H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
-  0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
+\bibitem{Rushby2000}
+John Rushby.
+\newblock {Partitioning in avionics architectures: requirements, mechanisms and
+  assurance}.
+\newblock {\em Work}, (March):67, 2000.
+
+\bibitem{AirlinesElectronicEngineeringCommittee2012}
+{Airlines Electronic Engineering Committee}.
+\newblock {653P1-3 Avionics Application Software Standard Interface Part 1 -
+  Required Services}.
+\newblock {\em Arinc 653}, page~85, 2012.
+
+\bibitem{Campbell1986}
+Arthur~L. Liestman and Roy~H. Campbell.
+\newblock {A Fault-Tolerant Scheduling Problem}.
+\newblock {\em IEEE Transactions on Software Engineering},
+  SE-12(11):1089--1095, 1986.
+
+\bibitem{Han2003}
+Ching~Chih Han, Kang~G. Shin, and Jian Wu.
+\newblock {A fault-tolerant scheduling algorithm for real-time periodic tasks
+  with possible software faults}.
+\newblock {\em IEEE Transactions on Computers}, 52(3):362--372, 2003.
+
+\bibitem{Shin2008}
+Insik Shin and Insup Lee.
+\newblock {Compositional real-time scheduling framework with periodic model}.
+\newblock {\em ACM Transactions on Embedded Computing Systems}, 7(3):1--39,
+  2008.
+
+\bibitem{Jin2013}
+Hyun-Wook Jin.
+\newblock {Fault-tolerant hierarchical real-time scheduling with backup
+  partitions on single processor}.
+\newblock {\em ACM SIGBED Review}, 10(4):25--28, 2013.
+
+\bibitem{VanderLeest2010}
+Steven~H. VanderLeest.
+\newblock {ARINC 653 hypervisor}.
+\newblock In {\em AIAA/IEEE Digital Avionics Systems Conference - Proceedings},
+  2010.
 
 \end{thebibliography}
 
-
+% \bibliographystyle{plain}
+% \bibliography{refs}
 
 \end{document}
+
+% vim: tw=96
