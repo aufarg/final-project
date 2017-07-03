@@ -3,43 +3,97 @@
 
 \section{Pengembangan \textit{Primary-Backup Scheduling}}
 
-Pengembangan dilakukan dengan memodifikasi kode \textit{scheduler} ARINC 653 \textit{source-tree} pada Xen ARINC 653.
-Modifikasi kode dilakukan pada modul-modul berikut:
+Pengembangan dilakukan dengan memodifikasi kode \textit{scheduler} ARINC 653
+\textit{source-tree} pada Xen ARINC 653.  Modifikasi kode dilakukan pada modul-modul berikut:
 
 \begin{itemize}
 
-	\item Libxl
+	\item Modul Libxl
 
-	Modul ini digunakan untuk membuat \textit{tools} yang dapat digunakan pada \textit{user space} \textit{domain} \code{dom0} untuk melakukan pengaturan \textit{hypervisor}.
+	Modul ini digunakan untuk membuat \textit{tools} yang dapat digunakan pada \textit{user
+	space} \textit{domain} \code{dom0} untuk melakukan pengaturan \textit{hypervisor}.
 
-	\item Libxc
+	\item Modul Libxc
 
-	Modul ini berisi fungsi-fungsi untuk menangani permintaan \textit{hypercall} dari \textit{domain}.
+	Modul ini berisi fungsi-fungsi untuk menangani permintaan \textit{hypercall} dari
+	\textit{domain}.
 
-	\item \textit{Public hypercall}
+	\item Modul \textit{Public hypercall}
 
-	Modul ini berisi definisi \textit{interface} yang digunakan untuk mengatur struktur data yang dikirimkan pada saat mengirim data dari \textit{domain} kepada \textit{hypervisor}.
+	Modul ini berisi definisi \textit{interface} yang digunakan untuk mengatur struktur data
+	yang dikirimkan pada saat mengirim data dari \textit{domain} kepada \textit{hypervisor}.
 
-	\item \textit{Scheduler} ARINC 653
+	\item Modul \textit{Scheduler} ARINC 653
 
-	Modul ini berisi fungsi-fungsi yang digunakan untuk mengisi definisi \textit{interface} \textit{scheduler} pada Xen. Fungsi-fungsi tersebut meliputi algoritma \textit{scheduler}, penanganan \textit{hypercall} terhadap \textit{scheduler}.
+	Modul ini berisi fungsi-fungsi yang digunakan untuk mengisi definisi \textit{interface}
+	\textit{scheduler} pada Xen. Fungsi-fungsi tersebut meliputi algoritma
+	\textit{scheduler}, penanganan \textit{hypercall} terhadap \textit{scheduler}.
 
 \end{itemize}
 
-Agar algoritma \textit{primary-backup scheduling} yang dijelaskan pada \autoref{section:solution} dapat berjalan dengan seharusnya, perlu ada mekanisme penanganan data yang dibutuhkan pada masing-masing domain. Hal tersebut dapat dicapai dengan mendefinisikan struktur data pada mekanisme pengiriman data dari \textit{user space} kepada \textit{hypervisor}, pendefinisian struktur data yang dimengerti oleh \textit{hypervisor} dan \textit{user space} untuk digunakan pada saat melakukan \textit{hypercall}, mekanisme pengiriman data melalui \textit{hypercall}, struktur data untuk menyimpan informasi \textit{domain} pada \textit{scheduler}, serta konversi data yang didapat oleh \textit{hypervisor} setelah menangani \textit{hypercall} menjadi dengan struktur data \textit{domain} pada \textit{scheduler}.
+Agar algoritma \textit{primary-backup scheduling} yang dijelaskan pada
+\autoref{section:solution} dapat berjalan dengan seharusnya, perlu ada mekanisme penanganan data
+yang dibutuhkan pada masing-masing domain. Hal tersebut dapat dicapai dengan mendefinisikan
+struktur data pada mekanisme pengiriman data dari \textit{user space} kepada
+\textit{hypervisor}, pendefinisian struktur data yang dimengerti oleh \textit{hypervisor} dan
+\textit{user space} untuk digunakan pada saat melakukan \textit{hypercall}, mekanisme pengiriman
+data melalui \textit{hypercall}, struktur data untuk menyimpan informasi \textit{domain} pada
+\textit{scheduler}, serta konversi data yang didapat oleh \textit{hypervisor} setelah menangani
+\textit{hypercall} menjadi dengan struktur data \textit{domain} pada \textit{scheduler}.
 
-Implementasi mekanisme pengiriman data dari \textit{user space} kepada \textit{hypervisor} akan dipaparkan pada \autoref{subsection:modul_libxl}. Mekanisme \textit{hypercall} yang diimplementasikan akan dipaparkan pada \autoref{subsection:modul_libxc}. Pendefinisian struktur data yang digunakan pada saat melakukan \textit{hypercall} akan dipaparkan pada \autoref{subsection:modul_public_hypercall}. Mekanisme konversi data yang didapat oleh \textit{hypervisor} setelah menangani \textit{hypercall} serta definisi struktur data masing-masing \textit{domain} pada \textit{scheduler} akan dijelaskan pada \autoref{subsection:modul_scheduler_arinc653}.
+Implementasi mekanisme pengiriman data dari \textit{user space} kepada \textit{hypervisor} akan
+dipaparkan pada \autoref{subsection:modul_libxl}. Mekanisme \textit{hypercall} yang
+diimplementasikan akan dipaparkan pada \autoref{subsection:modul_libxc}. Pendefinisian struktur
+data yang digunakan pada saat melakukan \textit{hypercall} akan dipaparkan pada
+\autoref{subsection:modul_public_hypercall}. Mekanisme konversi data yang didapat oleh
+\textit{hypervisor} setelah menangani \textit{hypercall} serta definisi struktur data
+masing-masing \textit{domain} pada \textit{scheduler} akan dijelaskan pada
+\autoref{subsection:modul_scheduler_arinc653}.
 
-Penjelasan akan dilakukan secara \textit{bottom-up} dimulai dari definisi \textit{interface}/struktur data, kemudian fungsi dari \textit{interface}/struktur data yang sudah didefinisikan. Masing-masing mekanisme akan dijelaskan apabila seluruh \textit{interface}/struktur data yang digunakan pada mekanisme tersebut telah dipaparkan. Secara garis besar, penjelasan akan dilakukan dimulai dari bagian \textit{low-level} dan \textit{high-level} pada \textit{hypervisor}, kemudian memasuki bagian \textit{low-level} dan \textit{high-level} pada \textit{user space}. Urutan penjelasan dilakukan sedemikian dengan harapan akan mempermudah pembaca dalam mengerti masing-masing langkah yang akan dipaparkan pada setiap mekanisme.
+Penjelasan akan dilakukan secara \textit{bottom-up} dimulai dari definisi
+\textit{interface}/struktur data, kemudian fungsi dari \textit{interface}/struktur data yang
+sudah didefinisikan. Masing-masing mekanisme akan dijelaskan apabila seluruh
+\textit{interface}/struktur data yang digunakan pada mekanisme tersebut telah dipaparkan. Secara
+garis besar, penjelasan akan dilakukan dimulai dari bagian \textit{low-level} dan
+\textit{high-level} pada \textit{hypervisor}, kemudian memasuki bagian \textit{low-level} dan
+\textit{high-level} pada \textit{user space}. Urutan penjelasan dilakukan sedemikian dengan
+harapan akan mempermudah pembaca dalam mengerti masing-masing langkah yang akan dipaparkan pada
+setiap mekanisme.
 
 \subsection{Modul \textit{scheduler} ARINC 653}
 \label{subsection:modul_scheduler_arinc653}
 
-Pada Xen, pendefinisian \textit{scheduler} dilakukan dengan membuat \textit{interface} \textit{scheduler}.
-\textit{Interface} dibuat berdasarkan struktur yang telah terdefinisi pada \filename{xen/include/xen/sched-if.h}.
+Subbab ini akan membahas implementasi dan modifikasi pada komponen \textit{scheduler} agar dapat
+mengimplementasikan \textit{primary-backup scheduling} pada \textit{scheduler} ARINC 653.
 
-\begin{lstlisting}[caption={\textit{Interface} dari fungsi \textit{scheduler} yang dimodifikasi/diimplementasi}]
+\subsubsection{Pendefinisian \textit{scheduler}}
+
+Pada Xen, pendefinisian \textit{scheduler} dilakukan dengan menggunakan \textit{interface} yang
+telah disediakan~\citep[p.~218]{Chisnall2014}. \autoref{code:struct_scheduler} menampilkan
+\textit{interface} tersebut. \textit{Interface} tersebut kemudiakan didefinisikan sebagai
+struktur pada saat \textit{runtime} dengan masing-masing \textit{function pointer} menunjuk pada
+fungsi yang diinginkan. Setiap fungsi yang ditunjuk oleh \textit{function pointer} pada struktur
+tersebut akan berlaku sebagai \textit{handler} yang akan dipanggil oleh \textit{hypervisor}
+apabila terjadi \textit{event} yang bersesuaian. Asosiasi antara \textit{handler} dan
+\textit{event} telah ditentukan sebelumnya. Setiap \textit{handler} pada struktur tersebut
+kemudian diisi dengan alamat dari fungsi yang nantinya akan menangani permintaan pada
+\textit{scheduler}. Setiap \textit{scheduler} diharuskan mengisi \textit{handler}
+\code{do\_schedule()}. Apabila \textit{scheduler} tidak memerlukan sebuah \textit{handler}, maka
+\textit{handler} dapat diisi dengan nilai \code{NULL}.
+
+Pada saat \textit{boot}, konfigurasi \textit{scheduler} yang diinginkan dapat dipilih dengan
+menambahkan argumen "sched=\{scheduler\}". \textit{Hypervisor} kemudian akan mencari
+\textit{scheduler} didefinisikan dengan nilai \code{opt\_name} sama dengan "scheduler".
+
+\begin{lstlisting}[
+	caption={\textit{Interface} dari fungsi \textit{scheduler} yang dimodifikasi/diimplementasi},
+	label=code:struct_scheduler
+]
 struct scheduler {
+    char ∗name ;
+    char ∗opt name ;
+    unsigned int sched id ;
+
     void         (*free_domdata)   (const struct scheduler *, void *);
     void *       (*alloc_domdata)  (const struct scheduler *, struct domain *);
     int          (*init_domain)    (const struct scheduler *, struct domain *);
@@ -52,14 +106,48 @@ struct scheduler {
 };
 \end{lstlisting}
 
-Setiap fungsi pada struktur tersebut akan berlaku sebagai \textit{handler} yang akan dipanggil oleh \textit{hypervisor} apabila terjadi \textit{event} yang bersesuaian.
-Asosiasi antara \textit{handler} dan \textit{event} telah ditentukan sebelumnya dan dapat dilihat pada \filename{xen/common/schedule.c}.
-Setiap \textit{handler} pada struktur tersebut kemudian diisi dengan alamat dari fungsi yang nantinya akan menangani permintaan pada \textit{scheduler}. Setiap \textit{scheduler} diharuskan mengisi \textit{handler} \code{do\_schedule}.
-Apabila \textit{scheduler} tidak memerlukan sebuah \textit{handler}, maka \textit{handler} dapat diisi dengan nilai \code{NULL}.
+Untuk mengimplementasikan \textit{scheduler}, fungsi \code{do\_schedule()} harus diisi dengan
+alamat dari fungsi yang akan melakukan pemilihan partisi. Pada implementasi
+\textit{primary-backup scheduler}, fungsi \code{do\_schedule()} akan diisi dengan alamat dari
+fungsi \code{a653sched\_do\_schedule()} dan \code{opt\_name} akan diberi nilai "arinc653pb".
+Definisi fungsi \code{a653sched\_do\_schedule()} dapat dilihat pada
+\autoref{appendix:a653sched_do_schedule}.
 
-Untuk mengimplementasikan \textit{scheduler}, fungsi \code{do\_schedule} harus diisi dengan alamat dari fungsi yang akan melakukan \textit{scheduling}.
-Pada implementasi \textit{primary-backup scheduler}, fungsi \code{do\_schedule} akan diisi dengan alamat dari fungsi \code{a653sched\_do\_schedule}.
-Definisi fungsi \code{a653sched\_do\_schedule} dapat dilihat pada \autoref{appendix:a653sched_do_schedule}.
+\subsubsection{Informasi Partisi}
+
+\textit{Scheduler} harus mengetahui beberapa informasi terkait keadaan partisi agar dapat
+menentukan partisi mana yang harus mendapatkan waktu CPU.  \textit{Scheduler} harus mengetahui
+apakah partisi tersebut mengalami \textit{failure} atau tidak. Apabila partisi sedang mengalami
+kegagalan, maka partisi tidak boleh mendapatkan jatah waktu CPU. Selain itu, \textit{scheduler}
+juga harus mengetahui \textit{service} apa saja yang sudah dikerjakan sebelumnya pada
+\textit{major time frame} saat ini. Dengan demikian, partisi yang memiliki \textit{service} yang
+tidak bersifat \textit{idempotent} tidak akan mendapatkan waktu CPU lebih dari sekali dan
+partisi yang memiliki \textit{service} yang bersifat \textit{idempotent} tidak akan membuang
+waktu CPU. Kedua hal tersebut dapat dilakukan dengan menyimpan informasi berupa keadaan partisi
+dan identifikasi \textit{service} yang berada pada partisi tersebut.
+
+\begin{lstlisting}[
+	caption={\textit{Interface} dari fungsi \textit{scheduler} yang dimodifikasi/diimplementasi},
+	label=code:struct_a653sched_domain_t
+]
+typedef struct a653sched_domain_s {
+    domid_t parent;
+    bool primary;
+    bool healthy;
+} a653sched_domain_t;
+\end{lstlisting}
+
+Informasi mengenai keadaan partisi dapat disimpan dengan menggunakan \textit{boolean}. Informasi
+mengenai identifikasi \textit{service} yang terdapat pada partisi dapat disimpan menggunakan
+identifikasi partisi, dengan asumsi \textit{service} yang terdapat hubungan satu ke satu antara
+service dengan partisi sehingga identifikasi partisi dapat digunakan untuk mengidentifikasi
+\textit{service}.
+
+Pada implementasi \textit{primary-backup scheduler}, kedua informasi tersebut disimpan pada
+struktur data seperti yang ditampilkan oleh \autoref{code:struct_a653sched_domain_t}.
+\textit{Scheduler} mengetahui keadaan partisi apabila partisi tersebut memberikan informasi
+tentang dirinya melalui \textit{hypercall} yang didefinisikan pada
+\autoref{subsection:modul_public_hypercall}.
 
 \subsection{Modul \textit{public hypercall}}
 \label{subsection:modul_public_hypercall}
@@ -72,4 +160,6 @@ Definisi fungsi \code{a653sched\_do\_schedule} dapat dilihat pada \autoref{appen
 
 \section{Pengujian}
 
-% vim: wrap
+
+
+% vim: tw=96

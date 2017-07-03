@@ -1,0 +1,52 @@
+%! TEX root = ../final-project.tex
+\section{Conclusion}
+
+In this paper, we proposed a way to increases the reliability of ARINC 653 operating systems by
+using primary-backup scheme on ARINC 653 partition scheduler. The scheduler works by giving CPU
+time to candidate partition only when it is currently healthy and the corresponding service has
+not provided yet. In order to let the scheduler know partition status, we define a new hypercall
+to modify information associated to a partition. Using primary-backup scheme on ARINC 653
+scheduler increases the reliability for each service and thus prolong the mean time to failure
+for any service. Since we assume that services reliability is the most unreliable component on the
+system, this means the proposed scheduler also increases the whole system reliability.
+
+While the result of the reliability testing is already good, the testing is done without regards
+of processes' deadline inside of each partition. We intend to do some improvement on the testing
+method so it also considers the deadline of each process inside of each partition. Doing so will
+make the result more relevant to the actual use case of the system. We also plan to have
+another type of test to measure performance difference caused by the overhead of the scheduler
+and analyze the effect of the difference on the system.
+
+As the paper proposed a new scheduler, there are some issues which need to be solved such as:
+
+\begin{itemize}
+
+	\item \textit{Space redundancy minimization}: Having backup partitions require extra
+		space linear to the average redundancy rate of primary partitions for the
+		system. On the assumption that the mean time to failure for each service to be
+		reasonably long, we might be able to reduce system required space in overall at
+		the cost of performance on rare events.
+
+	\item \textit{Automatic partition failure detection}: Telling the scheduler whether the
+		service on a partition is healthy or not can already be done by means of
+		hypercalls. This cannot be done if the environment on said partition does not
+		functions properly, which can be caused by transient or inherent problems. The
+		hypervisor must be able detect such cases automatically so the scheduler could
+		properly select one of the backup partitions.
+
+	\item \textit{Multicore support}: Some of the inherent problems that could happen is
+		failure of the CPU core which the partition is supposed to run.
+		Having some other cores could help the scheduler schedule the backup partitions
+		on different core than the primary to keep the service running.
+
+	\item \textit{Automatic schedule list generator}: It is up to the engineer to provide a
+		schedule list which satisfies the deadline and runtime constraints. Since the
+		schedule list might need to be adjusted when a partition failure occurs, the
+		scheduler list should still satisfies the deadline and runtime constraints on
+		any possible partitions state. This proves to be a daunting task for the
+		engineer since there will be many cases (up to $2^N$ possible cases, $N$ is the
+		number of partitions).
+
+\end{itemize}
+
+% vim: tw=96
