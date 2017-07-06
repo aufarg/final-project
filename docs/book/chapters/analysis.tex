@@ -1,7 +1,8 @@
 %! TEX root = ../final-project.tex
-\chapter{ANALISIS PERMASALAHAN DAN DESAIN SOLUSI}
+\chapter{ANALISIS PERMASALAHAN DAN RANCANGAN SOLUSI}
 
 \section{Analisis Permasalahan}
+\label{section:permasalahan}
 
 Standar ARINC 653 berfungsi sebagai panduan pengembangan sistem operasi \textit{real-time} pada
 \textit{safety-critical system}.  Banyak faktor yang menentukan apakah sebuah sistem dapat
@@ -13,35 +14,34 @@ sistem beroperasi.
 
 Fokus dari standar ARINC 653 adalah menjamin sistem operasi melakukan partisi lingkungan
 eksekusi agar aplikasi yang berjalan pada sebuah lingkungan eksekusi tidak mengganggu aplikasi
-pada lingkungan eksekusi lainnya.  Meski standar tersebut menjamin \textit{fault} yang terjadi
+pada lingkungan eksekusi lainnya. Meski standar tersebut menjamin \textit{fault} yang terjadi
 pada sebuah aplikasi tidak akan mengganggu aplikasi lain yang berada pada lingkungan eksekusi
 berbeda (\textit{fault containment}), \textit{fault} yang terjadi pada sebuah aplikasi tetap
-akan terjadi dan tidak ditangani.  Standar ARINC 653 mendefinisikan mekanisme untuk mendeteksi
+akan terjadi dan tidak ditangani. Standar ARINC 653 mendefinisikan mekanisme untuk mendeteksi
 dan memberikan tanggapan apabila terjadi \textit{fault}.  Namun, standar tersebut tidak
 mendefinisikan tanggapan apa yang harus dilakukan untuk menjamin aplikasi yang menghasilkan
-\textit{fault} akan terus bekerja.  Meskipun aplikasi pada sistem tersebut akan melalui proses
+\textit{fault} akan terus bekerja. Meskipun aplikasi pada sistem tersebut akan melalui proses
 verifikasi untuk menjamin tidak akan terjadi \textit{fault}, proses verifikasi tersebut mungkin
-sangat lama atau memiliki \textit{fault} juga.  Karena itu, mekanisme penanganan \textit{fault}
+sangat lama atau memiliki \textit{fault} juga.  Karena itu, mekanisme penanganan pada \textit{fault}
 tidak dapat diabaikan begitu saja.
 
-Solusi dari permasalahan tersebut adalah \textit{primary-backup scheduling}.  Penggunaan metode
-\textit{primary-backup scheduling} dapat menjamin bahwa aplikasi yang \textit{fault} akan tetap
-menjalankan \textit{backup} aplikasi tersebut yang sudah terverifikasi tidak akan mengalami
-\textit{fault} dalam waktu panjang.  Namun, meski sudah banyak studi mengenai
-\textit{primary-backup scheduling} \citep{Campbell1986} \citep{Bertossi2006}, belum ada studi
-mengenai metode tersebut spesifik pada sistem yang memenuhi standar ARINC 653.  Hal tersebut
-mengakibatkan sulitnya pengembangan dan verifikasi \textit{fault-tolerancy} sistem ARINC 653
-yang menggunakan \textit{primary-backup scheduling}.
-
-\section{Analisis Solusi}
+\section{Rancangan Solusi}
 \label{section:solution}
 
-Eksperimen \textit{primary-backup scheduling} akan dilakukan pada prototipe ARINC 653 pada Xen.
-Hal ini dikarenakan prototipe tersebut tersedia gratis dan \textit{open-source}, sehingga
-pengembangan dan eksperimen yang akan dilakukan tidak memerlukan biaya banyak dan dapat
-dieksplorasi secara mandiri.
+Solusi dari permasalahan yang dipaparkan pada \autoref{section:permasalahan} adalah dengan
+menggunakan \textit{primary-backup scheduling}. Penggunaan skema \textit{primary-backup} dapat
+menjamin bahwa aplikasi yang \textit{fault} akan tetap menjalankan \textit{backup} aplikasi
+tersebut yang sudah terverifikasi tidak akan mengalami \textit{fault} dalam waktu panjang.
+Namun, meski sudah banyak studi mengenai \textit{primary-backup scheduling} \citep{Campbell1986}
+\citep{Bertossi2006}, belum ada studi mengenai metode tersebut spesifik pada sistem yang
+memenuhi standar ARINC 653. 
 
-\subsection{Implementasi \textit{Primary-Backup Scheduling} pada Xen ARINC 653}
+Eksperimen \textit{primary-backup scheduling} akan dilakukan pada ARLX, yaitu prototipe sistem
+yang bersesuaian dengan spesifikasi ARINC 653 pada Xen. Hal ini dikarenakan prototipe tersebut
+tersedia gratis dan \textit{open-source}, sehingga pengembangan dan eksperimen yang akan
+dilakukan tidak memerlukan biaya banyak dan dapat dieksplorasi secara mandiri.
+
+\subsection{Implementasi \textit{Primary-Backup Scheduling} pada ARLX}
 
 Pada Xen, sebuah \textit{domain} hanya dapat dibuat oleh dom0 saja.  Aplikasi maupun
 \textit{scheduler} tidak dapat membuat \textit{domain} baru apabila aplikasi tersebut mengalami
@@ -59,91 +59,54 @@ Selain itu, \textit{scheduler} juga perlu mengetahui kapan sebuah partisi \texti
 dikategorikan mengalami kegagalan.  Karena itu, perlu ada mekanisme untuk mendeteksi
 \textit{fault}, dan memberikan informasi tersebut kepada \textit{scheduler}.
 
-\subsubsection{Rancangan Solusi untuk Mengenali Jenis Partisi}
+\subsection{Informasi Partisi}
+\label{section:informasi_partisi}
 
-Jenis partisi dapat dikenali dengan menambahkan properti \textit{partition\_type} pada
-konfigurasi \textit{domain}, sehingga partisi juga mempunyai properti tersebut.  Konfigurasi
-\textit{domain} pada Xen dapat dilakukan dengan menggunakan \textit{xl}, salah \textit{tools}
-untuk melakukan manajemen \textit{domain} yang tersedia pada \textit{toolstack} milik Xen.
-Fungsi untuk melakukan pengaturan dapat ditambahkan dengan memanfaatkan XAPI, yaitu
-\textit{interface} yang disediakan oleh Xen untuk menambahkan fungsionalitas.  Fungsionalitas
-yang akan ditambahkan adalah fungsionalitas untuk mendefinisikan \textit{partition\_type} pada
-\textit{xl}.  \textit{Scheduler} akan dapat mendeteksi jenis \textit{domain} melalui informasi
-tersebut.
+Agar skema \textit{primary-backup} dapat dilakukan, \textit{scheduler} harus mengetahui beberapa
+informasi terkait keadaan partisi agar dapat menentukan partisi mana yang harus mendapatkan
+waktu CPU. \textit{Scheduler} harus mengetahui apakah partisi tersebut mengalami
+\textit{failure} atau tidak. Apabila partisi sedang mengalami kegagalan, maka partisi tidak
+boleh mendapatkan jatah waktu CPU. Selain itu, \textit{scheduler} juga harus mengetahui
+layanan apa saja yang sudah dikerjakan sebelumnya pada \textit{major time frame} saat
+ini. Dengan demikian, partisi yang memiliki layanan yang tidak bersifat
+\textit{idempotent} tidak akan mendapatkan waktu CPU lebih dari sekali dan partisi yang memiliki
+layanan yang bersifat \textit{idempotent} tidak akan membuang waktu CPU. Kedua hal
+tersebut dapat dilakukan dengan menyimpan informasi berupa keadaan partisi dan identifikasi
+layanan yang berada pada partisi tersebut.
 
-\subsubsection{Rancangan Solusi untuk Mendeteksi Kegagalan}
+Informasi mengenai keadaan partisi dapat disimpan dengan menggunakan \textit{boolean}. Informasi
+mengenai identifikasi layanan yang terdapat pada partisi dapat disimpan menggunakan
+identifikasi partisi, dengan asumsi layanan yang terdapat hubungan satu ke satu antara
+layanan dengan partisi sehingga identifikasi partisi dapat digunakan untuk mengidentifikasi
+layanan. Kedua informasi ini akan dapat diubah dengan menggunakan xl melalui dom0.
 
-Pada Xen, sebuah dom0 dapat mendefinisikan aksi yang harus dilakukan apabila sebuah
-\textit{domain} mengalami \textit{crash}.  Salah satu aksi yang dapat dilakukan adalah menghapus
-\textit{domain} tersebut, sehingga permasalahan apabila kegagalan yang dialami adalah
-\textit{crash}, \textit{domain} tersebut otomatis tidak akan diberikan pada \textit{scheduler}.
-Namun, apabila permasalahan yang terjadi adalah \textit{deadline} yang tidak terpenuhi, atau
-kesalahan yang tidak mengakibatkan \textit{crash}, maka aplikasi harus mengirim IRQ kepada
-\textit{hypervisor}.  IRQ yang diberikan akan ditangani melalui dom0 yang dapat mengatur
-\textit{domain}, sehingga IRQ tersebut dapat menjadi pertanda bahwa \textit{domain} yang
-mengirimkan IRQ tersebut mengalami kegagalan dan meminta dom0 untuk menanganinya.  Berikut
-beberapa penanganan yang dapat dilakukan oleh dom0:
+\subsection{Algoritma \textit{Scheduling}}
+\label{section:algoritma_scheduling}
 
-\begin{itemize}
-    \item Menghapus \textit{domain} yang mengirim IRQ tersebut
-    \item Mengganti properti \textit{domain} menjadi \textit{temporary-primary}
-\end{itemize}
+Algoritma \textit{scheduling} pada sistem \textit{real-time} harus deterministik agar
+administrator sistem dapat mengatur konfigurasi proses-proses \textit{real-time} sehingga
+memenuhi batasan-batasan masing-masing proses. Agar algoritma \textit{scheduling} tetap
+deterministik, algoritma tersebut harus tidak bergantung pada sumber eksternal. Dengan demikian,
+algoritma \textit{primary-backup scheduling} yang dibuat harus secara penuh bergantung kepada
+informasi masing-masing partisi. \textit{Scheduler} akan memberikan waktu CPU kepada partisi
+yang tidak sedang mengalami \textit{failure} dan layanan tersebut belum pernah
+disediakan. Sebuah layanan dikatakan belum pernah disediakan jika dan hanya jika dan
+hanya jika tidak ada partisi dengan layanan yang sama dengan layanan partisi
+tersebut yang sudah diberikan waktu CPU pada suatu \textit{major time frame}.
 
-Pemilihan penanganan akan ditentukan setelah studi lebih lanjut.
-
-\subsection{Pengujian dan Pengambilan Hasil}
-
-Pengujian \textit{real-time} akan dilakukan dengan melakukan \textit{stress-testing} menggunakan
-\textit{scheduler} tertentu.  \textit{Scheduler} yang akan diuji adalah \textit{scheduler}
-bawaan prototipe ARINC 653 dan \textit{scheduler} implementasi \textit{primary-backup
-scheduling}.  \textit{Stress-testing} dilakukan dengan menggunakan aplikasi yang akan
-menjalankan sebuah proses subjek dan menjalankan beberapa proses \textit{background} (mungkin
-nol).  Proses subjek akan memberikan laporan secara berkala pada aplikasi penguji apakah
-\textit{deadline} dari \textit{task} yang dibutuhkan terpenuhi atau tidak.
-
-Pengujian \textit{fault-tolerancy} akan dilakukan oleh aplikasi pengujian dengan cara memberikan
-\textit{request} pada proses subjek, kemudian memvalidasi \textit{response} yang diterima dari
-proses subjek.  \textit{Request} yang dilakukan harus sebuah pekerjaan yang dapat divalidasi
-kebenaran hasilnya oleh aplikasi penguji.  Alur pengujian \textit{fault-tolerancy} dilakukan
-sebagai berikut:
-
-\begin{enumerate}
-    \item Aplikasi pengujian akan meminta proses subjek untuk menghitung suatu nilai berdasarkan masukan tertentu (misal menghitung nilai $\sqrt{n}$).
-    \item Proses subjek akan mengambil nilai semi-acak, berdasarkan nilai tersebut proses dapat melakukan salah satu dari:
-        \begin{itemize}
-            \item Proses subjek akan menghitung nilai $\sqrt{n}$ dan memberikan \textit{response} berupa hasil perhitungan.
-            \item Proses subjek akan mengaktivasikan mekanisme \textit{fault detection}.
-        \end{itemize}
-    \item Aplikasi pengujian akan melakukan validasi kebenaran hasil perhitungan.
-\end{enumerate}
-
-Untuk pengujian ini, aplikasi pengujian tidak akan menjalankan proses \textit{background} sama
-sekali.
-
-Kedua metode ini akan memberikan persentase \textit{real-time} serta \textit{fault-tolerancy}
-\textit{scheduler} yang digunakan pada saat pengujian.  Nilai semi-acak yang akan digunakan
-sebagai ambang batas keputusan proses subjek akan ditentukan sedemikian sehingga memiliki
-\textit{mean time to failure} yang diharapkan.  Hasil pengujian akan memberikan statistik
-faktor-faktor yang penting untuk sebuah \textit{scheduler}.
-
-\subsection{The Scheduling Strategy}
-
-To keep the scheduling deterministic, we need to make sure that the algorithm will not depend on
-external sources. The input of the scheduling algorithm is partition information which already
-discussed in the last part. The scheduler selects one of the runnable partition such that its
-status is healthy and there are no partitions that have provided the service corresponding to
-its service identification. When the scheduler scans the schedule list, we extend it to also
-check whether the partition satisfies said conditions.
-
-It is trivial to check whether the partition is healthy. To check whether the service it
-provides have been provided before, we need a flag for possible service identification value.
-The flag is initialized to zero for all services at first. When a partition already exhausted
-its quantum, the scheduler then toggle the flag for the corresponding service. This is feasible
-without changing the required space complexity for the scheduler. Since service identification
-value corresponds to partition identification, thus its value is incremental from $1$ to $N$
-with $N$ is the number of partitions available. Thus, the extra space in the scheduler we need
-for the flag is linear to the number of partitions, which is the same as the schedule list
-itself.
+Pengecekan partisi yang dilakukan oleh \textit{scheduler} harus dibuat sedemikian sehingga tidak
+terjadi perubahan signifikan pada penggunaan memori dan waktu. Pengecekan keadaan partisi dapat
+dilakukan dengan mudah. Untuk melakukan pengecekan apakah terdapat layanan pada partisi
+yang menjadi kandidat belum pernah disediakan, perlu ada sebuah penanda untuk masing-masing
+layanan. Hal ini dapat dilakukan dengan menggunakan struktur data \textit{array} dengan
+ukuran sejumlah banyaknya partisi maximum yang dapat terdaftar sebagai masukkan dari algoritma
+\textit{scheduling} pada suatu waktu. \textit{Array} ini akan memiliki indeks identifikasi
+layanan. Karena identifikasi layanan sama dengan identifikasi partisi, maka
+nilai yang mungkin dari identifikasi layanan ada diantara $1$ sampai dengan $N$ dengan
+$N$ adalah jumlah partisi yang tersedia. Dengan demikian, memori tambahan yang diperlukan untuk
+algoritma \textit{primary-backup scheduling} linear terhadap maximum jumlah partisi yang akan
+dijadwalkan. Karena memori tambahan yang diperlukan sama dengan memori yang diperlukan untuk
+daftar partisi yang akan dijadwalkan, maka kompleksitas memori yang dibutuhkan tidak berubah.
 
 \begin{figure}[ht]
 	\centering
@@ -208,112 +171,84 @@ itself.
 
 		% legends
 		\draw[candidate] (0pt,{6*(-\boxs-\off)-0*(\legends+\loff)-\legends-\off}) \lshape
-		\lnode{Candidate partition};
+		\lnode{Partisi kandidat};
 
 		\draw[partition-healthy]
 		(0pt,{6*(-\boxs-\off)-1*(\legends+\loff)-\legends-\off}) \lshape
-		\lnode{Partition healthy};
+		\lnode{Partisi baik};
 
 		\draw[partition-failed]
 		(0pt,{6*(-\boxs-\off)-2*(\legends+\loff)-\legends-\off}) \lshape
-		\lnode{Partition failed};
+		\lnode{Partisi gagal};
 
 		\draw[partition-done]
 		(0pt,{6*(-\boxs-\off)-3*(\legends+\loff)-\legends-\off}) \lshape
-		\lnode{Service on partition already provided};
+		\lnode{Layanan pada partisi telah disediakan};
 
 	\end{tikzpicture}
 	\caption{Primary-backup scheduling}
 	\label{figure:pb_scheduling}
 \end{figure}
 
-We illustrate how primary-backup ARINC 653 scheduler work in \figurename
-~\ref{figure:pb_scheduling}. The scheduler has a list of partitions to be scheduled. These
-partition each have current status (healthy/failed) and service identification. When the
-scheduler should determine whether the candidate partition will be given CPU time or not, the
-scheduler will check if the partition is healthy and the service corresponding to service
-identification is not provided yet. In \figurename ~\ref{figure:pb_scheduling}, the partition
-label has the format P$X$-S$Y$, which means partition $X$ will provide service $Y$ if given CPU
-time. On a particular major time frame, the algorithm will work as follows:
+Illustrasi bagaimana algoritma \textit{primary-backup scheduling} pada \textit{scheduler} ARINC
+653 dapat dilihat pada \autoref{figure:pb_scheduling}. Scheduler memiliki daftar partisi yang
+akan dijadwalkan. Setiap partisi memiliki informasi partisi seperti yang telah dijelaskan pada
+\autoref{section:informasi_partisi}. Pada \autoref{figure:pb_scheduling}, partisi diberi label
+dengan format P$X$-S$Y$, yang berarti partisi $X$ akan menyediakan layanan $Y$ jika
+diberikan waktu CPU oleh \textit{scheduler}. Pada skenario tersebut, \textit{scheduler} akan
+bekerja sebagai berikut:
 
 \begin{itemize}
 
-	\item On partition P1, the partition is healthy and service $A$ is not yet provided, so
-		the partition is given the CPU time,
+	\item Pada partisi P1, partisi tidak sedang mengalami kegagalan dan
+		layanan $A$ belum pernah disediakan, sehingga partisi diberikan waktu
+		CPU oleh \textit{scheduler}.
 
-	\item Partition P2 however, is not given the CPU time, as when partition P1 exhausted
-		its quantum, service $A$ is already provided.
+	\item Pada partisi P2, partisi tidak diberikan waktu CPU karena pada saat partisi P1
+		sudah menghabiskan kuantumnya, layanan $A$ sudah pernah disediakan.
 
-	\item For partition P3, the corresponding service is not yet provided, but the partition
-		is currently failed, thus is not given the CPU time.
+	\item Pada partisi P3, layanan pada partisi tersebut belum pernah disediakan,
+		namun partisi sedang mengalami kegagalan sehingga partisi tidak diberikan waktu
+		CPU.
 
-	\item Partition P4 is healthy, and since partition P3 is not given the CPU time, the
-		corresponding service has not yet provided. Since all condition is satisfied,
-		partition P4 is given CPU time.
+	\item Partisi P4 tidak sedang mengalami kegagalan dan karena partisi P3 tidak diberikan
+		waktu CPU, layanan $B$ belum pernah disediakan. Karena semua kondisi
+		memenuhi, maka partisi P4 diberikan waktu CPU oleh \textit{scheduler}.
 
-	\item Partition P5 is not given the CPU time, as the corresponding service, service $B$
-		is already provided by partition P4.
+	\item Partisi P5 tidak diberikan waktu CPU karena layanan $B$ sudah pernah
+		disediakan.
 
 \end{itemize}
 
-At the end of the major time frame, this algorithm ensures that given a service will be provided
-if there is at least one partition providing the service that is healthy. The algorithm will
-restart this process if current major time frame is elapsed. This whole process will be done
-indefinitely.
+Pada akhir dari \textit{major time frame}, algoritma ini menjamin setiap layanan pernah
+disediakan apabila terdapat setidaknya satu partisi yang memiliki layanan tersebut yang
+tidak sedang mengalami kegagalan. Algoritma ini akan berulang secara terus menerus tiap akhir
+\textit{major time frame}.
 
-\subsection{Reliability Testing}
+\subsection{Pengujian Keandalan}
 
-To measure whether the proposed scheduler improve system reliability, the system is to be tested
-for its reliability while using the scheduler. The primary goal of this reliability testing is
-to measure mean time to failure for the system. We can assume that the system will always fail
-when any service is failed and the service is the most unreliable component of the system, thus
-the system mean time to failure is the same as the minimum mean time to failure of all services.
-Since we want to prolong the system mean time to failure, we want to maximize the mean time to
-failure for all services. The testing result can also be used to validate whether the algorithm
-works as intended.
+Untuk mengukur peningkatan keandalan sistem akibat penggunaan \textit{primary-backup scheduler},
+sistem akan menjalani pengujian keandalan pada saat menggunakan \textit{scheduler} tersebut.
+Tujuan utama dari pengujian keandalan adalah untuk mengukur \textit{mean time to failure} sistem
+tersebut. Untuk mempermudah pengukuran, asumsikan bahwa sistem akan selalu mengalami kegagalan
+apabila terdapat sebuah layanan pada sistem tersebut yang mengalami kegagalan dan
+layanan-layanan merupakan komponen paling tidak andal pada sistem. Dengan demikian, \textit{mean
+time to failure} sistem sama dengan minimum dari \textit{mean time to failure} seluruh layanan
+yang terdapat pada sistem tersebut. Keandalan sistem dikatakan meningkat saat menggunakan
+\textit{primary-backup scheduler} apabila \textit{mean time to failure} sistem tersebut menjadi
+lebih lama. Selain itu, hasil pengujian dapat digunakan untuk menentukan apakah algoritma
+bekerja seperti yang seharusnya.
 
-Reliability testing is done by checking whether each partition can successfully pass heartbeat
-check. The partition is said to be successfully pass heartbeat check when it sends heartbeat if
-and only if the partition satisfies the running condition. One simple way to do this is by
-creating a testing framework with server-client architecture. Each partition is a client, and we
-can have any machine as the server, as long as all the partitions is connected to the server
-machine by any means. Each partition then sends heartbeat with its service identification and
-partition identification to the server on a fixed interval. The server makes sure that each
-service is provided, while noting which partition provides the service.
-
-We tested the primary-backup ARINC 653 scheduler by having five partitions, named as P1 to P5.
-The first two partitions (P1 and P2) provide service $A$ and the last three partitions (P3, P4,
-and P5) provide service $B$. The testing scenarios on these partitions, including the expected
-outcome, are as follows:
-
-\begin{enumerate}
-	\item Initially, all five partitions are healthy. In this scenario, the scheduler are
-		supposed to selects partition P1 and partition P3.
-
-	\item Partition P3 experienced a failure. In this scenario, the scheduler are supposed
-		to selects partition P1 and partition P4. This scenario is exactly the same as
-		illustrated in \figurename ~\ref{figure:pb_scheduling}.
-
-	\item Partition P2, P3, and P5 then experienced a failure. In this scenario, the
-		scheduler are supposed to selects partition P1 and partition P5. This scenario is
-		done to test the scheduler behavior. The scheduler should still choose a
-		candidate which meets the running conddition, even when there are backup
-		partitions, which to be scheduled later than the candidate experienced a
-		failure. 
-\end{enumerate}
-
-In the first scenario, when all partitions are healthy, the server receive service $A$ from
-partition P1 and service P2 from partition P3. For the second scenario, the server receives
-heartbeat from partition P1 for service $A$ and from partition P4 for service $B$. This means
-the service still functioning correctly even when the original partition which provides the
-service experiencing a failure. On the third scenario, the server still receives heartbeat for
-service $A$ from partition P1 and service $B$ from partition P4. This means failured experienced
-by backup partitions later than the supposed selected partitions do not affect scheduler
-selection.
-
-In all of these scenarios, all the service required is provided, even though partitions can
-still experience failures as base ARINC 653 scheduler. This means, while this scheme does not
-increases the mean time to failure for each partition, it does increases mean time to failure
-for each service. 
+Pengujian keandalan dilakukan dengan melakukan pengecekan apakah setiap partisi dapat
+mengirimkan \textit{heartbeat} dengan baik. Sebuah partisi dikatakan dapat mengirim
+\textit{heartbeat} apabila partisi mengirimkan \textit{heartbeat} jika dan hanya jika partisi
+tersebut memenuhi kondisi untuk mendapatkan waktu CPU. Cara termudah untuk melakukan pengujian
+tersebut adalah dengan menggunakan kerangka uji dengan arsitektur \textit{server-client}. Setiap
+partisi berlaku sebagai \textit{client} dan \textit{server} dapat berupa mesin apapun, selama
+mesin tersebut terhubung dengan seluruh partisi. Kemudian, setiap partisi mengirimkan
+\textit{heartbeat} dengan selang waktu tertentu kepada \textit{server}. Selang waktu harus
+dipilih sedemikian sehingga setiap partisi akan memberikan layanan tersebut apabila mendapatkan
+waktu CPU. Kemudian, \textit{server} akan mencatat setiap layanan sudah pernah disediakan pada
+tiap akhir \textit{major time frame}.
 
 % vim: tw=96

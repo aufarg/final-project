@@ -3,15 +3,6 @@
 
 \usepackage{final-project}
 \usepackage{idn-hyph}
-\usepackage[
-    backend=biber,
-    style=authoryear-icomp,
-    sortlocale=de_DE,
-    natbib=true,
-    url=false, 
-    doi=true,
-    eprint=false
-]{biblatex}
 \addbibresource{./final-project.bib}
 
 \begin{document}
@@ -23,6 +14,7 @@
 \pagestyle{plain}
 \tableofcontents
 \listoffigures
+\lstlistoflistings
 
 % Main Matter
 \clearpage
@@ -32,7 +24,8 @@
 \input{./chapters/literature_study.tex}
 \input{./chapters/analysis.tex}
 \input{./chapters/devtest.tex}
-\printbibliography[heading=bibintoc, title=\thebibname]
+\input{./chapters/conclusion.tex}
+\printbibliography[heading=bibintoc]
 \input{./chapters/appendix.tex}
 \end{document}
 % vim: tw=120
