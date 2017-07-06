@@ -86,11 +86,21 @@
 	columns=flexible,
 	basicstyle={\scriptsize\ttfamily},
 	breaklines=true,
+	numbers=left,
+	stepnumber=5,
+	numberstyle={\tiny\ttfamily},
 	breakatwhitespace=true,
 	lineskip=-1pt,
 	captionpos=b,
 	frame=shadowbox,
+	xleftmargin=0em,
+	xrightmargin=0em,
+	framexleftmargin=2em,
 }
+\renewcommand{\lstlistingname}{Kode}
+\renewcommand{\lstlistlistingname}{DAFTAR KODE PROGRAM}
+\contentsuse{lstlisting}{lol}
+\titlecontents{lstlistings}[0.0em]{\addvspace{0.5pc}}{Kode \thecontentslabel.\ }{}{\titlerule*[\tocdotswidth]{.}\contentspage}
 
 %-------------------- MISC --------------------%
 \usepackage[numbib]{tocbibind}
@@ -104,6 +114,8 @@
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
 
 %-------------------- META --------------------%
+\newcommand{\context}{Laporan Tugas Akhir II}
+\newcommand{\matakuliah}{IF4092/Tugas Akhir II}
 \newcommand{\judul}{
 \MakeUppercase{Pengembangan Keandalan Sistem ARINC 653}\\
 \MakeUppercase{dengan Menggunakan}\\
@@ -111,9 +123,9 @@
 }
 \newcommand{\penulis}{\MakeUppercase{Aufar Gilbran}}
 \newcommand{\nimpenulis}{13513015}
-\newcommand{\pembimbing}{Achmad Imam Kistijantoro, ST,M.Sc, Ph.D}
+\newcommand{\pembimbing}{Achmad Imam Kistijantoro, ST., M.Sc., Ph.D.}
 \newcommand{\nippembimbing}{197308092006041001}
-\newcommand{\tanggal}{5}
+\newcommand{\tanggal}{7}
 \newcommand{\bulan}{Juli}
 \newcommand{\tahun}{2017}
 

@@ -121,7 +121,7 @@ sebuah fungsi.
 
 \begin{figure}
 \begin{lstlisting}[
-	caption={\textit{Interface} dari fungsi \textit{scheduler} yang dimodifikasi/diimplementasi},
+	caption={\textit{Interface} dari fungsi \textit{scheduler}},
 	label=code:struct_scheduler
 ]
 struct scheduler {
@@ -169,7 +169,7 @@ yang diimplementasikan, \code{opt\_name} akan diberi nilai "arinc653pb". Dengan 
 
 \begin{figure}
 \begin{lstlisting}[
-	caption={\textit{Interface} dari fungsi \textit{scheduler} yang dimodifikasi/diimplementasi},
+	caption={Struktur untuk menyimpan informasi partisi},
 	label=code:struct_a653sched_domain_t
 ]
 typedef struct a653sched_domain_s {
@@ -287,7 +287,7 @@ seperti yang sudah dibahas pada \autoref{section:informasi_partisi}.
 
 \begin{figure}
 \begin{lstlisting}[
-	caption={Data struktur untuk komunikasi yang dapat dimengerti \textit{scheduler} dan \textit{user space}},
+	caption={Data struktur untuk komunikasi yang dapat dimengerti \newline \textit{scheduler} dan \textit{user space}},
 	label=code:struct_xen_domctl_sched_arinc653
 ]
 typedef struct xen_domctl_sched_arinc653 {
@@ -351,7 +351,7 @@ meminta informasi partisi dari \textit{scheduler}.
 
 \begin{figure}
 \begin{lstlisting}[
-	caption={Fungsi yang digunakan \textit{user space} mengirim informasi kepada \textit{scheduler}},
+	caption={Fungsi yang digunakan \textit{user space} mengirim informasi \newline kepada \textit{scheduler}},
 	label=code:xc_sched_sysctl_set
 ]
 int
@@ -378,7 +378,7 @@ xc_sched_arinc653_domain_set(
 
 \begin{figure}
 \begin{lstlisting}[
-	caption={Fungsi yang digunakan \textit{user space} meminta informasi partisi dari \textit{scheduler}},
+	caption={Fungsi yang digunakan \textit{user space} meminta informasi \newline partisi dari \textit{scheduler}},
 	label=code:xc_sched_sysctl_get
 ]
 int
@@ -483,44 +483,44 @@ static int sched_arinc653_domain_set(libxl__gc *gc, uint32_t domid,
 \end{lstlisting}
 \end{figure}
 
-\section{Pengujian}
+% \section{Pengujian}
 
-Pengujian dilakukan dengan mengukur keandalan sistem seperti yang sudah
-We tested the primary-backup ARINC 653 scheduler by having five partitions, named as P1 to P5.
-The first two partitions (P1 and P2) provide service $A$ and the last three partitions (P3, P4,
-and P5) provide service $B$. The testing scenarios on these partitions, including the expected
-outcome, are as follows:
+% Pengujian dilakukan dengan mengukur keandalan sistem seperti yang sudah
+% We tested the primary-backup ARINC 653 scheduler by having five partitions, named as P1 to P5.
+% The first two partitions (P1 and P2) provide service $A$ and the last three partitions (P3, P4,
+% and P5) provide service $B$. The testing scenarios on these partitions, including the expected
+% outcome, are as follows:
 
-\begin{enumerate}
+% \begin{enumerate}
 
-	\item Initially, all five partitions are healthy. In this scenario, the scheduler are
-		supposed to selects partition P1 and partition P3.
+% 	\item Initially, all five partitions are healthy. In this scenario, the scheduler are
+% 		supposed to selects partition P1 and partition P3.
 
-	\item Partition P3 experienced a failure. In this scenario, the scheduler are supposed
-		to selects partition P1 and partition P4. This scenario is exactly the same as
-		illustrated in \figurename ~\ref{figure:pb_scheduling}.
+% 	\item Partition P3 experienced a failure. In this scenario, the scheduler are supposed
+% 		to selects partition P1 and partition P4. This scenario is exactly the same as
+% 		illustrated in \figurename ~\ref{figure:pb_scheduling}.
 
-	\item Partition P2, P3, and P5 then experienced a failure. In this scenario, the
-		scheduler are supposed to selects partition P1 and partition P5. This scenario is
-		done to test the scheduler behavior. The scheduler should still choose a
-		candidate which meets the running conddition, even when there are backup
-		partitions, which to be scheduled later than the candidate experienced a
-		failure.
+% 	\item Partition P2, P3, and P5 then experienced a failure. In this scenario, the
+% 		scheduler are supposed to selects partition P1 and partition P5. This scenario is
+% 		done to test the scheduler behavior. The scheduler should still choose a
+% 		candidate which meets the running conddition, even when there are backup
+% 		partitions, which to be scheduled later than the candidate experienced a
+% 		failure.
 
-\end{enumerate}
+% \end{enumerate}
 
-In the first scenario, when all partitions are healthy, the server receive service $A$ from
-partition P1 and service P2 from partition P3. For the second scenario, the server receives
-heartbeat from partition P1 for service $A$ and from partition P4 for service $B$. This means
-the service still functioning correctly even when the original partition which provides the
-service experiencing a failure. On the third scenario, the server still receives heartbeat for
-service $A$ from partition P1 and service $B$ from partition P4. This means failured experienced
-by backup partitions later than the supposed selected partitions do not affect scheduler
-selection.
+% In the first scenario, when all partitions are healthy, the server receive service $A$ from
+% partition P1 and service P2 from partition P3. For the second scenario, the server receives
+% heartbeat from partition P1 for service $A$ and from partition P4 for service $B$. This means
+% the service still functioning correctly even when the original partition which provides the
+% service experiencing a failure. On the third scenario, the server still receives heartbeat for
+% service $A$ from partition P1 and service $B$ from partition P4. This means failured experienced
+% by backup partitions later than the supposed selected partitions do not affect scheduler
+% selection.
 
-In all of these scenarios, all the service required is provided, even though partitions can
-still experience failures as base ARINC 653 scheduler. This means, while this scheme does not
-increases the mean time to failure for each partition, it does increases mean time to failure
-for each service. 
+% In all of these scenarios, all the service required is provided, even though partitions can
+% still experience failures as base ARINC 653 scheduler. This means, while this scheme does not
+% increases the mean time to failure for each partition, it does increases mean time to failure
+% for each service. 
 
 % vim: tw=96
