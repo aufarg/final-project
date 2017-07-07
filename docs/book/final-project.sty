@@ -30,7 +30,7 @@
 bibliography     = {{}{DAFTAR PUSTAKA}},
 in               = {{dalam}{dalam}},
 and              = {{dan}{dan}},
-andothers        = {{, dkk.}{, dkk.}},
+andothers        = {{dkk.}{dkk.}},
 page             = {{halaman}{hal.}},
 pages            = {{halaman}{hal.}},
 volume           = {{volume}{vol.}},
@@ -69,13 +69,13 @@ volume           = {{volume}{vol.}},
 
 % Lists
 \usepackage{enumitem}
-\setitemize{noitemsep}
 \setenumerate{noitemsep}
+
 % Titles & Caption
 \usepackage{titlesec}
 \usepackage{titletoc}
 \usepackage{etoolbox}
-\usepackage[font={small},justification=centering]{caption}
+\usepackage[font={small},justification=centering,labelsep=period]{caption}
 \renewcommand{\thechapter}{\Roman{chapter}}
 \renewcommand{\thesection}{\thechapter.\arabic{section}}
 
@@ -111,6 +111,7 @@ volume           = {{volume}{vol.}},
 \titlecontents{chapter}[0.0em]{\addvspace{0.5pc}}{\bfseries\MakeUppercase{\chapterautorefname}\ \thecontentslabel.\ }{\bfseries}{\bfseries\titlerule*[\tocdotswidth]{.}\contentspage}
 \titlecontents{section}[3.8em]{}{\contentslabel{2.3em}}{}{\titlerule*[\tocdotswidth]{.}\contentspage}
 \titlecontents{subsection}[5.6em]{}{\contentslabel{3.2em}}{}{\titlerule*[\tocdotswidth]{.}\contentspage}
+\titlecontents{subsubsection}[7.4em]{}{\contentslabel{4.1em}}{}{\titlerule*[\tocdotswidth]{.}\contentspage}
 \titlecontents{figure}[0.0em]{\addvspace{0.5pc}}{\figureautorefname\ \thecontentslabel.\ }{}{\titlerule*[\tocdotswidth]{.}\contentspage}
 \contentsuse{lstlisting}{lol}
 \titlecontents{lstlisting}[0.0em]{\addvspace{0.5pc}}{Kode \thecontentslabel.\ }{}{\titlerule*[\tocdotswidth]{.}\contentspage}[]
@@ -126,6 +127,8 @@ volume           = {{volume}{vol.}},
 \titlespacing{\subsection}{0pt}{11pt}{0pt}
 \titlespacing{\subsubsection}{0pt}{11pt}{0pt}
 \titlespacing{\subsubsubsection}{0pt}{11pt}{0pt}
+\setlength\intextsep{2em}
+% TODO: specify figure spacing
 
 % Paragraphs
 \usepackage{parskip}
@@ -135,7 +138,7 @@ volume           = {{volume}{vol.}},
 % Counters
 \usepackage{chngcntr}
 \setcounter{secnumdepth}{4}
-\setcounter{tocdepth}{2}
+\setcounter{tocdepth}{3}
 \counterwithin{table}{section}
 
 %-------------------- MISC --------------------%

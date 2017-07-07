@@ -6,7 +6,7 @@
 Pengembangan dilakukan dengan memodifikasi kode \textit{scheduler} ARINC 653
 \textit{source-tree} pada Xen ARINC 653.  Modifikasi kode dilakukan pada modul-modul berikut.
 
-\begin{itemize}
+\begin{enumerate}
 
 	\item Modul Libxl
 
@@ -29,7 +29,7 @@ Pengembangan dilakukan dengan memodifikasi kode \textit{scheduler} ARINC 653
 	\textit{scheduler} pada Xen. Fungsi-fungsi tersebut meliputi algoritma
 	\textit{scheduler}, penanganan \textit{hypercall} terhadap \textit{scheduler}.
 
-\end{itemize}
+\end{enumerate}
 
 Agar algoritma \textit{primary-backup partition scheduling} yang dijelaskan pada
 \autoref{section:solution} dapat berjalan dengan seharusnya, perlu ada mekanisme penanganan data
@@ -100,7 +100,7 @@ bagian.
 
 \end{enumerate}
 
-\begin{figure}
+\begin{figure}[!h]
 \begin{lstlisting}[
 	caption={Deklarasi fungsi \textit{scheduling} pada ARLX},
 	label=code:do_schedule_declaration
@@ -119,7 +119,7 @@ telah disediakan~\citep[p.~218]{Chisnall2014}. \autoref{code:struct_scheduler} m
 struktur pada saat \textit{runtime} dengan masing-masing \textit{function pointer} menunjuk pada
 sebuah fungsi.
 
-\begin{figure}
+\begin{figure}[!h]
 \begin{lstlisting}[
 	caption={\textit{Interface} dari fungsi \textit{scheduler}},
 	label=code:struct_scheduler
@@ -167,7 +167,7 @@ yang diimplementasikan, \code{opt\_name} akan diberi nilai "arinc653pb". Dengan 
 \textit{primary-backup partition scheduler} dapat digunakan dengan cara memberikan parameter
 "sched=arinc653pb" pada \textit{hypervisor} ketika \textit{boot}.
 
-\begin{figure}
+\begin{figure}[!ht]
 \begin{lstlisting}[
 	caption={Struktur untuk menyimpan informasi partisi},
 	label=code:struct_a653sched_domain_t
@@ -186,7 +186,7 @@ struktur data seperti yang ditampilkan oleh \autoref{code:struct_a653sched_domai
 tentang dirinya melalui \textit{hypercall} yang akan didefinisikan pada
 \autoref{section:modul_public_hypercall}.
 
-\begin{figure}
+\begin{figure}[!hb]
 \begin{lstlisting}[
 	caption={Fungsi inisialisasi partisi},
 	label=code:init_domain
@@ -221,7 +221,7 @@ awal yang menandakan bahwa partisi tersebut sehat dan partisi tersebut memberika
 dengan identifikasi sama dengan identifikasi partisi tersebut.
 
 
-\begin{figure}
+\begin{figure}[!ht]
 \begin{lstlisting}[
 	caption={Fungsi penghapusan partisi},
 	label=code:destroy_domain
@@ -262,26 +262,25 @@ yang kemudian dimodifikasi sehingga bekerja sebagaimana telah dipaparkan pada
 Karena fungsi \textit{scheduling} akan dipanggil setiap kali sebuah partisi menghabiskan kuantum
 waktu atau \textit{hypervisor} mendapatkan \textit{timer interrupt}, keadaan algoritma pada
 fungsi \textit{scheduling} harus bersifat tetap pada setiap pemanggilan. Fungsi
-\textit{scheduling} ARINC 653 pada ARLX memiliki kompleksitas $O(1)$ untuk setiap pemanggilan.
-Untuk menjaga efisiensi sistem, algoritma \textit{scheduling} pada \textit{primary-backup
-partition scheduler} diimplementasikan sedemikian sehingga memiliki kompleksitas yang sama
-dengan algoritma \textit{scheduling} pada \textit{scheduler} ARINC 653.
+\textit{scheduling} ARINC 653 pada ARLX memiliki kompleksitas waktu $O(1)$ untuk setiap
+pemanggilan. Untuk menjaga efisiensi kinerja sistem secara keseluruhan, algoritma
+\textit{scheduling} pada \textit{primary-backup partition scheduler} diimplementasikan
+sedemikian sehingga memiliki kompleksitas waktu yang sama dengan algoritma \textit{scheduling}
+pada \textit{scheduler} ARINC 653.
 
 \begin{figure}
 \begin{lstlisting}[
 	caption={Implementasi algoritma \textit{scheduling}},
 	label=code:fungsi_scheduling,
-	linerange={bst-est,bdata-edata,binit-einit,balgo-ealgo},
+	linerange={bdata-edata,balgo-ealgo},
 	escapeinside={(*@}{@*)}
 ]
-{ bst }
 static struct task_slice
 a653sched_do_schedule(
     const struct scheduler *ops,
     s_time_t now,
     bool_t tasklet_work_scheduled)
 {
-{ est }
     struct task_slice ret;                      /* hold the chosen domain */
     struct vcpu * new_task = NULL;
     static unsigned int sched_index = 0;
@@ -289,16 +288,18 @@ a653sched_do_schedule(
     a653sched_priv_t *sched_priv = SCHED_PRIV(ops);
     const unsigned int cpu = smp_processor_id();
     { bdata }
+    (*@{$\cdots$}@*)
     static bool task_done[ARINC653_MAX_DOMAINS_PER_SCHEDULE] = {0};
     static a653sched_domain_t * dom_priv = NULL;
     unsigned long flags;
+    (*@{$\cdots$}@*)
     { edata }
 
     spin_lock_irqsave(&sched_priv->lock, flags);
 
     if ( sched_priv->num_schedule_entries < 1 )
         sched_priv->next_major_frame = now + DEFAULT_TIMESLICE;
-    { binit }
+    { balgo }
     else if ( now >= sched_priv->next_major_frame )
     {
         sched_index = 0;
@@ -307,8 +308,6 @@ a653sched_do_schedule(
         dom_priv = DOM_PRIV(sched_priv->schedule[0].vc->domain);
         memset(task_done, 0, sizeof(task_done));
     }
-    { einit }
-    { balgo }
     else
     {
         if ( now >= next_switch_time) 
@@ -328,6 +327,7 @@ a653sched_do_schedule(
             }
         }
     }
+    (*@{$\cdots$}@*)
     { ealgo }
 }
 \end{lstlisting}
@@ -405,7 +405,14 @@ struktur yang dikirimkan melalui \textit{hypercall} tersebut ditujukan untuk kom
 apakah \textit{user space} akan mengirimkan informasi partisi kepada \textit{scheduler} atau
 meminta informasi partisi dari \textit{scheduler}.
 
-\begin{figure}
+Implementasi fungsi untuk mengirimkan informasi partisi kepada \textit{scheduler} oleh \textit{user
+space} dapat dilihat pada \autoref{code:xc_sched_sysctl_set} sedangkan fungsi untuk meminta
+informasi dari \textit{scheduler} oleh \textit{user space} dapat dilihat pada
+\autoref{code:xc_sched_sysctl_get}.
+
+\subsubsection{Fungsi Pengiriman Informasi Partisi}
+
+\begin{figure}[!h]
 \begin{lstlisting}[
 	caption={Fungsi yang digunakan \textit{user space} mengirim informasi \newline kepada \textit{scheduler}},
 	label=code:xc_sched_sysctl_set
@@ -432,7 +439,23 @@ xc_sched_arinc653_domain_set(
 \end{lstlisting}
 \end{figure}
 
-\begin{figure}
+Fungsi untuk mengirimkan informasi partisi kepada \textit{scheduler} membutuhkan identifikasi
+partisi dan struktur yang akan dikirim melalui \textit{hypercall}. Identifikasi partisi harus
+berupa nilai yang valid (terdapat partisi yang memiliki identifikasi dengan nilai tersebut) agar
+pemanggilan \textit{hypercall} berhasil. Struktur yang dikirim adalah struktur yang dapat
+dimengerti oleh \textit{scheduler} seperti yang telah ditampilkan pada
+\autoref{code:struct_xen_domctl_scheduler_op}.
+
+Fungsi pada \autoref{code:xc_sched_sysctl_set} diimplementasikan dengan meminta alokasi memori
+pada \textit{hypervisor} yang berkorespondensi dengan memori pada \textit{user space}.
+Permintaan tersebut dilakukan dengan menggunakan \textit{macro} \code{DECLARE\_DOMCTL}. Dengan
+menggunakan hasil dari alokasi memori, \textit{hypervisor} dapat menyalin isi dari memori pada
+\textit{user space} menjadi isi dari memori korespondensinya pada \textit{hypervisor}.
+
+\subsubsection{Fungsi Permintaan Informasi Partisi}
+\label{section:fungsi_permintaan_informasi_partisi}
+
+\begin{figure}[!h]
 \begin{lstlisting}[
 	caption={Fungsi yang digunakan \textit{user space} meminta informasi \newline partisi dari \textit{scheduler}},
 	label=code:xc_sched_sysctl_get
@@ -461,10 +484,18 @@ xc_sched_arinc653_domain_get(
 \end{lstlisting}
 \end{figure}
 
-Implementasi fungsi untuk mengirimkan informasi kepada \textit{scheduler} oleh \textit{user
-space} dapat dilihat pada \autoref{code:xc_sched_sysctl_set} sedangkan fungsi untuk meminta
-informasi dari \textit{scheduler} oleh \textit{user space} dapat dilihat pada
-\autoref{code:xc_sched_sysctl_get}.
+Fungsi untuk meminta informasi partisi kepada \textit{scheduler} membutuhkan identifikasi
+partisi dan memori yang akan digunakan untuk menyimpan informasi partisi yang didapat melalui
+\textit{hypercall}. Identifikasi partisi harus berupa nilai yang valid (terdapat partisi yang
+memiliki identifikasi dengan nilai tersebut) agar pemanggilan \textit{hypercall} berhasil.
+Ukuran dari memori yang digunakan untuk melakukan \textit{hypercall} harus sama dengan ukuran
+struktur pada \autoref{code:struct_xen_domctl_scheduler_op}.
+
+Fungsi tersebut diimplementasikan seperti pada \autoref{code:xc_sched_sysctl_get}. Secara umum
+implementasi fungsi tersebut sama seperti impementasi fungsi permintaan informasi partisi
+seperti pada \autoref{section:fungsi_permintaan_informasi_partisi}. Perbedaannya hanya pada
+nilai yang digunakan oleh \textit{hypervisor} untuk menentukan arah komunikasi
+\textit{hypercall}.
 
 \subsection{Modul libxl}
 \label{section:modul_libxl}
@@ -477,16 +508,11 @@ umumnya menggunakan fungsi-fungsi yang ditawarkan oleh libxc.
 
 Modifikasi yang dilakukan pada libxl adalah menambahkan opsi pada xl sehingga administrator
 dapat mengubah informasi mengenai partisi dan memanggil fungsi yang digunakan untuk
-berkomunikasi dengan \textit{hypervisor} melalui \textit{user space} seperti yang telah
-dipaparkan pada \autoref{section:modul_libxc}.
+berkomunikasi dengan \textit{hypervisor} melalui \textit{user space}. libxl akan memanggil kode
+libxc seperti pada \autoref{code:xl_domain_getset}. Kode tersebut memanggil fungsi-fungsi telah
+dibahas sebelumnya pada \autoref{section:modul_libxc}.
 
-Fungsi yang ditambahkan untuk menambahkan opsi pada xl diperlihatkan pada
-\autoref{code:xl_arinc653_main}. Kode tersebut akan menerima opsi untuk mengubah \textit{parent}
-dan/atau keadaan dari sebuah partisi. Kemudian, libxl akan memanggil kode libxc seperti pada
-\autoref{code:xl_domain_getset}. Kode tersebut memanggil fungsi-fungsi telah dibahas sebelumnya
-pada \autoref{section:modul_libxc}.
-
-\begin{figure}
+\begin{figure}[!h]
 \begin{lstlisting}[
 	caption={xl berkomunikasi dengan menggunakan fungsi milik xc},
 	label=code:xl_domain_getset

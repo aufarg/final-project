@@ -51,7 +51,8 @@ lingkungan yang terlibat. Untuk mempermudah penjelasan, asumsikan terdapat hubun
 antara partisi dengan layanan. Cara termudah untuk mengembalikan layanan pada keadaan semula
 adalah dengan mengembalikan keadaan partisi seperti semula. Namun, dalam kasus tertentu, keadaan
 partisi tidak dapat dikembalikan seperti semula dikarenakan kegagalan yang terjadi bersifat
-tetap.
+tetap. Karena itu, perlu ada mekanisme untuk menggantikan layanan pada partisi yang mengalami
+kegagalan.
 
 Untuk meningkatkan keandalan sistem dalam sistem \textit{real-time}, salah satu cara yang dapat
 digunakan adalah dengan menggunakan \textit{fault-tolerant scheduling} \citep{Campbell1986}
@@ -69,9 +70,11 @@ mengalami \textit{fault} akan tetap tersedia dan sistem akan tetap berjalan seba
 seharusnya, sehingga sistem dapat dikatakan menjadi lebih andal.
 
 Meski demikian, peningkatan tersebut hanya terlihat secara teoretis dan belum ada studi mengenai
-penggunaan \textit{primary-backup scheduling} pada sistem ARINC 653.  Untuk dapat melihat
-perbandingan antara \textit{primary-backup scheduling} dengan \textit{scheduling} normal, perlu
-dilakukan pengujian pada sistem ARINC 653 yang dapat menggunakan keduanya.
+penggunaan \textit{primary-backup scheduling} pada sistem ARINC 653. Untuk dapat melihat
+perbandingan antara \textit{primary-backup partition scheduling} dengan \textit{scheduling}
+sistem ARINC 653, perlu dilakukan pengujian keandalan sistem pada sistem yang menggunakan
+\textit{primary-backup partition scheduling} dan sistem yang menggunakan \textit{scheduling}
+sistem ARINC 653.
 
 % Hypervisor
 Arsitektur komputer yang dispesifikasikan pada standar ARINC 653 dapat divirtualisasikan dengan
@@ -96,13 +99,13 @@ pengembangan sistem operasi \textit{real-time} pada \textit{safety-critical syst
 tersebut dapat diselesaikan dengan menggunakan \textit{fault-tolerant partition scheduling}.
 Meski \textit{fault-tolerant partition scheduling} membuat sistem menjadi andal secara teoretis,
 perlu adanya studi lebih lanjut apakah metode \textit{fault-tolerant partition scheduling} dapat
-digunakan pada sistem ARINC 653.  Selain itu, perlu adanya perbandingan antara
+digunakan pada sistem ARINC 653. Selain itu, perlu adanya perbandingan antara
 \textit{scheduling} normal dengan \textit{fault-tolerant partition scheduling} pada ARINC 653
 untuk melihat kemungkinan peningkatan atau penurunan efisiensi sistem.
 
 Berikut adalah pertanyaan permasalahan yang akan dijawab dan diselesaikan pada tugas akhir ini.
 
-\begin{itemize}
+\begin{enumerate}
 
     \item Bagaimana cara mengimplementasikan \textit{fault-tolerant partition scheduling} pada
     	    sistem ARINC 653 sehingga keandalan sistem meningkat?
@@ -114,7 +117,7 @@ Berikut adalah pertanyaan permasalahan yang akan dijawab dan diselesaikan pada t
     	    menggunakan \textit{fault-tolerant partition scheduling} pada sistem yang memenuhi
     	    standar ARINC 653?
 
-\end{itemize}
+\end{enumerate}
 
 \section{Tujuan}
 \label{section:tujuan}
@@ -131,7 +134,7 @@ sebelum dan sesudah implementasi \textit{fault-tolerant partition scheduling}.
 Berdasarkan rumusan masalah yang ada, terdapat beberapa asumsi terkait dengan sistem avionik
 yang akan dikembangkan yaitu.
 
-\begin{itemize}
+\begin{enumerate}
 
     \item Pengujian yang dilakukan hanya akan diuji coba pada sistem dengan
     	    arsitektur x86-64.
@@ -140,7 +143,7 @@ yang akan dikembangkan yaitu.
     	    \textit{kernel} Linux untuk setiap partisi-nya.  Hal ini mengakibatkan partisi yang
     	    tidak menggunakan \textit{kernel} Linux mungkin memiliki perilaku yang berbeda.
 
-\end{itemize}
+\end{enumerate}
 
 \section{Metodologi}
 

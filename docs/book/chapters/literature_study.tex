@@ -9,7 +9,7 @@ memberikan fasilitas untuk mengoperasikan pesawat terbang.  Avionik umumnya meru
 \textit{safety\hyp critical}, yang berarti kegagalan pada sistem dapat berakibat terjadinya
 hal-hal berikut.
 
-\begin{itemize}
+\begin{enumerate}
 
     \item Kematian atau cedera serius pada manusia.
 
@@ -17,7 +17,7 @@ hal-hal berikut.
 
     \item Kerusakan lingkungan.
 
-\end{itemize}
+\end{enumerate}
 
 Pada avionik, \textit{Integrated Modular Avionics} (IMA) merupakan sebuah konsep yang bertujuan
 memperkecil penggunaan daya dan meringankan perangkat \citep[p.~2.A.2-1]{Garside2009}.  Dalam
@@ -51,7 +51,7 @@ melakukan \textit{multitasking}.
 
 Perangkat lunak pada \textit{platform} ARINC 653 meliputi.
 
-\begin{itemize}
+\begin{enumerate}
 
     \item Partisi aplikasi avionik yang dispesifikasikan secara langsung oleh ARINC 653. Partisi
     	    aplikasi adalah target utama dari partisi ruang dan waktu dan dibatasi hanya
@@ -68,7 +68,7 @@ Perangkat lunak pada \textit{platform} ARINC 653 meliputi.
     \item Fungsi spesifik sistem seperti \textit{device driver}, \textit{debug}, dan
     	    \textit{test}.
 
-\end{itemize}
+\end{enumerate}
 
 \subsection{Sistem \textit{Real-Time}}
 
@@ -221,7 +221,7 @@ masuk ke dalam keadaan inisialisasi kembali atau keadaan diam.
 
 Berikut adalah fungsionalitas sistem yang dispesifikasikan oleh standar ARINC 653.
 
-\begin{itemize}
+\begin{enumerate}
 
     \item Manajemen Partisi.
 
@@ -235,7 +235,7 @@ Berikut adalah fungsionalitas sistem yang dispesifikasikan oleh standar ARINC 65
 
     \item Komunikasi Dalam Partisi.
 
-\end{itemize}
+\end{enumerate}
 
 Penelitian ini hanya akan membahas manajemen partisi dan manajemen waktu yang dilakukan oleh
 ARINC 653.
@@ -377,7 +377,7 @@ operasi dan perangkat keras.  Xen menyediakan lingkungan virtual yaitu sebuah \t
 dapat beroperasi.  Terdapat tiga komponen utama pada sistem yang menggunakan Xen, yaitu
 \textit{hypervisor}, \textit{kernel}, dan aplikasi yang bekerja pada \textit{userspace}.
 
-\begin{figure}[!h]
+\begin{figure}[h]
     \includegraphics[scale=0.5]{./resources/xen-ring.png}
     \caption[Perbedaan penggunaan \textit{ring} \textit{native} dan
     \textit{paravirtualized}]{Perbedaan penggunaan \textit{ring} \textit{native} (kiri) dan
@@ -399,7 +399,7 @@ berjalan pada \textit{ring} 1 dan aplikasi yang berjalan pada \textit{ring} 3.  
 \textit{privileged instructions} seperti biasanya.  \textit{Hypervisor} pada Xen menyediakan
 \textit{hypercall} sebagai pengganti \textit{privileged instructions}.
 
-\begin{figure}[!ht]
+\begin{figure}[h]
     \includegraphics[scale=0.5]{./resources/xen-split-driver.png}
     \caption[Jalur sebuah paket jaringan yang dikirim dari domU]{Jalur sebuah paket jaringan yang dikirim dari domU \citep{Chisnall2014}}
     \label{figure:xen_split_driver}
@@ -437,7 +437,7 @@ yang terpartisi sesuai dengan spesifikasi ARINC 653. Dalam melakukan partisi mem
 tersebut memanfaatkan mekanisme partisi memori menggunakan MMU yang sudah merupakan mekanisme
 bawaan pada Xen.
 
-\begin{figure}[!hbp]
+\begin{figure}[!ht]
     \centering
     \includegraphics[scale=0.6]{resources/xen-arinc653-partitions.png}
     \caption{\textit{Hypervisor} ARLX}
@@ -457,7 +457,7 @@ dilihat pada \autoref{figure:xen_arinc653_partitions_schedule}. Algoritma ini be
 sebuah \textit{major time frame} dan akan dilakukan secara terus menerus untuk setiap
 \textit{major time frame}.
 
-\begin{figure}[!htp]
+\begin{figure}[!hb]
     \includegraphics[scale=0.6]{resources/xen-arinc653-partition-schedule.png}
     \caption{\textit{Schedule} partisi pada ARLX}
     \label{figure:xen_arinc653_partitions_schedule}
