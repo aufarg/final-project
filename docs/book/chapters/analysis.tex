@@ -36,7 +36,7 @@ Namun, meski sudah banyak studi mengenai \textit{primary-backup scheduling} \cit
 \citep{Bertossi2006}, belum ada studi mengenai metode tersebut spesifik pada sistem yang
 memenuhi standar ARINC 653. 
 
-Eksperimen \textit{primary-backup scheduling} akan dilakukan pada ARLX, yaitu prototipe sistem
+Pengujian \textit{primary-backup scheduling} akan dilakukan pada ARLX, yaitu prototipe sistem
 yang bersesuaian dengan spesifikasi ARINC 653 pada Xen. Hal ini dikarenakan prototipe tersebut
 tersedia gratis dan \textit{open-source}, sehingga pengembangan dan eksperimen yang akan
 dilakukan tidak memerlukan biaya banyak dan dapat dieksplorasi secara mandiri.
@@ -56,7 +56,7 @@ pada prototipe ARINC 653, \textit{scheduler} harus dapat mengetahui partisi mana
 \textit{primary} atau \textit{backup} agar dapat melakukan \textit{scheduling}.
 
 Selain itu, \textit{scheduler} juga perlu mengetahui kapan sebuah partisi \textit{primary}
-dikategorikan mengalami kegagalan.  Karena itu, perlu ada mekanisme untuk mendeteksi
+dikategorikan mengalami kegagalan. Karena itu, perlu ada mekanisme untuk mendeteksi
 \textit{fault}, dan memberikan informasi tersebut kepada \textit{scheduler}.
 
 \subsection{Informasi Partisi}
@@ -75,10 +75,10 @@ tersebut dapat dilakukan dengan menyimpan informasi berupa keadaan partisi dan i
 layanan yang berada pada partisi tersebut.
 
 Informasi mengenai keadaan partisi dapat disimpan dengan menggunakan \textit{boolean}. Informasi
-mengenai identifikasi layanan yang terdapat pada partisi dapat disimpan menggunakan
-identifikasi partisi, dengan asumsi layanan yang terdapat hubungan satu ke satu antara
-layanan dengan partisi sehingga identifikasi partisi dapat digunakan untuk mengidentifikasi
-layanan. Kedua informasi ini akan dapat diubah dengan menggunakan xl melalui dom0.
+mengenai identifikasi layanan yang terdapat pada partisi dapat disimpan menggunakan identifikasi
+partisi, dengan asumsi layanan yang terdapat hubungan satu ke satu antara layanan dengan
+partisi. Dengan demikian identifikasi partisi dapat digunakan untuk mengidentifikasi layanan.
+Kedua informasi ini akan dapat diubah dengan menggunakan xl melalui dom0.
 
 \subsection{Algoritma \textit{Scheduling}}
 \label{section:algoritma_scheduling}

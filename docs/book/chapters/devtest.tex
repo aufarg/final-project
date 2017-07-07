@@ -4,7 +4,7 @@
 \section{Pengembangan \textit{Primary-Backup Partition Scheduling}}
 
 Pengembangan dilakukan dengan memodifikasi kode \textit{scheduler} ARINC 653
-\textit{source-tree} pada Xen ARINC 653.  Modifikasi kode dilakukan pada modul-modul berikut:
+\textit{source-tree} pada Xen ARINC 653.  Modifikasi kode dilakukan pada modul-modul berikut.
 
 \begin{itemize}
 
@@ -34,12 +34,12 @@ Pengembangan dilakukan dengan memodifikasi kode \textit{scheduler} ARINC 653
 Agar algoritma \textit{primary-backup partition scheduling} yang dijelaskan pada
 \autoref{section:solution} dapat berjalan dengan seharusnya, perlu ada mekanisme penanganan data
 yang dibutuhkan pada masing-masing domain. Hal tersebut dapat dicapai dengan mendefinisikan
-struktur data pada mekanisme pengiriman data dari \textit{user space} kepada
-\textit{hypervisor}, pendefinisian struktur data yang dimengerti oleh \textit{hypervisor} dan
-\textit{user space} untuk digunakan pada saat melakukan \textit{hypercall}, mekanisme pengiriman
-data melalui \textit{hypercall}, struktur data untuk menyimpan informasi \textit{domain} pada
-\textit{scheduler}, serta konversi data yang didapat oleh \textit{hypervisor} setelah menangani
-\textit{hypercall} menjadi dengan struktur data \textit{domain} pada \textit{scheduler}.
+struktur data yang dapat dimengerti oleh \textit{hypervisor} dan \textit{user space} untuk
+berkomunikasi melalui \textit{hypercall}, membuat struktur data untuk menggunakan
+\textit{hypercall}, membuat mekanisme pengiriman data melalui \textit{hypercall}, membuat
+struktur data untuk menyimpan informasi \textit{domain} pada \textit{scheduler}, serta mengubah
+data yang didapat oleh \textit{hypervisor} setelah menangani \textit{hypercall} sesuai dengan
+struktur data \textit{domain} pada \textit{scheduler}.
 
 Implementasi mekanisme pengiriman data dari \textit{user space} kepada \textit{hypervisor} akan
 dipaparkan pada \autoref{section:modul_libxl}. Mekanisme \textit{hypercall} yang
@@ -65,7 +65,7 @@ setiap mekanisme.
 
 Subbab ini akan membahas implementasi dari \textit{primary-backup partition scheduling} pada
 modul \textit{scheduler}. Implementasi \textit{scheduler} pada ARLX meliputi tiga buah
-bagian:
+bagian.
 
 \begin{enumerate}
 	
@@ -92,7 +92,7 @@ bagian:
 		
 	\item Fungsi \textit{scheduling}
 
-		Algoritma \textit{scheduling} pada ARLX diimplementasikan dengan definisikan
+		Algoritma \textit{scheduling} pada ARLX diimplementasikan dengan mendefinisikan
 		fungsi yang memiliki deklarasi seperti pada
 		\autoref{code:do_schedule_declaration}. Fungsi tersebut kemudian akan dipanggil
 		apabila \textit{hypervisor} menerima \textit{timer interrupt} atau partisi yang
@@ -163,7 +163,7 @@ harus diisi dengan alamat dari fungsi yang akan melakukan pemilihan partisi. Pad
 \textit{primary-backup partition scheduler}, \textit{function pointer} tersebut akan diisi
 dengan alamat dari fungsi \code{a653sched\_do\_schedule()} yang akan dipaparkan pada
 \autoref{section:scheduling_impl}. Agar \textit{hypervisor} dapat mengenali \textit{scheduler}
-yang diimplementasikan, \code{opt\_name} akan diberi nilai "arinc653pb". Dengan demikian
+yang diimplementasikan, \code{opt\_name} akan diberi nilai "arinc653pb". Dengan demikian,
 \textit{primary-backup partition scheduler} dapat digunakan dengan cara memberikan parameter
 "sched=arinc653pb" pada \textit{hypervisor} ketika \textit{boot}.
 
@@ -218,7 +218,7 @@ Pada saat pembuatan partisi, \textit{scheduler} akan memanggil fungsi yang ditun
 serta menginisialisasi informasi partisi pada saat dibuat. Fungsi tersebut diimplementasikan
 seperti pada \autoref{code:init_domain}. Setelah dibuat, informasi partisi akan memiliki nilai
 awal yang menandakan bahwa partisi tersebut sehat dan partisi tersebut memberikan layanan sesuai
-dengan identifikasi layanan sesuai dengan identifikasi partisi tersebut.
+dengan identifikasi sama dengan identifikasi partisi tersebut.
 
 
 \begin{figure}
@@ -236,18 +236,18 @@ a653sched_destroy_domain(const struct scheduler *ops, struct domain *dom)
 \end{lstlisting}
 \end{figure}
 
-Pada saat penghapusan partisi, \textit{scheduler} akan memanggil fungsi yang ditunjuk
-oleh \textit{function pointer} \code{destroy\_domain} pada struktur yang telah dijelaskan pada
+Pada saat penghapusan partisi, \textit{scheduler} akan memanggil fungsi yang ditunjuk oleh
+\textit{function pointer} \code{destroy\_domain} pada struktur yang telah dijelaskan pada
 \autoref{section:definisi_scheduler}. Tujuan fungsi tersebut adalah untuk dealokasi memori yang
 digunakan oleh informasi partisi yang tersimpan pada \textit{scheduler}. Dealokasi memori akan
 membuat pengaksesan memori tersebut mengakibatkan kegagalan pada \textit{hypervisor} sehingga
-\textit{hypervisor} akan berhenti bekerja. Karena itu, setelah dihapus memori tersebut tidak
-boleh diakses lagi. Fungsi tersebut hanya akan dipanggil apabila terdapat \textit{interrupt}
-yang meminta agar \textit{domain} tersebut dihapus. Maka, penggunaan informasi partisi sebaiknya
-dimulai dengan permintaan \textit{lock} dan mematikan \textit{interrupt}, kemudian pada saat
-pembacaan maupun penulisan melakukan pengecekan nilai \textit{pointer} untuk memastikan
-informasi partisi masih valid, dan diakhiri dengan pelepasan \textit{lock} dan
-menyalakan \textit{interrupt}.
+\textit{hypervisor} akan berhenti bekerja. Karena itu, memori tempat penyimpanan struktur
+informasi partisi milik partisi yang dihapus tidak boleh diakses lagi. Fungsi tersebut hanya
+akan dipanggil apabila terdapat \textit{interrupt} yang meminta agar \textit{domain} tersebut
+dihapus. Maka, penggunaan informasi partisi sebaiknya dimulai dengan permintaan \textit{lock}
+dan mematikan \textit{interrupt}, kemudian pada saat pembacaan maupun penulisan melakukan
+pengecekan nilai \textit{pointer} untuk memastikan informasi partisi masih valid, dan diakhiri
+dengan pelepasan \textit{lock} dan menyalakan \textit{interrupt}.
 
 \subsubsection{Fungsi \textit{Scheduling}}
 \label{section:scheduling_impl}
@@ -267,13 +267,69 @@ Untuk menjaga efisiensi sistem, algoritma \textit{scheduling} pada \textit{prima
 partition scheduler} diimplementasikan sedemikian sehingga memiliki kompleksitas yang sama
 dengan algoritma \textit{scheduling} pada \textit{scheduler} ARINC 653.
 
-% TODO: diffs
 \begin{figure}
 \begin{lstlisting}[
 	caption={Implementasi algoritma \textit{scheduling}},
-	label=code:fungsi_scheduling
+	label=code:fungsi_scheduling,
+	linerange={bst-est,bdata-edata,binit-einit,balgo-ealgo},
+	escapeinside={(*@}{@*)}
 ]
+{ bst }
+static struct task_slice
+a653sched_do_schedule(
+    const struct scheduler *ops,
+    s_time_t now,
+    bool_t tasklet_work_scheduled)
+{
+{ est }
+    struct task_slice ret;                      /* hold the chosen domain */
+    struct vcpu * new_task = NULL;
+    static unsigned int sched_index = 0;
+    static s_time_t next_switch_time;
+    a653sched_priv_t *sched_priv = SCHED_PRIV(ops);
+    const unsigned int cpu = smp_processor_id();
+    { bdata }
+    static bool task_done[ARINC653_MAX_DOMAINS_PER_SCHEDULE] = {0};
+    static a653sched_domain_t * dom_priv = NULL;
+    unsigned long flags;
+    { edata }
 
+    spin_lock_irqsave(&sched_priv->lock, flags);
+
+    if ( sched_priv->num_schedule_entries < 1 )
+        sched_priv->next_major_frame = now + DEFAULT_TIMESLICE;
+    { binit }
+    else if ( now >= sched_priv->next_major_frame )
+    {
+        sched_index = 0;
+        sched_priv->next_major_frame = now + sched_priv->major_frame;
+        next_switch_time = now + sched_priv->schedule[0].runtime;
+        dom_priv = DOM_PRIV(sched_priv->schedule[0].vc->domain);
+        memset(task_done, 0, sizeof(task_done));
+    }
+    { einit }
+    { balgo }
+    else
+    {
+        if ( now >= next_switch_time) 
+            task_done[dom_priv->parent] = true;
+
+        while ( ( (now >= next_switch_time)
+                || (!dom_priv->healthy)
+                || (task_done[dom_priv->parent]) )
+                && (sched_index < sched_priv->num_schedule_entries) )
+        {
+            /* time to switch to the next domain in this major frame */
+            sched_index++;
+            if (sched_index < sched_priv->num_schedule_entries) {
+                dom_priv = DOM_PRIV(sched_priv->schedule[sched_index].vc->domain);
+                if (!task_done[dom_priv->parent])
+                    next_switch_time += sched_priv->schedule[sched_index].runtime;
+            }
+        }
+    }
+    { ealgo }
+}
 \end{lstlisting}
 \end{figure}
 
@@ -429,16 +485,6 @@ Fungsi yang ditambahkan untuk menambahkan opsi pada xl diperlihatkan pada
 dan/atau keadaan dari sebuah partisi. Kemudian, libxl akan memanggil kode libxc seperti pada
 \autoref{code:xl_domain_getset}. Kode tersebut memanggil fungsi-fungsi telah dibahas sebelumnya
 pada \autoref{section:modul_libxc}.
-
-\begin{figure}
-\begin{lstlisting}[
-	caption={Fungsi utama xl},
-	label=code:xl_arinc653_main
-]
-
-\end{lstlisting}
-% TODO: Code
-\end{figure}
 
 \begin{figure}
 \begin{lstlisting}[

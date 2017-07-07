@@ -6,15 +6,16 @@
 Standar ARINC 653 menspesifikasikan partisi ruang dan waktu pada sistem operasi
 \textit{real-time} avionik.  Avionik adalah sebuah perangkat elektronik yang berfungsi untuk
 memberikan fasilitas untuk mengoperasikan pesawat terbang.  Avionik umumnya merupakan sistem
-\textit{safety\hyp critical}, yang berarti kegagalan pada sistem dapat mengakibatkan:
+\textit{safety\hyp critical}, yang berarti kegagalan pada sistem dapat berakibat terjadinya
+hal-hal berikut.
 
 \begin{itemize}
 
-    \item Kematian atau cedera serius pada manusia
+    \item Kematian atau cedera serius pada manusia.
 
-    \item Hilangnya atau rusaknya perlengkapan atau properti
+    \item Hilangnya atau rusaknya perlengkapan atau properti.
 
-    \item Kerusakan lingkungan
+    \item Kerusakan lingkungan.
 
 \end{itemize}
 
@@ -44,11 +45,11 @@ penanganan \textit{error} pada arsitektur IMA.  Pada ARINC 653, satu unit partis
 disebut sebagai partisi.
 
 Setiap partisi pada dasarnya sama seperti sistem dengan satu aplikasi karena partisi memiliki
-\textit{device}, aktuator, konteks, dan data tersendiri.  Hal tersebut mengakibatkan partisi
-ruang dan waktu yang kuat.  Proses dalam sebuah partisi diperbolehkan untuk melakukan
-\textit{multitasking}.
+\textit{device}, aktuator, konteks, dan data tersendiri.  Hal tersebut mengakibatkan sistem
+memiliki partisi ruang dan waktu yang kuat.  Proses dalam sebuah partisi diperbolehkan untuk
+melakukan \textit{multitasking}.
 
-Perangkat lunak pada \textit{platform} ARINC 653 meliputi:
+Perangkat lunak pada \textit{platform} ARINC 653 meliputi.
 
 \begin{itemize}
 
@@ -72,12 +73,15 @@ Perangkat lunak pada \textit{platform} ARINC 653 meliputi:
 \subsection{Sistem \textit{Real-Time}}
 
 Sistem \textit{real-time} adalah sistem yang kebenaran perhitungannya tidak hanya ditentukan
-oleh kebenaran hasil perhitungan secara logika, tetapi juga waktu dimana hasil perhitungan dapat
-digunakan \citep[pp.~6-7]{Shin1994}.  Sistem \textit{real-time} digunakan untuk mendukung
+oleh kebenaran hasil perhitungan secara logika, tetapi juga waktu pada saat hasil perhitungan
+dapat digunakan \citep[pp.~6-7]{Shin1994}.  Sistem \textit{real-time} digunakan untuk mendukung
 aplikasi yang membutuhkan perhitungan \textit{real-time}.  Aplikasi yang membutuhkan perhitungan
 \textit{real-time} umumnya terdiri atas beberapa \textit{task} yang saling terkait.  Sebuah
-\textit{task} seringkali harus dikerjakan dalam interval reguler dan memiliki \textit{deadline}
-yang berarti \textit{task} tersebut harus sudah selesai pada waktu yang telah ditentukan.
+\textit{task} dapat berupa periodik dan aperiodik. \textit{Task} yang bersifat periodik harus
+dikerjakan dalam interval reguler dan memiliki \textit{deadline} yang berarti \textit{task}
+tersebut harus sudah selesai pada waktu yang telah ditentukan. \textit{Task} yang bersifat
+aperiodik tidak memiliki \textit{interval} reguler, namun tetap memiliki \textit{deadline} yang
+harus dipenuhi.
 
 \textit{Task} demikian biasa disebut sebagai \textit{periodic task}.  Pada umumnya,
 \textit{periodic task} merupakan \textit{time-critical task} yang harus dijamin dapat
@@ -129,16 +133,16 @@ ditentukan oleh aplikasi yang dijalankan pada sistem tersebut.
 \subsection{\textit{Real-Time Scheduling}}
 
 Diberikan beberapa \textit{real-time task} dan \textit{resouces} yang terdapat pada sistem,
-\textit{real-time scheduling} adalah proses menentukan kapan dan dimana \textit{task} tersebut
+\textit{real-time scheduling} adalah proses penentuan kapan dan dimana \textit{task} tersebut
 akan dikerjakan untuk menjamin \cite[pp.~8-9]{Shin1994}.  \textit{Scheduler} adalah sebuah
 proses yang melakukan \textit{scheduling} pada \textit{real-time task} yang diberikan.  Dalam
-buku ini, istilah \textit{real-time scheduling} dan \textit{real-time scheduler} dapat
-dipertukarkan dengan \textit{scheduling} dan \textit{scheduler} sesuai dengan urutannya.  Sistem
-operasi akan secara periodik memberikan sejumlah \textit{real-time task} yang tersimpan pada
-memori pada \textit{scheduler}.  Pada aplikasi \textit{non-real-time}, tujuan utama
-\textit{scheduling} adalah untuk meminimisasi total waktu yang dibutuhkan untuk menyelesaikan
-semua \textit{task}.  Sementara itu, pada aplikasi \textit{real-time}, tujuan utama
-\textit{scheduling} adalah untuk memenuhi \textit{deadline} \textit{task} aplikasi.
+buku ini, istilah \textit{real-time scheduling} dan \textit{real-time scheduler} secara
+berurutan dapat dipertukarkan dengan \textit{scheduling} dan \textit{scheduler}.  Sistem operasi
+akan secara periodik memberikan sejumlah \textit{real-time task} yang tersimpan pada memori pada
+\textit{scheduler}.  Pada aplikasi \textit{non-real-time}, tujuan utama \textit{scheduling}
+adalah untuk meminimumkan total waktu yang dibutuhkan untuk menyelesaikan semua \textit{task}.
+Sementara itu, pada aplikasi \textit{real-time}, tujuan utama \textit{scheduling} adalah untuk
+memenuhi \textit{deadline} \textit{task} aplikasi.
 
 Sebagai contoh, \autoref{figure:scheduling_comparison}\subref{subfigure:scheduling_comparison_a}
 dan \subref{subfigure:scheduling_comparison_b} memperlihatkan perbedaan antara
@@ -175,7 +179,7 @@ Algoritma \textit{scheduling} dipengaruhi oleh faktor-faktor seperti tingkat kek
 keterkaitan, \textit{resource}, dan \textit{deadline} aplikasi.
 
 Algoritma \textit{scheduling} juga berbeda tergantung komputer tempat sistem akan dijalankan.
-Beberapa faktor komputer yang memengaruhi algoritma \textit{scheduling} adalah jenis
+Beberapa faktor komputer yang memengaruhi algoritma \textit{scheduling} adalah arsitektur
 \textit{processor} (\textit{uniprocessor} atau \textit{multiprocessor}), metode komunikasi
 \textit{shared memory} atau \textit{message-passing}, dan jaringan.
 
@@ -215,21 +219,21 @@ dan komunikasi.  \textit{Module} akan terus berada pada keadaan operasional samp
 atau fungsi \textit{health monitoring} pada \textit{module} memerintahkan \textit{module} untuk
 masuk ke dalam keadaan inisialisasi kembali atau keadaan diam.
 
-Berikut adalah fungsionalitas sistem yang dispesifikasikan oleh standar ARINC 653:
+Berikut adalah fungsionalitas sistem yang dispesifikasikan oleh standar ARINC 653.
 
 \begin{itemize}
 
-    \item Manajemen Partisi
+    \item Manajemen Partisi.
 
-    \item Manajemen Proses
+    \item Manajemen Proses.
 
-    \item Manajemen Waktu
+    \item Manajemen Waktu.
 
-    \item Manajemen Memori
+    \item Manajemen Memori.
 
-    \item Komunikasi Antar Partisi
+    \item Komunikasi Antar Partisi.
 
-    \item Komunikasi Dalam Partisi
+    \item Komunikasi Dalam Partisi.
 
 \end{itemize}
 
@@ -238,15 +242,16 @@ ARINC 653.
 
 \subsubsection[Manajemen Partisi]{Manajemen Partisi}
 
-Inti dari standar ARINC 653 adalah konsep partisi, dimana aplikasi yang beroperasi dalam sebuah
+Inti dari standar ARINC 653 adalah konsep partisi, yaitu aplikasi yang beroperasi dalam sebuah
 \textit{module} dipartisi terhadap ruang (partisi memori) dan waktu.  Sebuah partisi dapat
 dikatakan sebagai satu unit aplikasi yang didesain untuk memenuhi batasan-batasan partisi.
 
-Sistem operasi pada dasarnya sudah cara untuk melakukan partisi.  Sistem dengan partisi yang
-kuat memungkinkan partisi dengan tingkat kekritisan yang berbeda berjalan pada satu
-\textit{module} yang sama tanpa memengaruhi partisi lain secara \textit{ruang} dan waktu.
-Bagian dari sistem operasi yang bekerja pada tingkat \textit{core module} bertanggung jawab
-untuk memaksakan partisi dilakukan dan manajemen partisi dalam \textit{module} tersebut.
+Spistem operasi pada dasarnya sudah memiliki cara untuk melakukan partisi \textit{resource} yang
+dimilikinya.  Sistem dengan partisi yang kuat memungkinkan partisi dengan tingkat kekritisan
+yang berbeda berjalan pada satu \textit{module} yang sama tanpa memengaruhi partisi lain secara
+\textit{ruang} dan waktu.  Bagian dari sistem operasi yang bekerja pada tingkat \textit{core
+module} bertanggung jawab untuk melakukan partisi dan memanajemeni partisi dalam \textit{module}
+tersebut.
 
 Partisi ditentukan urutannya dengan melakukan \textit{scheduling} secara melingkar dan tetap.
 Untuk dapat melakukan \textit{scheduling} secara melingkar, sistem operasi menyimpan
@@ -256,7 +261,7 @@ selama \textit{module} berjalan.  Partisi akan terdaftar pada \textit{major time
 ditentukan.  Partisi dengan dijalankan terlebih dahulu akan mendaftarkan \textit{partition
 window} dengan nilai \textit{offset} yang lebih kecil.  Urutan yang didapatkan oleh suatu
 partisi ditentukan oleh pengaturan urutan yang dibuat pada saat integrasi.  Metode ini menjamin
-bahwa \textit{scheduling} yang dilakukan deterministik dan dapat diprediksi.
+bahwa \textit{scheduling} yang dilakukan akan bersifat deterministik sehingga dapat diprediksi.
 
 Sebuah \textit{module} dapat memiliki beberapa partisi yang memiliki periode pengerjaan yang
 berbeda-beda.  \textit{Major time frame} didefinisikan sebagai kelipatan dari kelipatan
@@ -368,13 +373,21 @@ operasi.
 \section{Xen}
 
 Xen merupakan sebuah perangkat lunak untuk melakukan virtualisasi yang bekerja diantara sistem
-operasi dan perangkat keras.  Xen menyediakan lingkungan virtual dimana sebuah \textit{kernel}
+operasi dan perangkat keras.  Xen menyediakan lingkungan virtual yaitu sebuah \textit{kernel}
 dapat beroperasi.  Terdapat tiga komponen utama pada sistem yang menggunakan Xen, yaitu
 \textit{hypervisor}, \textit{kernel}, dan aplikasi yang bekerja pada \textit{userspace}.
 
+\begin{figure}[!h]
+    \includegraphics[scale=0.5]{./resources/xen-ring.png}
+    \caption[Perbedaan penggunaan \textit{ring} \textit{native} dan
+    \textit{paravirtualized}]{Perbedaan penggunaan \textit{ring} \textit{native} (kiri) dan
+    \textit{paravirtualized} (kanan) \citep{Chisnall2014}}
+    \label{figure:xen_ring}
+\end{figure}
+
 Pada Xen, \textit{kernel} sebuah sistem operasi tidak lagi beroperasi pada \textit{ring} 0.
 \textit{Ring} 0 digunakan oleh \textit{hypervisor} yang akan mengatur \textit{resources} yang
-akan diberikan pada \textit{virtual machine} di bawahnya.  Dimana \textit{kernel} sistem operasi
+akan diberikan pada \textit{virtual machine} di bawahnya.  \textit{Kernel} sistem operasi
 dijalankan bergantung pada arsitektur \textit{processor}-nya.  Sebagai contoh, pada sistem IA32,
 \textit{kernel} sistem operasi berjalan pada \textit{ring} 1 seperti pada
 \autoref{figure:xen_ring}.  Hal tersebut mengakibatkan \textit{kernel} yang berjalan di atas Xen
@@ -386,12 +399,10 @@ berjalan pada \textit{ring} 1 dan aplikasi yang berjalan pada \textit{ring} 3.  
 \textit{privileged instructions} seperti biasanya.  \textit{Hypervisor} pada Xen menyediakan
 \textit{hypercall} sebagai pengganti \textit{privileged instructions}.
 
-\begin{figure}[htbp]
-    \includegraphics[scale=0.5]{./resources/xen-ring.png}
-    \caption[Perbedaan penggunaan \textit{ring} \textit{native} dan
-    \textit{paravirtualized}]{Perbedaan penggunaan \textit{ring} \textit{native} (kiri) dan
-    \textit{paravirtualized} (kanan) \citep{Chisnall2014}}
-    \label{figure:xen_ring}
+\begin{figure}[!ht]
+    \includegraphics[scale=0.5]{./resources/xen-split-driver.png}
+    \caption[Jalur sebuah paket jaringan yang dikirim dari domU]{Jalur sebuah paket jaringan yang dikirim dari domU \citep{Chisnall2014}}
+    \label{figure:xen_split_driver}
 \end{figure}
 
 Fungsi dari sebuah \textit{hypervisor} adalah untuk menjalankan \textit{virtual machine}.  Pada
@@ -409,19 +420,13 @@ tersebut tidak meneruskan langsung ke \textit{network device} tetapi menulis pak
 memory} untuk dilanjutkan ke \textit{network device} yang sebenarnya.  Penggunaan \textit{shared
 memory} seperti ilustrasi tersebut banyak digunakan pada berbagai komponen yang membentuk Xen.
 
-\begin{figure}[htbp]
-    \includegraphics[scale=0.5]{./resources/xen-split-driver.png}
-    \caption[Jalur sebuah paket jaringan yang dikirim dari domU]{Jalur sebuah paket jaringan yang dikirim dari domU \citep{Chisnall2014}}
-    \label{figure:xen_split_driver}
-\end{figure}
-
 Salah satu kelebihan Xen sebagai \textit{hypervisor} adalah Xen memudahkan pengembang untuk
 menuliskan komponen sesuai dengan kebutuhan.  Xen menjelaskan secara rinci bagaimana proses
 penulisan komponen dan memberikan \textit{interface} yang relatif mudah.  Xen juga merupakan
 \textit{hypervisor} \textit{open-source}, sehingga eksplorasi keseluruhan sistem lebih mudah
 dilakukan.  Fokus utama pada buku ini adalah, Xen menyediakan \textit{interface} untuk membuat
 \textit{scheduler} baru.  \textit{Scheduler} dalam kasus ini tidak bekerja pada proses,
-melainkan bekerja pada \textit{domain}.
+tetapi bekerja pada \textit{domain}.
 
 \section{ARLX}
 
@@ -432,7 +437,7 @@ yang terpartisi sesuai dengan spesifikasi ARINC 653. Dalam melakukan partisi mem
 tersebut memanfaatkan mekanisme partisi memori menggunakan MMU yang sudah merupakan mekanisme
 bawaan pada Xen.
 
-\begin{figure}[htbp]
+\begin{figure}[!hbp]
     \centering
     \includegraphics[scale=0.6]{resources/xen-arinc653-partitions.png}
     \caption{\textit{Hypervisor} ARLX}
@@ -452,7 +457,7 @@ dilihat pada \autoref{figure:xen_arinc653_partitions_schedule}. Algoritma ini be
 sebuah \textit{major time frame} dan akan dilakukan secara terus menerus untuk setiap
 \textit{major time frame}.
 
-\begin{figure}[htbp]
+\begin{figure}[!htp]
     \includegraphics[scale=0.6]{resources/xen-arinc653-partition-schedule.png}
     \caption{\textit{Schedule} partisi pada ARLX}
     \label{figure:xen_arinc653_partitions_schedule}

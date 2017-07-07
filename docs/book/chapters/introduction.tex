@@ -16,11 +16,11 @@ critical system}, yaitu sistem yang apabila mengalami kegagalan dapat mengakibat
 kerugian besar, atau kerusakan lingkungan.  Sistem operasi yang digunakan oleh avionik pada
 sebuah pesawat umumnya merupakan sistem \textit{real-time}, yaitu sistem yang kebenaran
 komputasinya tidak hanya ditentukan oleh kebenaran hasil komputasi secara logika, tetapi juga
-waktu dimana hasil komputasi dapat digunakan \citep[p.~6]{Shin1994}. Dengan demikian, manajemen
-waktu adalah aspek yang sangat mendasar pada sistem \textit{real-time}. Perangkat yang digunakan
-untuk avionik memiliki beberapa standar yang wajib dipenuhi. Standar tersebut dibuat oleh
-Aeronautical Radio, Incorporated (ARINC) dalam sebuah seri standar ARINC 600. Penelitian ini
-akan mendalami lebih lanjut mengenai sistem operasi \textit{real-time} pada avionik yang
+waktu pada saat hasil komputasi dapat digunakan \citep[p.~6]{Shin1994}. Dengan demikian,
+manajemen waktu adalah aspek yang sangat mendasar pada sistem \textit{real-time}. Perangkat yang
+digunakan untuk avionik memiliki beberapa standar yang wajib dipenuhi. Standar tersebut dibuat
+oleh Aeronautical Radio, Incorporated (ARINC) dalam sebuah seri standar ARINC 600. Penelitian
+ini akan mendalami lebih lanjut mengenai sistem operasi \textit{real-time} pada avionik yang
 dispesifikasikan pada penerbangan bernama ARINC 653.
 
 % ARINC 653
@@ -29,8 +29,8 @@ Standar ARINC 653 menspesifikasikan partisi ruang dan waktu pada sistem operasi
 \textit{safety-critical}. Setiap proses aplikasi disebut sebagai partisi.  Selain spesifikasi
 partisi, ARINC 653 juga mendefinisikan API untuk memudahkan manajemen partisi.  Sistem operasi
 yang memenuhi standar ARINC 653 berfungsi untuk memanajemeni beberapa partisi beserta komunikasi
-antar partisi.  Manajemen yang dilakukan oleh meliputi \textit{resources} komputasi umum seperti
-CPU, \textit{timing}, memori, dan \textit{devices} serta \textit{resources} untuk komunikasi.
+antar partisi.  Manajemen yang dilakukan meliputi \textit{resources} komputasi umum seperti CPU,
+\textit{timing}, memori, dan \textit{devices} serta \textit{resources} untuk komunikasi.
 Penelitian ini akan mendalami lebih lanjut mengenai manajemen CPU, khususnya proses
 \textit{partition scheduling}, yang dispesifikasikan oleh standar ARINC 653.
 
@@ -91,7 +91,7 @@ menggunakan \textit{fault-tolerant partition scheduling} dengan sistem yang meng
 \section{Rumusan Masalah}
 
 Permasalahan yang terjadi berdasarkan uraian latar belakang adalah standar ARINC 653 tidak
-membuat sistem menjadi andal  Padahal, fungsi dari standar ARINC 653 adalah sebagai panduan
+membuat sistem menjadi andal. Padahal, fungsi dari standar ARINC 653 adalah sebagai panduan
 pengembangan sistem operasi \textit{real-time} pada \textit{safety-critical system}.  Masalah
 tersebut dapat diselesaikan dengan menggunakan \textit{fault-tolerant partition scheduling}.
 Meski \textit{fault-tolerant partition scheduling} membuat sistem menjadi andal secara teoretis,
@@ -100,7 +100,7 @@ digunakan pada sistem ARINC 653.  Selain itu, perlu adanya perbandingan antara
 \textit{scheduling} normal dengan \textit{fault-tolerant partition scheduling} pada ARINC 653
 untuk melihat kemungkinan peningkatan atau penurunan efisiensi sistem.
 
-Berikut adalah pertanyaan permasalahan yang akan dijawab dan diselesaikan pada tugas akhir ini:
+Berikut adalah pertanyaan permasalahan yang akan dijawab dan diselesaikan pada tugas akhir ini.
 
 \begin{itemize}
 
@@ -129,14 +129,14 @@ sebelum dan sesudah implementasi \textit{fault-tolerant partition scheduling}.
 \label{section:batasan_masalah}
 
 Berdasarkan rumusan masalah yang ada, terdapat beberapa asumsi terkait dengan sistem avionik
-yang akan dikembangkan yaitu:
+yang akan dikembangkan yaitu.
 
 \begin{itemize}
 
-    \item Pengujian dan eksperimen yang dilakukan hanya akan diuji coba pada sistem dengan
+    \item Pengujian yang dilakukan hanya akan diuji coba pada sistem dengan
     	    arsitektur x86-64.
 
-    \item Pengujian dan eksperimen yang dilakukan hanya akan diuji coba dengan menggunakan
+    \item Pengujian yang dilakukan hanya akan diuji coba dengan menggunakan
     	    \textit{kernel} Linux untuk setiap partisi-nya.  Hal ini mengakibatkan partisi yang
     	    tidak menggunakan \textit{kernel} Linux mungkin memiliki perilaku yang berbeda.
 
@@ -144,7 +144,7 @@ yang akan dikembangkan yaitu:
 
 \section{Metodologi}
 
-Metodologi yang akan digunakan dalam penelitian tugas akhir adalah sebagai berikut:
+Metodologi yang akan digunakan dalam penelitian tugas akhir adalah sebagai berikut.
 
 \begin{enumerate}
 
@@ -155,7 +155,7 @@ Metodologi yang akan digunakan dalam penelitian tugas akhir adalah sebagai berik
 	Pembelajaran mengenai spesifikasi ARINC 653 dilakukan untuk dapat mengetahui kriteria
 	penilaian yang akan digunakan sebagai patokan dalam pembuatan kerangka pengujian.
 	Pembelajaran arsitektur Xen dilakukan untuk mengetahui cara memodifikasi ARLX untuk
-	mencari tahu bagaimana eksperimen pada prototipe tersebut akan dilakukan.
+	mencari tahu bagaimana modifikasi dan pengujian pada prototipe tersebut akan dilakukan.
 
     \item Analisis
 
@@ -165,20 +165,20 @@ Metodologi yang akan digunakan dalam penelitian tugas akhir adalah sebagai berik
 
     \item Perancangan Solusi dan Pengujian
 
-	Pada tahap ini dilakukan perancangan pengujian serta eksperimen yang akan dilakukan yang
-	dapat menyelesaikan masalah\hyp{}masalah yang telah dijelaskan pada
+	Pada tahap ini dilakukan perancangan solusi dan pengujian yang akan dilakukan yang dapat
+	menyelesaikan masalah\hyp{}masalah yang telah dijelaskan pada
 	\autoref{section:batasan_masalah}.
 
     \item Pengembangan dan Pengujian
 
 	Pada tahap ini dilakukan pembangunan sistem pengujian serta pengembangan modul
-	eksperimen pada ARLX.
+	pengujian pada ARLX.
 
     \item Kesimpulan dan Saran
 
-	Pada tahap ini dilakukan pengujian dengan metodologi pengujian yang dibangun dari tahap
-	pembangunan solusi dan pengujian.  Selanjutnya dilakukan pengujian hasil pengujian dan
-	penarikan kesimpulan.
+	Pada tahap ini akan dilakukan analisis hasil pengembangan dan pengujian serta efeknya
+	terhadap sistem. Hasil analisis akan digunakan dalam penarikan kesimpulan serta
+	pembuatan saran untuk penelitian selanjutnya.
 
 \end{enumerate}
 
