@@ -1,200 +1,361 @@
+%! TEX program = xelatex
 \documentclass[xetex]{beamer}
 
-\usefonttheme{default}
-\beamertemplatenavigationsymbolsempty
-\setbeamertemplate{footline}[frame number]
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric}
 \usepackage{caption}
 \usepackage{graphicx}
-\DeclareGraphicsExtensions{.pdf,.png,.jpg}
 \usepackage{hyperref}
 
-\title{Implementasi \textit{Primary-Backup Scheduling} Pada Xen ARINC 653}
-\subtitle{Seminar Tugas Akhir I}
-\author{Aufar Gilbran - 13513015}
-\date{13 Januari 2017}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
 
-\AtBeginSection[]
-{
-    \begin{frame}{Overview}
-        \tableofcontents[currentsection]
-    \end{frame}
-}
+\usetheme{metropolis}
+\beamertemplatenavigationsymbolsempty
+
+% Tikz Commands
+\newcommand{\rectnode}[3]{rectangle +(#1,#2) node[pos=0.5,font=\tiny] {#3}}
+\newcommand{\squarenode}[2]{\rectnode{#1}{#1}{#2}}
+
+\title{Pengembangan Keandalan Sistem ARINC 653\\dengan Menggunakan\\ \textit{Fault Tolerant Partition Scheduling}}
+\subtitle{Seminar Tugas Akhir II}
+\author{Aufar Gilbran - 13513015}
+\date{11 Juli 2017}
 
 \hypersetup{pdfstartview={FitH}}
 
 \begin{document}
-    \frame{\titlepage}
-    \section{Latar Belakang}
-    \begin{frame}
-        \frametitle{Sistem \textit{Real-Time}}
-        \begin{itemize}
-            \item Sistem yang kebenaran perhitungannya ditentukan oleh:
-                \begin{itemize}
-                    \item Hasil perhitungan secara logika.
-                    \item Hasil perhitungan didapat sebelum \textit{deadline}.
-                \end{itemize}
-            \item Gagal dalam memenuhi \textit{deadline} terhitung sebagai \textit{fault}.
-            \item Contoh:
-                \begin{itemize}
-                    \item \textit{Anti-ballistic missile} untuk mendeteksi misil sebelum misil jatuh.
-                    \item \textit{Anti-lock braking system} untuk melakukan operasi akselerasi dan deselerasi sebelum terjadi \textit{slip}.
-                    \item \textit{Missile approach warning system} untuk memperingatkan pilot bahwa ada misil datang.
-                \end{itemize}
-        \end{itemize}
-    \end{frame}
-    \begin{frame}
-        \frametitle{ARINC 653}
-        \begin{itemize}
-            \item Standar avionik yang menspesifikasikan partisi pada sistem operasi \textit{real-time}.
-            \item Partisi mengakibatkan isolasi \textit{fault}
-            \item Namun, \textit{fault} tetap terjadi.
-        \end{itemize}
-    \end{frame}
-    \begin{frame}
-        \frametitle{ARINC 653 --- Arsitektur}
-        \begin{figure}[htbp]
-            \centering
-            \includegraphics[scale=0.3]{resources/arinc653-architecture.png}
-        \end{figure}
-    \end{frame}
-    \begin{frame}
-        \frametitle{\textit{Primary-Backup Scheduling}}
-        \begin{itemize}
-            \item Metode \textit{scheduling} proses yang menjamin \textit{fault-tolerancy}.
-            \item Pada kondisi normal, \textit{scheduler} akan melakukan \textit{scheduling} untuk proses \textit{primary}.
-            \item Proses \textit{primary} gagal $\implies$ proses \textit{backup} menggantikan.
-        \end{itemize}
-    \end{frame}
-    \begin{frame}
-        \frametitle{\textit{Primary-Backup Scheduling} --- \textit{Process List}}
-        \begin{figure}[htbp]
-            \includegraphics[scale=0.5]{resources/process_list.png}
-            \caption*{\textit{Process List}}
-            \\[25pt]
-            \includegraphics[scale=0.5]{resources/process_list_desc.png}
-            \caption*{Aplikasi pada \textit{Process List}}
-        \end{figure}
-    \end{frame}
-    \begin{frame}
-        \frametitle{\textit{Primary-Backup Scheduling} --- \textit{Normal Scheduling}}
-        \begin{figure}[htbp]
-            \includegraphics[scale=0.7]{resources/schedule_normal.png}
-        \end{figure}
-    \end{frame}
-    \begin{frame}
-        \frametitle{\textit{Primary-Backup Scheduling} --- \textit{Fault}}
-        \begin{figure}[htbp]
-            \includegraphics[scale=0.7]{resources/fault.png}
-        \end{figure}
-    \end{frame}
-    \begin{frame}
-        \frametitle{\textit{Primary-Backup Scheduling} --- \textit{On-Fault Scheduling}}
-        \begin{figure}[htbp]
-            \includegraphics[scale=0.7]{resources/schedule_onfault.png}
-        \end{figure}
-    \end{frame}
-    \begin{frame}
-        \frametitle{Xen}
-        \begin{itemize}
-            \item Hypervisor yang memanajemeni \textit{virtual machine} (pada Xen disebut sebagai \textit{domain}).
-            \item Setiap \textit{virtual machine} memiliki lingkungan terisolasi (mesin fisik menjadi terpartisi).
-            \item Dapat digunakan untuk memodelkan partisi pada spesifikasi ARINC 653.
-            \item Free \& Open Source $\implies$ mudah melakukan \textit{customization}:
-                \begin{itemize}
-                    \item Memiliki \textit{interface} untuk membuat \textit{scheduler}
-                    \item Memiliki \textit{interface} untuk membuat konfigurasi \textit{domain}
-                \end{itemize}
-            \item Produk serupa:
-                \begin{itemize}
-                    \item VMWare
-                    \item VirtualBox
-                \end{itemize}
-        \end{itemize}
-    \end{frame}
-    \begin{frame}
-        \frametitle{Xen ARINC 653}
-        \begin{itemize}
-            \item Prototipe sistem yang memenuhi standar ARINC 653.
-            \item Dikembangkan diatas Xen  $\implies$ memiliki karakteristik dan keuntungan Xen.
-        \end{itemize}
-    \end{frame}
-    \section{Rumusan Masalah \& Tujuan}
-    \begin{frame}
-        \frametitle{Rumusan Masalah \& Tujuan}
-        \begin{itemize}
-            \item Belum ada implementasi maupun penelitian tentang \textit{primary-backup scheduling} pada sistem yang memenuhi standar ARINC 653.
-            \item Penelitian ini akan menjawab permasalahan mengenai:
-                \begin{itemize}
-                    \item Implementasi \textit{primary-backup scheduling} pada Xen ARINC 653
-                    \item Pengujian \textit{scheduling} pada Xen ARINC 653
-                    \item ARINC 653 + \textit{primary-backup scheduling} $\implies$ lebih \textit{fault-tolerant}
-                    \item Kinerja ARINC 653 + \textit{primary-backup scheduling} vs normal
-                \end{itemize}
-        \end{itemize}
-    \end{frame}
-    \section{Analisis}
-    \begin{frame}
-        \frametitle{Xen ARINC 653 --- \textit{Scheduling}}
-        \begin{itemize}
-            \item Memodelkan partisi dengan menggunakan \textit{domain}
-            \item Menggunakan \textit{major time frame} (didapat dari faktor persekutuan terbesar \textit{deadline} seluruh partisi)
-            \item Aplikasi akan meminta \textit{slot} pada \textit{major time frame}
-            \item Diimplementasikan pada \textit{file} 'xen/common/sched\_arinc653.c'
-        \end{itemize}
-    \end{frame}
-    \begin{frame}
-        \frametitle{Xen ARINC 653 --- Contoh Partisi}
-        \begin{figure}[htbp]
-            \includegraphics[scale=0.4]{resources/xen-arinc653-partitions.png}
-            \caption*{Contoh partisi yang akan dijalankan}
-        \end{figure}
-    \end{frame}
-    \begin{frame}
-        \frametitle{Xen ARINC 653 --- Contoh \textit{Scheduling}}
-        \begin{figure}[htbp]
-            \includegraphics[scale=0.4]{resources/xen-arinc653-partition-schedule.png}
-            \caption*{\textit{Scheduling} pada Xen ARINC 653}
-        \end{figure}
-    \end{frame}
-    \begin{frame}
-        \frametitle{Implementasi \textit{Primary-Backup} Scheduling}
-        \begin{itemize}
-            \item Penentuan Jenis \textit{Partisi} (\textit{primary}/\textit{backup})
-                \begin{itemize}
-                    \item \textit{Hardcode} nama
-                    \item Menambahkan \textit{property} pada saat konfigurasi \textit{domain}
-                \end{itemize}
-            \item Pendeteksian Kegagalan
-                \begin{itemize}
-                    \item Komunikasi kepada \textit{domain} utama/dom0 (menggunakan \textit{shared memory}, XenStore)
-                    \item Komunikasi kepada \textit{hypervisor} (menggunakan \textit{hypercall})
-                \end{itemize}
-        \end{itemize}
-    \end{frame}
-    \begin{frame}
-        \frametitle{Evaluasi}
-        \begin{itemize}
-            \item \textit{Stress-testing}
-                \begin{enumerate}
-                    \item Aplikasi akan bekerja bersamaan dengan aplikasi lain.
-                    \item Hitung persentase \textit{deadline} yang terpenuhi
-                \end{enumerate}
-            \item \textit{Fault-injection}
-                \begin{enumerate}
-                    \item Aplikasi akan diberikan \textit{request}.
-                    \item Aplikasi akan memiliki kemungkinan untuk mengalami \textit{fault}.
-                    \item Hitung persentase aplikasi tidak mengalami \textit{fault}.
-                \end{enumerate}
-        \end{itemize}
-    \end{frame}
-    \begin{frame}
-        \Huge Terima Kasih
-    \end{frame}
-    \begin{frame}
-        \frametitle{F.A.Q}
-        \begin{itemize}
-            \item \textit{Hypervisor} --- \textit{Supervisor} dari \textit{supervisor} (kernel), \textit{hyper} $>$ \textit{super}
-            \item dom0 --- \textit{Domain} yang melakukan manajemen \textit{domain}/\textit{virtual machine} lain
-        \end{itemize}
-    \end{frame}
+\frame{\titlepage}
+\begin{frame}{Alur}
+	\tableofcontents
+\end{frame}
+
+\section{Latar Belakang}
+\begin{frame}
+	\frametitle{Latar Belakang --- Definisi Sistem \textit{Real-Time}}
+	\begin{itemize}
+		\item Menurut Kang G. Shin, berikut merupakan komponen dari sebuah sistem \textit{real-time}: 
+			\begin{itemize}
+				\item \textit{Task} pada sistem memiliki \textit{deadline}.
+				\item Keandalan sistem sangat penting.
+			\end{itemize}
+	\end{itemize}
+\end{frame}
+\begin{frame}
+	\frametitle{Latar Belakang --- Sistem \textit{Real-Time} pada Avionika}
+	\begin{itemize}
+		\item Sistem \textit{real-time} digunakan pada berbagai bidang.
+		\item Fokus penelitian adalah pada bidang avionika.
+		\item Kegagalan sistem pada bidang avionika dapat mengakibatkan hilangnya nyawa atau kerusakan lingkungan.
+		\item Contoh sistem \textit{real-time} pada bidang avionika:
+			\begin{itemize}
+				\item \textit{Aircraft Collision Avoidance System}.
+				\item \textit{Aircraft Flight Control System}.
+				\item \textit{Missile Approach Warning System}.
+			\end{itemize}
+	\end{itemize}
+\end{frame}
+\begin{frame}
+	\frametitle{Latar Belakang --- ARINC 653}
+	\begin{itemize}
+		\item Standar untuk sistem operasi \textit{real-time} pada avionik.
+		\item Menjamin lingkungan eksekusi layanan terpartisi pada sistem operasi ARINC 653.
+		\item Sistem terpartisi mengakibatkan kegagalan yang terjadi pada suatu partisi terisolasi dan tidak mempengaruhi partisi lain.
+		\item Kegagalan pada partisi tetap terjadi sehingga memungkinkan terjadinya kegagalan pada sistem secara keseluruhan.
+	\end{itemize}
+\end{frame}
+\begin{frame}{Latar Belakang --- ARINC 653 \textit{Scheduler}}
+	\begin{itemize}
+		\item Isolasi waktu CPU pada sistem ARINC 653 dilakukan dengan menggunakan dua jenis \textit{scheduler}:
+			\begin{itemize}
+				\item \textit{Partition Scheduler} --- Menjadwalkan partisi-partisi pada sistem.
+				\item \textit{Process Scheduler} --- Menjadwalkan layanan pada masing-masing partisi.
+			\end{itemize}
+		\item Fokus penelitian adalah \textit{partition scheduler}.
+	\end{itemize}
+\end{frame}
+\begin{frame}
+	\frametitle{Latar Belakang --- Xen}
+	\begin{itemize}
+		\item Xen merupakan solusi \textit{virtual machine} yang gratis dan \textit{open source}.
+		\item Setiap \textit{virtual machine} pada Xen memiliki lingkungan eksekusi yang
+			terisolasi sehingga dapat digunakan untuk memodelkan partisi pada
+			spesifikasi ARINC 653. 
+		\item \textit{Open source} $\implies$ Mudah melakukan modifikasi pada sistem:
+		\item Teknologi lain yang serupa:
+			\begin{itemize}
+				\item VMWare ESXi
+				\item Microsoft Hyper-V
+				\item Oracle VM Server
+			\end{itemize}
+	\end{itemize}
+\end{frame}
+\begin{frame}
+	\frametitle{Latar Belakang --- ARLX}
+	\begin{itemize}
+		\item Prototipe sistem yang memenuhi standar ARINC 653.
+		\item Dikembangkan diatas Xen  $\implies$ memiliki karakteristik dan keuntungan Xen.
+	\end{itemize}
+\end{frame}
+\begin{frame}
+	\frametitle{Latar Belakang --- \textit{Fault-Tolerant Partition Scheduling}}
+	\begin{itemize}
+		\item Algoritma \textit{scheduling} partisi yang menggunakan partisi cadangan untuk menggantikan partisi asli apabila mengalami kegagalan.
+		\item Solusi untuk meningkatkan keandalan sistem terpartisi.
+		\item Cocok digunakan untuk sistem ARINC 653.
+		\item Teknologi yang menggunakannya merupakan produk komersial.
+	\end{itemize}
+\end{frame}
+
+\section{Rumusan Masalah \& Tujuan}
+\begin{frame}
+	\frametitle{Rumusan Masalah}
+	\begin{itemize}
+		\item Standar ARINC 653 tidak membuat sistem menjadi andal.
+		\item Sistem ARINC 653 yang andal belum tersedia secara gratis dan \textit{open source}.
+	\end{itemize}
+\end{frame}
+\begin{frame}
+	\frametitle{Tujuan}
+	\begin{itemize}
+		\item Meningkatkan keandalan sistem ARINC 653.
+		\item Dapat dicapai dengan:
+			\begin{itemize}
+				\item Implementasi \textit{fault-tolerant partition scheduling} pada sistem ARINC 653.
+				\item Pengujian \textit{fault-tolerant partition scheduler} pada sistem ARINC 653.
+				\item Analisis efektivitas \textit{fault-tolerant partition scheduling} pada sistem ARINC 653.
+				\item Analisis efisiensi \textit{fault-tolerant partition scheduling} pada sistem ARINC 653.
+			\end{itemize}
+	\end{itemize}.
+\end{frame}
+\begin{frame}
+	\frametitle{Batasan Masalah}
+	\begin{itemize}
+		\item Implementasi hanya akan dilakukan pada sistem dengan arsitektur x86-64.
+		\item Implementasi hanya akan dilakukan di atas \textit{virtual machine}.
+		\item Implementasi hanya akan diuji coba dengan menggunakan sistem operasi Linux untuk setiap partisi-nya.
+			Hasil pada sistem operasi lain mungkin berbeda.
+	\end{itemize}
+\end{frame}
+
+\section{Rancangan Solusi dan Pengujian}
+\begin{frame}
+	\frametitle{Rancangan Solusi --- ARLX}
+	\begin{itemize}
+		\item Memodelkan partisi dengan menggunakan \textit{virtual machine}.
+		\item Menggunakan \textit{major time frame} (didapat dari faktor persekutuan
+			terbesar \textit{deadline} seluruh partisi).
+		\item Partisi akan meminta \textit{slot} pada \textit{major time frame}.
+	\end{itemize}
+\end{frame}
+\begin{frame}
+	\frametitle{Rancangan Solusi --- Algoritma \textit{Scheduling}}
+	\begin{itemize}
+		\item Secara umum sama dengan algoritma \textit{partition scheduling} pada ARINC 653.
+		\item Asumsikan setiap partisi menyediakan layanan.
+		\item Partisi \textit{backup} memiliki layanan yang sama dengan partisi \textit{primary}.
+		\item \textit{Scheduler} hanya akan memberikan CPU kepada
+			partisi yang tidak sedang mengalami kegagalan
+			dan layanan tersebut belum pernah tersedia.
+		\item Layanan belum pernah disediakan
+			$\Longleftrightarrow$ tidak ada partisi dengan layanan
+			tersebut yang sudah diberikan waktu CPU pada suatu
+			\textit{major time frame}.
+	\end{itemize}
+\end{frame}
+\begin{frame}
+	\frametitle{Rancangan Solusi --- Informasi Partisi}
+	\begin{itemize}
+		\item \textit{Scheduler} perlu mengetahui informasi terkait keadaan partisi dan layanan pada partisi.
+		\item Status partisi diperlukan untuk mengetahui apakah partisi mengalami kegagalan/tidak.
+		\item Layanan pada partisi diperlukan untuk mengetahui apakah layanan tersebut sudah tersedia.
+		\item Informasi tersebut dapat diberikan oleh partisi melalui \textit{hypercall}.
+	\end{itemize}
+\end{frame}
+\begin{frame}{Rancangan Solusi --- Alur Kerja Sistem}
+	\centering
+	\begin{figure}
+		\begin{tikzpicture}[
+			base/.style={draw, text opacity=1.0, rounded corners, minimum width=35pt, minimum height=35pt, font=\tiny},
+			arrow/.style={font=\tiny, midway, anchor=south, text width=30pt},
+			userspace/.style={fill=blue!20},
+			kernelspace/.style={fill=orange!20},
+			partition/.style={base, userspace},
+			xl/.style={base, userspace},
+			hypervisor/.style={base, kernelspace},
+			scheduler/.style={base, kernelspace},
+		]
+
+		\node[partition] (partisi) {Partisi};
+		\node[xl, right of=partisi, xshift=50pt] (xl)  {xl};
+		\node[hypervisor, right of=xl, xshift=50pt] (hypervisor) {Hypervisor};
+		\node[scheduler, right of=hypervisor, xshift=50pt] (scheduler) {Scheduler};
+
+		\draw[->] (partisi) -- node[arrow] {mengirimkan informasi partisi} (xl);
+		\draw[->] (xl) -- node[arrow] {mengirimkan IRQ} (hypervisor);
+		\draw[->] (hypervisor) -- node[arrow] {memanggil \textit{handler}} (scheduler);
+		
+		\end{tikzpicture}
+	\end{figure}
+\end{frame}
+\begin{frame}{Rancangan Solusi --- Flowchart Algoritma \textit{Scheduling}}
+	\centering
+	\begin{figure}
+		\begin{tikzpicture}[
+			base/.style={scale=0.9, draw, text opacity=1.0, font=\tiny, text width=35pt},
+			block/.style={base, fill=blue!20, rounded corners, text centered},
+			decision/.style={base, fill=orange!20, diamond, inner sep=0pt, text badly centered},
+			label/.style={scale=0.9, font=\tiny, near start},
+		]
+
+		\node[block, fill=pink!80] (mulai) {Mulai};
+		\node[decision, below of=mulai, yshift=-20pt] (cek-konfigurasi) {Konfigurasi Penjadwalan Tersedia?};
+		\node[block, right of=cek-konfigurasi, xshift=30pt] (mulai-major) {Mulai Major Frame Baru};
+		\node[decision, right of=mulai-major, xshift=25pt] (cek-major) {Major Frame Habis?};
+		\node[decision, right of=cek-major, xshift=30pt]  (cek-partisi) {Terdapat Kandidat Partisi?};
+		\node[block, right of=cek-partisi, xshift=30pt] (partisi-kandidat) {Partisi Berikutnya};
+		\node[decision, below of=partisi-kandidat, yshift=-30pt] (cek-gagal) {Partisi Mengalami Kegagalan?};
+		\node[decision, below of=cek-gagal, yshift=-40pt] (cek-layanan) {Layanan Sudah Tersedia?};
+		\node[block, right of=cek-gagal, xshift=30pt] (partisi-tidak-jalan) {Partisi Tidak Diberi Kuantum Waktu CPU};
+		\node[block, left of=cek-layanan, xshift=-40pt] (partisi-jalan) {Partisi Diberi Kuantum Waktu CPU};
+		\node[block, left of=partisi-jalan, xshift=-30pt] (partisi-kuantum) {Partisi Menggunakan Kuantum};
+		\node[decision, left of=partisi-kuantum, xshift=-30pt] (cek-kuantum) {Kuantum Habis?};
+		\node[block, below of=mulai-major, yshift=-30pt] (akhir-major) {Akhir dari Major Frame};
+		\node[block, below of=cek-partisi, yshift=-30pt] (idle) {Idle};
+		
+		\draw[->] (mulai) -- (cek-konfigurasi);
+		\draw[->] (cek-konfigurasi) -- node[label, anchor=south] {ya} (mulai-major);
+		\draw[->] (cek-konfigurasi) |- ++(-30pt,-30pt) |- node[label, anchor=north] {tidak} (cek-konfigurasi);
+		\draw[->] (mulai-major) -- (cek-major);
+		\draw[->] (cek-major) |- node[label, anchor=west] {ya} (akhir-major);
+		\draw[->] (cek-partisi) -- node[label, anchor=west] {tidak} (idle);
+		\draw[->] (akhir-major) -- (mulai-major);
+		\draw[->] (cek-major) -- node[label, anchor=south] {ya} (cek-partisi);
+		\draw[->] (cek-partisi) -- node[label, anchor=south] {ya} (partisi-kandidat);
+		\draw[->] (partisi-kandidat) -- (cek-gagal);
+		\draw[->] (cek-gagal) -- node[label, anchor=south] {ya} (partisi-tidak-jalan);
+		\draw[->] (cek-gagal) -- node[label, anchor=west] {tidak} (cek-layanan);
+		\draw[->] (cek-layanan) -| node[label, anchor=south] {ya} (partisi-tidak-jalan);
+		\draw[->] (cek-layanan) -- node[label, anchor=south] {tidak} (partisi-jalan);
+		\draw[->] (partisi-kuantum) -- (cek-kuantum);
+		\draw[->] (cek-kuantum) -- ++(0pt, -30pt) -| node[label, anchor=south] {tidak} (partisi-kuantum);
+		\draw[->] (idle) -- (akhir-major);
+		\draw[->] (cek-kuantum) |- ++(14pt, 30pt) -- node[label, anchor=west] {ya} (akhir-major);
+		\draw[->] (partisi-tidak-jalan) -- ++(0pt, 90pt) -| (cek-partisi);
+		\draw[->] (partisi-jalan) -- (partisi-kuantum);
+		
+		\end{tikzpicture}
+		\caption{Diagram \textit{Flowchart} Algoritma \textit{Scheduling}}
+	\end{figure}
+\end{frame}
+\begin{frame}{Rancangan Solusi --- Ilustrasi Algoritma}
+	\centering
+	\begin{figure}
+		\begin{tikzpicture}[
+			scale=0.8,
+			base/.style={draw, text opacity=1.0, rounded corners=1pt, minimum width=20pt, minimum height=24pt, font=\tiny},
+			partition-done/.style={base, fill=gray, fill opacity=0.10},
+			partition-healthy/.style={base, fill=green, fill opacity=0.30},
+			partition-failed/.style={base, fill=red, fill opacity=0.40},
+			candidate/.style={ultra thick},
+			]
+
+			\newcommand{\boxs}{30pt}
+			\newcommand{\off}{20pt}
+
+			\node [partition-healthy,candidate] at (0*\boxs,{1*(-\boxs-\off)}) {P1-SA};
+			\node [partition-healthy]           at (1*\boxs,{1*(-\boxs-\off)}) {P2-SA};
+			\node [partition-failed]            at (2*\boxs,{1*(-\boxs-\off)}) {P3-SB};
+			\node [partition-healthy]           at (3*\boxs,{1*(-\boxs-\off)}) {P4-SB};
+			\node [partition-healthy]           at (4*\boxs,{1*(-\boxs-\off)}) {P5-SB};
+
+			\node [partition-done]              at (0*\boxs,{2*(-\boxs-\off)}) {P1-SA};
+			\node [partition-done,candidate]    at (1*\boxs,{2*(-\boxs-\off)}) {P2-SA};
+			\node [partition-failed]            at (2*\boxs,{2*(-\boxs-\off)}) {P3-SB};
+			\node [partition-healthy]           at (3*\boxs,{2*(-\boxs-\off)}) {P4-SB};
+			\node [partition-healthy]           at (4*\boxs,{2*(-\boxs-\off)}) {P5-SB};
+
+			\node [partition-done]              at (0*\boxs,{3*(-\boxs-\off)}) {P1-SA};
+			\node [partition-done]              at (1*\boxs,{3*(-\boxs-\off)}) {P2-SA};
+			\node [partition-failed,candidate]  at (2*\boxs,{3*(-\boxs-\off)}) {P3-SB};
+			\node [partition-healthy]           at (3*\boxs,{3*(-\boxs-\off)}) {P4-SB};
+			\node [partition-healthy]           at (4*\boxs,{3*(-\boxs-\off)}) {P5-SB};
+
+			\node [partition-done]              at (0*\boxs,{4*(-\boxs-\off)}) {P1-SA};
+			\node [partition-done]              at (1*\boxs,{4*(-\boxs-\off)}) {P2-SA};
+			\node [partition-failed]            at (2*\boxs,{4*(-\boxs-\off)}) {P3-SB};
+			\node [partition-healthy,candidate] at (3*\boxs,{4*(-\boxs-\off)}) {P4-SB};
+			\node [partition-healthy]           at (4*\boxs,{4*(-\boxs-\off)}) {P5-SB};
+
+			\node [partition-done]              at (0*\boxs,{5*(-\boxs-\off)}) {P1-SA};
+			\node [partition-done]              at (1*\boxs,{5*(-\boxs-\off)}) {P2-SA};
+			\node [partition-done]              at (2*\boxs,{5*(-\boxs-\off)}) {P3-SB};
+			\node [partition-done]              at (3*\boxs,{5*(-\boxs-\off)}) {P4-SB};
+			\node [partition-done,candidate]    at (4*\boxs,{5*(-\boxs-\off)}) {P5-SB};
+
+		\end{tikzpicture}
+
+		\caption{Algoritma \textit{Primary-Backup Scheduling}}
+	\end{figure}
+\end{frame}
+\begin{frame}{Rancangan Pengujian -- \textit{Reliability Testing}}
+	\begin{itemize}
+		\item Metode:
+			\begin{enumerate}
+				\item Partisi akan diuji dengan arsitektur \textit{client-server}.
+				\item Partisi sebagai \textit{client} mengirimkan \textit{heartbeat} ke \textit{server}.
+				\item \textit{Server} mencatat nomor identifikasi partisi.
+			\end{enumerate}
+		\item Tujuan:
+			\begin{enumerate}
+				\item Mengetahui jumlah layanan yang disediakan pada setiap \textit{major time frame}.
+				\item Menjamin partisi yang diberi waktu CPU adalah partisi yang seharusnya.
+				\item Menjamin layanan tidak terduplikasi.
+			\end{enumerate}
+	\end{itemize}
+\end{frame}
+\begin{frame}{Rancangan Pengujian -- \textit{Real-Time Testing}}
+	\begin{itemize}
+		\item Metode:
+			\begin{enumerate}
+				\item Partisi akan menjalankan \textit{periodic task}.
+				\item Server akan mencatat waktu \textit{task} tersebut dijalankan.
+			\end{enumerate}
+		\item Tujuan:
+			\begin{enumerate}
+				\item Menjamin \textit{task} akan dijalankan sebelum \textit{deadline}.
+				\item Menjamin tidak terjadi \textit{time-drift} yang signifikan.
+			\end{enumerate}
+	\end{itemize}
+\end{frame}
+\section{Implementasi}
+\begin{frame}
+	\frametitle{Implementasi --- \textit{Hypercall}}
+	\begin{itemize}
+		\item Partisi dapat mengirimkan informasi partisi kepada \textit{scheduler}.
+		\item Menggunakan \textit{interface} pada Xen untuk mendefinisikan \textit{public hypercall}.
+		\item Menggunakan libxl pada Xen untuk membuat kakas pada \textit{user space}.
+	\end{itemize}
+\end{frame}
+\begin{frame}
+	\frametitle{Implementasi --- \textit{Primary-Backup Partition Scheduling}}
+	\begin{itemize}
+		\item \textit{Scheduler} dapat menyimpan informasi partisi.
+		\item \textit{Scheduler} dapat menentukan pemberian waktu CPU kepada partisi berdasarkan keadaan dan layanan pada partisi tersebut.
+		\item \textit{Scheduler} dapat menjamin penjadwalan yang deterministik.
+		\item Menggunakan \textit{interface} pada Xen untuk mendefinisikan \textit{scheduler}.
+	\end{itemize}
+\end{frame}
+\begin{frame}[standout]
+	\centering Terima Kasih
+\end{frame}
+
+\section{Tambahan}
+\begin{frame}
+	\frametitle{Terminologi}
+	\begin{itemize}
+		\item \textit{Hypervisor} --- \textit{Supervisor} dari \textit{supervisor} (kernel), \textit{hyper} $>$ \textit{super}
+		\item \textit{Open Source} --- Berlaku untuk perangkat lunak. Perangkat lunak tersedia bersama dengan \textit{source code}-nya.
+		\item \textit{Time-Drift} --- Pergeseran waktu sistem karena ketidaktelitian perhitungan waktu atau perangkat sistem.
+	\end{itemize}
+\end{frame}
 \end{document}
