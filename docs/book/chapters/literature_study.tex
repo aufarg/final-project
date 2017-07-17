@@ -377,7 +377,7 @@ operasi dan perangkat keras.  Xen menyediakan lingkungan virtual yaitu sebuah \t
 dapat beroperasi.  Terdapat tiga komponen utama pada sistem yang menggunakan Xen, yaitu
 \textit{hypervisor}, \textit{kernel}, dan aplikasi yang bekerja pada \textit{userspace}.
 
-\begin{figure}[h]
+\begin{figure}[!ht]
     \includegraphics[scale=0.5]{./resources/xen-ring.png}
     \caption[Perbedaan penggunaan \textit{ring} \textit{native} dan
     \textit{paravirtualized}]{Perbedaan penggunaan \textit{ring} \textit{native} (kiri) dan
@@ -399,12 +399,6 @@ berjalan pada \textit{ring} 1 dan aplikasi yang berjalan pada \textit{ring} 3.  
 \textit{privileged instructions} seperti biasanya.  \textit{Hypervisor} pada Xen menyediakan
 \textit{hypercall} sebagai pengganti \textit{privileged instructions}.
 
-\begin{figure}[h]
-    \includegraphics[scale=0.5]{./resources/xen-split-driver.png}
-    \caption[Jalur sebuah paket jaringan yang dikirim dari domU]{Jalur sebuah paket jaringan yang dikirim dari domU \citep{Chisnall2014}}
-    \label{figure:xen_split_driver}
-\end{figure}
-
 Fungsi dari sebuah \textit{hypervisor} adalah untuk menjalankan \textit{virtual machine}.  Pada
 Xen, \textit{hypervisor} menjalankan \textit{virtual machine} yang disebut sebagai
 \textit{domain}.  Terdapat dua jenis \textit{domain} pada Xen, yaitu dom0 dan domU.  Dom0
@@ -419,6 +413,12 @@ tersebut tidak meneruskan langsung ke \textit{network device} tetapi menulis pak
 \textit{shared memory}.  Kemudian dom0 akan membaca paket yang terdapat pada \textit{shared
 memory} untuk dilanjutkan ke \textit{network device} yang sebenarnya.  Penggunaan \textit{shared
 memory} seperti ilustrasi tersebut banyak digunakan pada berbagai komponen yang membentuk Xen.
+
+\begin{figure}[!ht]
+    \includegraphics[scale=0.5]{./resources/xen-split-driver.png}
+    \caption[Jalur sebuah paket jaringan yang dikirim dari domU]{Jalur sebuah paket jaringan yang dikirim dari domU \citep{Chisnall2014}}
+    \label{figure:xen_split_driver}
+\end{figure}
 
 Salah satu kelebihan Xen sebagai \textit{hypervisor} adalah Xen memudahkan pengembang untuk
 menuliskan komponen sesuai dengan kebutuhan.  Xen menjelaskan secara rinci bagaimana proses

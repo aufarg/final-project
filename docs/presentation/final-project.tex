@@ -9,8 +9,11 @@
 
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
 
-\usetheme{metropolis}
-\beamertemplatenavigationsymbolsempty
+\usetheme[
+	titleformat=smallcaps,
+	sectionpage=progressbar,
+	numbering=fraction,
+]{metropolis}
 
 % Tikz Commands
 \newcommand{\rectnode}[3]{rectangle +(#1,#2) node[pos=0.5,font=\tiny] {#3}}

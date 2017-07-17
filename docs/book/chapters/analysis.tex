@@ -4,6 +4,36 @@
 \section{Analisis Permasalahan}
 \label{section:permasalahan}
 
+% TODO: use this one
+% The problem with faulty partition is that the service it provides will cease to work and/or give
+% incorrect result. In avionics, this could lead to incorrect calculation of control systems, thus
+% significantly increases safety-risk for people and/or environment involved. We assume that there
+% is one-to-one relationship between service and partition. The simplest way to bring back the
+% service is by restarting the faulty partition. In general cases, there is no way to know whether
+% restarting faulty partition could bring back said service as the cause of fault could be
+% persistent.
+
+% To improve service reliability in real-time systems, one solution is to have the scheduler to be
+% fault-tolerant \cite{Campbell1986} \cite{Han2003} \cite{Shin2008}. A study shows that a
+% hierarchical scheduler like ARINC 653 scheduler, which has at least two levels of scheduling,
+% can be made fault-tolerant with primary-backup scheme \cite{Jin2013}. When a partition
+% experienced failure, the scheduler can keeps the service running by having backup partition
+% running in place of the faulty primary partition. Common primary-backup schemes make sure that
+% each partition have replicas that is identical service-wise to the primary partition before
+% being operational. When said partition experienced a failure, one of its replicas could take
+% over its place and provide the same service. While this scheme can seamlessly handle persistent
+% failure on partitions, identical partitions means the exact same failure in primary are bound to
+% happen in replicas.
+
+% For primary-backup scheme on partition scheduler to work indefinitely, replica partitions should
+% not be identical to their corresponding primary partition. We could think of replicas as
+% fail-safe mechanism of corresponding primary. This could be achieved by having more mature
+% application and environments in replicas. We assume that mature version of the application
+% provide identical service to current version of the application, although it might lack some
+% non-essential features or optimizations. For applications that do not support backward
+% compatibility, having flexibility in choosing applications that resides in replicas means we
+% still have the option to use identical replicas.
+
 Standar ARINC 653 berfungsi sebagai panduan pengembangan sistem operasi \textit{real-time} pada
 \textit{safety-critical system}.  Banyak faktor yang menentukan apakah sebuah sistem dapat
 dikategorikan sebagai \textit{safety-critical system}, salah satunya adalah
@@ -65,7 +95,7 @@ dikategorikan mengalami kegagalan. Karena itu, perlu ada mekanisme untuk mendete
 Agar skema \textit{primary-backup} dapat dilakukan, \textit{scheduler} harus mengetahui beberapa
 informasi terkait keadaan partisi agar dapat menentukan partisi mana yang harus mendapatkan
 waktu CPU. \textit{Scheduler} harus mengetahui apakah partisi tersebut mengalami
-\textit{failure} atau tidak. Apabila partisi sedang mengalami kegagalan, maka partisi tidak
+kegagalan atau tidak. Apabila partisi sedang mengalami kegagalan, maka partisi tidak
 boleh mendapatkan jatah waktu CPU. Selain itu, \textit{scheduler} juga harus mengetahui
 layanan apa saja yang sudah dikerjakan sebelumnya pada \textit{major time frame} saat
 ini. Dengan demikian, partisi yang memiliki layanan yang tidak bersifat
@@ -89,7 +119,7 @@ memenuhi batasan-batasan masing-masing proses. Agar algoritma \textit{scheduling
 deterministik, algoritma tersebut harus tidak bergantung pada sumber eksternal. Dengan demikian,
 algoritma \textit{primary-backup scheduling} yang dibuat harus secara penuh bergantung kepada
 informasi masing-masing partisi. \textit{Scheduler} akan memberikan waktu CPU kepada partisi
-yang tidak sedang mengalami \textit{failure} dan layanan tersebut belum pernah
+yang tidak sedang mengalami kegagalan dan layanan tersebut belum pernah
 disediakan. Sebuah layanan dikatakan belum pernah disediakan jika dan hanya jika dan
 hanya jika tidak ada partisi dengan layanan yang sama dengan layanan partisi
 tersebut yang sudah diberikan waktu CPU pada suatu \textit{major time frame}.

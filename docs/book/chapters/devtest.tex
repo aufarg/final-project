@@ -100,7 +100,7 @@ bagian.
 
 \end{enumerate}
 
-\begin{figure}[!h]
+\begin{figure}[!ht]
 \begin{lstlisting}[
 	caption={Deklarasi fungsi \textit{scheduling} pada ARLX},
 	label=code:do_schedule_declaration
@@ -119,7 +119,7 @@ telah disediakan~\citep[p.~218]{Chisnall2014}. \autoref{code:struct_scheduler} m
 struktur pada saat \textit{runtime} dengan masing-masing \textit{function pointer} menunjuk pada
 sebuah fungsi.
 
-\begin{figure}[!h]
+\begin{figure}[!ht]
 \begin{lstlisting}[
 	caption={\textit{Interface} dari fungsi \textit{scheduler}},
 	label=code:struct_scheduler
@@ -412,7 +412,7 @@ informasi dari \textit{scheduler} oleh \textit{user space} dapat dilihat pada
 
 \subsubsection{Fungsi Pengiriman Informasi Partisi}
 
-\begin{figure}[!h]
+\begin{figure}[!ht]
 \begin{lstlisting}[
 	caption={Fungsi yang digunakan \textit{user space} mengirim informasi \newline kepada \textit{scheduler}},
 	label=code:xc_sched_sysctl_set
@@ -455,7 +455,7 @@ menggunakan hasil dari alokasi memori, \textit{hypervisor} dapat menyalin isi da
 \subsubsection{Fungsi Permintaan Informasi Partisi}
 \label{section:fungsi_permintaan_informasi_partisi}
 
-\begin{figure}[!h]
+\begin{figure}[!ht]
 \begin{lstlisting}[
 	caption={Fungsi yang digunakan \textit{user space} meminta informasi \newline partisi dari \textit{scheduler}},
 	label=code:xc_sched_sysctl_get
@@ -512,7 +512,7 @@ berkomunikasi dengan \textit{hypervisor} melalui \textit{user space}. libxl akan
 libxc seperti pada \autoref{code:xl_domain_getset}. Kode tersebut memanggil fungsi-fungsi telah
 dibahas sebelumnya pada \autoref{section:modul_libxc}.
 
-\begin{figure}[!h]
+\begin{figure}[!ht]
 \begin{lstlisting}[
 	caption={xl berkomunikasi dengan menggunakan fungsi milik xc},
 	label=code:xl_domain_getset

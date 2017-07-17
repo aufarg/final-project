@@ -113,6 +113,9 @@ Berikut adalah pertanyaan permasalahan yang akan dijawab dan diselesaikan pada t
     \item Bagaimana cara melakukan pengujian keandalan sistem ARINC 653 setelah menggunakan
     	    \textit{fault-tolerant partition scheduling}?
 
+    \item Apakah terjadi peningkatan keandalan sistem akibat penggunaan \textit{fault-tolerant
+    	    partition scheduling} pada sistem yang memenuhi standar ARINC 653?
+
     \item Apakah terdapat peningkatan atau penurunan kinerja akibat peningkatan keandalan
     	    menggunakan \textit{fault-tolerant partition scheduling} pada sistem yang memenuhi
     	    standar ARINC 653?
@@ -136,12 +139,13 @@ yang akan dikembangkan yaitu.
 
 \begin{enumerate}
 
-    \item Pengujian yang dilakukan hanya akan diuji coba pada sistem dengan
-    	    arsitektur x86-64.
+    \item Implementasi hanya akan dilakukan pada sistem dengan arsitektur x86-64.
 
-    \item Pengujian yang dilakukan hanya akan diuji coba dengan menggunakan
-    	    \textit{kernel} Linux untuk setiap partisi-nya.  Hal ini mengakibatkan partisi yang
-    	    tidak menggunakan \textit{kernel} Linux mungkin memiliki perilaku yang berbeda.
+    \item Implementasi hanya akan dilakukan di atas \textit{virtual machine}. Hal ini
+	    mengakibatkan batasan pada \autoref{enumerate:linux_batasan}.
+
+    \item \label{enumerate:linux_batasan} Implementasi hanya akan diuji coba dengan menggunakan sistem operasi Linux untuk
+	    setiap partisi-nya. Hasil pada sistem operasi lain mungkin berbeda.
 
 \end{enumerate}
 
