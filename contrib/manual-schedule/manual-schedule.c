@@ -3,34 +3,34 @@
 #include <jansson.h>
 #include <string.h>
 #include <uuid/uuid.h>
-/* #include <xenctrl.h> */
-/* #include <libxl_utils.h> */
-/* #include <libxl.h> */
+#include <xenctrl.h>
+#include <libxl_utils.h>
+#include <libxl.h>
 
 #define MILLISECS(_ms)  ((_ms) * 1000000ULL)
 
 #define SCHED_POOLID 0
 #define VCPU_ID 0
 
-struct schedule {
-    int64_t major_frame;
-    struct sched_entry *entries;
-    int num_entries;
-};
-
-struct sched_entry {
+struct sched_entry_t {
     const char *dom_name;
     int vcpu_id;
     int64_t runtime;
 };
 
-struct dominfo {
-    char *dom_name;
-    uuid_t uuid;
+struct schedule_t {
+    int64_t major_frame;
+    struct sched_entry_t *entries;
+    int num_entries;
+};
+
+struct dominfo_t {
+    const char *dom_name;
+    libxl_uuid uuid;
     domid_t domid;
 };
 
-int extract_config(struct schedule *sched, char *config_path)
+int extract_config(struct schedule_t *sched, char *config_path)
 {
     json_t *root, *cur_obj, *json_arr;
     json_error_t error;
@@ -53,7 +53,7 @@ int extract_config(struct schedule *sched, char *config_path)
         return 1;
     }
 
-    sched = calloc(1, sizeof(sched));
+    memset(sched, 0, sizeof(struct schedule_t));
 
     /* get major time frame */
     cur_obj = json_object_get(root, "major_frame");
@@ -68,7 +68,7 @@ int extract_config(struct schedule *sched, char *config_path)
     json_arr = cur_obj;
 
     sched->num_entries = json_array_size(cur_obj);
-    sched->entries = malloc(sched->num_entries);
+    sched->entries = malloc(sched->num_entries * sizeof(struct sched_entry_t));
 
     json_array_foreach(json_arr, i, cur_obj) {
         json_t *cur_entry = cur_obj;
@@ -84,9 +84,11 @@ int extract_config(struct schedule *sched, char *config_path)
         if (!cur_obj || !json_is_integer(cur_obj))
             goto fail;
         sched->entries[i].runtime = json_integer_value(cur_obj);
+        printf("JSON %d %s %ld\n", i, sched->entries[i].dom_name, sched->entries[i].runtime);
     }
 
     return 0;
+
 fail:
     if (sched->entries)
         free(sched->entries);
@@ -98,33 +100,38 @@ fail:
 int main(int argc, char *argv[])
 {
     struct xen_sysctl_arinc653_schedule a653sched;
-    struct schedule sched;
-    struct dominfo *domlist;
+    struct schedule_t sched;
+    struct dominfo_t *domlist;
+    xc_interface *xci;
     libxl_ctx *ctx;
     libxl_dominfo *dominfo;
     int64_t total_runtime = 0;
     int i, ret;
-    int num_entries, num_domains;
+    int num_domains;
 
     if (argc != 2) {
-    	fprintf(stderr, "Usage: manual-schedule [config]");
+    	fprintf(stderr, "Usage: manual-schedule [config]\n");
     	return 1;
     }
-
-    xc_interface *xci = xc_interface_open(NULL, NULL, 0);
 
     libxl_ctx_alloc(&ctx, LIBXL_VERSION, 0, NULL);
     dominfo = libxl_list_domain(ctx, &num_domains);
 
-    domlist = malloc(num_domains * sizeof(dominfo));
+    domlist = malloc(num_domains * sizeof(struct dominfo_t));
     for (i = 0; i < num_domains; i++) {
-        char *name = libxl_domid_to_name(ctx, dominfo[i].domid);
+        const char *name = libxl_domid_to_name(ctx, dominfo[i].domid);
+	libxl_uuid_copy(ctx, &domlist[i].uuid, &dominfo[i].uuid);
         domlist[i].dom_name = name;
         domlist[i].domid = dominfo[i].domid;
-        domlist[i].uuid = dominfo[i].uuid;
     }
 
-    extract_config(&sched, argv[1]);
+    ret = extract_config(&sched, argv[1]);
+
+    puts("DONE EXTRACT JSON");
+    if (ret) {
+        fprintf(stderr, "error parsing JSON.\n");
+        return 1;
+    }
 
     for (i = 0; i < sched.num_entries; i++) {
         total_runtime += sched.entries[i].runtime;
@@ -138,15 +145,23 @@ int main(int argc, char *argv[])
     a653sched.major_frame = sched.major_frame;
     a653sched.num_sched_entries = sched.num_entries;
     for (i = 0; i < sched.num_entries; i++) {
-        char *entry_name = sched.entries[i].dom_name;
         int j;
+        const char *entry_name = sched.entries[i].dom_name;
         for (j = 0; j < num_domains && strcmp(entry_name, domlist[j].dom_name); j++);
 
+        char uuid_str[40];
         libxl_uuid_copy(ctx, (libxl_uuid *)&a653sched.sched_entries[i].dom_handle,
-                &(sched.entries[i].uuid));
+                &domlist[j].uuid);
         a653sched.sched_entries[i].vcpu_id = VCPU_ID;
         a653sched.sched_entries[i].runtime = sched.entries[i].runtime;
+
+        uuid_unparse((const char *)&a653sched.sched_entries[i].dom_handle, uuid_str);
+        printf("- %s\n", uuid_str);
+        printf("Domain runtime is %ld\n", a653sched.sched_entries[i].runtime);
     }
+    printf("Major frame is %ld\n", a653sched.major_frame);
+
+    xci = xc_interface_open(NULL, NULL, 0);
 
     ret = xc_sched_arinc653_schedule_set(xci, SCHED_POOLID, &a653sched);
     if (ret) {

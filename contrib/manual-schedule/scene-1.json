@@ -1,0 +1,13 @@
+{
+  "major_frame": 20000000,
+  "entries": [
+    {
+      "dom_name": "Domain-0",
+      "runtime": 10000000
+    },
+    {
+      "dom_name": "xen-vm1",
+      "runtime": 10000000
+    }
+  ]
+}
