@@ -127,7 +127,6 @@ int main(int argc, char *argv[])
 
     ret = extract_config(&sched, argv[1]);
 
-    puts("DONE EXTRACT JSON");
     if (ret) {
         fprintf(stderr, "error parsing JSON.\n");
         return 1;
@@ -135,11 +134,6 @@ int main(int argc, char *argv[])
 
     for (i = 0; i < sched.num_entries; i++) {
         total_runtime += sched.entries[i].runtime;
-    }
-
-    if (total_runtime > sched.major_frame) {
-        fprintf(stderr, "major frame (%ld) should be longer than total runtime (%ld).\n", sched.major_frame, total_runtime);
-        return 1;
     }
 
     a653sched.major_frame = sched.major_frame;

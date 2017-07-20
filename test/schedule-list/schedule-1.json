@@ -3,10 +3,14 @@
   "entries": [
     {
       "dom_name": "Domain-0",
-      "runtime": 10000000
+      "runtime": 5000000
     },
     {
       "dom_name": "xen-vm1",
+      "runtime": 10000000
+    },
+    {
+      "dom_name": "xen-vm2",
       "runtime": 10000000
     }
   ]

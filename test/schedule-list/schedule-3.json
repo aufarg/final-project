@@ -1,0 +1,37 @@
+{
+  "major_frame": 40000000,
+  "entries": [
+    {
+      "dom_name": "Domain-0",
+      "runtime": 5000000
+    },
+    {
+      "dom_name": "xen-vm1",
+      "runtime": 10000000
+    },
+    {
+      "dom_name": "xen-vm2",
+      "runtime": 10000000
+    },
+    {
+      "dom_name": "xen-vm3",
+      "runtime": 10000000
+    },
+    {
+      "dom_name": "xen-vm4",
+      "runtime": 10000000
+    },
+    {
+      "dom_name": "xen-vm5",
+      "runtime": 10000000
+    },
+    {
+      "dom_name": "xen-vm6",
+      "runtime": 10000000
+    },
+    {
+      "dom_name": "xen-vm7",
+      "runtime": 10000000
+    }
+  ]
+}
