@@ -7,7 +7,7 @@
       "providers": [
         { "dom_name": "Domain-0" }
       ]
-    }
+    },
     {
       "service_id": 1,
       "runtime": 10000000,
