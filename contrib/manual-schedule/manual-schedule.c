@@ -174,21 +174,28 @@ int main(int argc, char *argv[])
 
         printf("Service %d\n", a653sched.sched_entries[i].service_id);
         printf("Service runtime is %ld\n", a653sched.sched_entries[i].runtime);
+        printf("There %d domain(s) providing this service\n", a653sched.sched_entries[i].num_providers);
 
         for (j = 0; j < sched.entries[i].num_providers; j++) {
             const char *entry_name = sched.entries[i].providers[j].dom_name;
-            for (j = 0; j < num_domains && strcmp(entry_name, domlist[j].dom_name); j++);
-
             char uuid_str[40];
+
+	    for (j = 0; j < num_domains && strcmp(entry_name, domlist[j].dom_name); j++);
+            if (j >= num_domains) {
+                fprintf(stderr, "domain name %s is not found.\n", entry_name);
+                return 1;
+            }
+
             libxl_uuid_copy(ctx, (libxl_uuid *)&a653sched.sched_entries[i].service_providers[j].dom_handle,
                     &domlist[j].uuid);
             a653sched.sched_entries[i].service_providers[j].vcpu_id = sched.entries[i].providers[j].vcpu_id;
 
             uuid_unparse((const char *)&a653sched.sched_entries[i].service_providers[j].dom_handle, uuid_str);
-            printf("- %s\n", uuid_str);
+            printf("- %s at VCPU %d\n", uuid_str, a653sched.sched_entries[i].service_providers[j].vcpu_id);
         }
     }
-    printf("Major frame is %ld\n", a653sched.major_frame);
+    printf("Major frame is %ld.\n", a653sched.major_frame);
+    printf("Scheduling %d domain(s) ... \n", a653sched.num_sched_entries);
 
     xci = xc_interface_open(NULL, NULL, 0);
 
