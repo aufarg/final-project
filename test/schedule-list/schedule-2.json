@@ -2,40 +2,43 @@
   "major_frame": 50000000,
   "entries": [
     {
-      "dom_name": "Domain-0",
-      "runtime": 5000000
+      "service_id": 0,
+      "runtime": 5000000,
+      "providers": [
+        { "dom_name": "Domain-0" }
+      ]
     },
     {
-      "dom_name": "xen-vm1",
-      "runtime": 10000000
+      "service_id": 1,
+      "runtime": 10000000,
+      "providers": [
+        { "dom_name": "xen-vm1" },
+        { "dom_name": "xen-vm5" }
+      ]
     },
     {
-      "dom_name": "xen-vm2",
-      "runtime": 10000000
+      "service_id": 2,
+      "runtime": 10000000,
+      "providers": [
+        { "dom_name": "xen-vm2" },
+        { "dom_name": "xen-vm6" }
+      ]
     },
     {
-      "dom_name": "xen-vm3",
-      "runtime": 10000000
+      "service_id": 3,
+      "runtime": 10000000,
+      "providers": [
+        { "dom_name": "xen-vm3" },
+        { "dom_name": "xen-vm7" }
+      ]
     },
     {
-      "dom_name": "xen-vm4",
-      "runtime": 10000000
-    },
-    {
-      "dom_name": "xen-vm5",
-      "runtime": 10000000
-    },
-    {
-      "dom_name": "xen-vm6",
-      "runtime": 10000000
-    },
-    {
-      "dom_name": "xen-vm7",
-      "runtime": 10000000
-    },
-    {
-      "dom_name": "xen-vm8",
-      "runtime": 10000000
+      "service_id": 4,
+      "runtime": 10000000,
+      "providers": [
+        { "dom_name": "xen-vm4" },
+        { "dom_name": "xen-vm8" }
+      ]
     }
   ]
 }
