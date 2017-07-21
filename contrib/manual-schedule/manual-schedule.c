@@ -82,6 +82,11 @@ int extract_config(struct schedule_t *sched, char *config_path)
         if (!cur_entry || !json_is_object(cur_entry))
             goto fail;
 
+        cur_obj = json_object_get(cur_entry, "service_id");
+        if (!cur_obj || !json_is_integer(cur_obj))
+            goto fail;
+        sched->entries[i].service_id = json_integer_value(cur_obj);
+
         cur_obj = json_object_get(cur_entry, "runtime");
         if (!cur_obj || !json_is_integer(cur_obj))
             goto fail;
