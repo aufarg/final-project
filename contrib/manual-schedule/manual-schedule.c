@@ -167,10 +167,14 @@ int main(int argc, char *argv[])
     a653sched.num_sched_entries = sched.num_entries;
     for (i = 0; i < sched.num_entries; i++) {
         int j;
+
         a653sched.sched_entries[i].service_id = sched.entries[i].service_id;
         a653sched.sched_entries[i].runtime = sched.entries[i].runtime;
-        printf("Service %d\n", sched.entries[i].service_id);
+        a653sched.sched_entries[i].num_providers = sched.entries[i].num_providers;
+
+        printf("Service %d\n", a653sched.sched_entries[i].service_id);
         printf("Service runtime is %ld\n", a653sched.sched_entries[i].runtime);
+
         for (j = 0; j < sched.entries[i].num_providers; j++) {
             const char *entry_name = sched.entries[i].providers[j].dom_name;
             for (j = 0; j < num_domains && strcmp(entry_name, domlist[j].dom_name); j++);
