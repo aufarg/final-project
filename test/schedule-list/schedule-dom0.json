@@ -1,0 +1,12 @@
+{
+  "major_frame": 5000000,
+  "entries": [
+    {
+      "service_id": 0,
+      "runtime": 5000000,
+      "providers": [
+        { "dom_name": "Domain-0" }
+      ]
+    }
+  ]
+}
