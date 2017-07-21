@@ -12,9 +12,15 @@
 #define SCHED_POOLID 0
 #define VCPU_ID 0
 
-struct sched_entry_t {
+struct sched_provider_t {
     const char *dom_name;
     int vcpu_id;
+};
+
+struct sched_entry_t {
+    int service_id;
+    struct sched_provider_t * providers;
+    int num_providers;
     int64_t runtime;
 };
 
@@ -32,11 +38,11 @@ struct dominfo_t {
 
 int extract_config(struct schedule_t *sched, char *config_path)
 {
-    json_t *root, *cur_obj, *json_arr;
+    json_t *root, *cur_obj, *arr_entries;
     json_error_t error;
     char *config_json;
     size_t size;
-    int i;
+    unsigned int i, j;
 
     FILE *fp = fopen(config_path, "r");
     fseek(fp, 0, SEEK_END);
@@ -65,26 +71,42 @@ int extract_config(struct schedule_t *sched, char *config_path)
     cur_obj = json_object_get(root, "entries");
     if (!cur_obj || !json_is_array(cur_obj))
         goto fail;
-    json_arr = cur_obj;
+    arr_entries = cur_obj;
 
-    sched->num_entries = json_array_size(cur_obj);
+    sched->num_entries = json_array_size(arr_entries);
     sched->entries = malloc(sched->num_entries * sizeof(struct sched_entry_t));
 
-    json_array_foreach(json_arr, i, cur_obj) {
+    json_array_foreach(arr_entries, i, cur_obj) {
         json_t *cur_entry = cur_obj;
+        json_t *arr_providers;
         if (!cur_entry || !json_is_object(cur_entry))
             goto fail;
-
-        cur_obj = json_object_get(cur_entry, "dom_name");
-        if (!cur_obj || !json_is_string(cur_obj))
-            goto fail;
-        sched->entries[i].dom_name = json_string_value(cur_obj);
 
         cur_obj = json_object_get(cur_entry, "runtime");
         if (!cur_obj || !json_is_integer(cur_obj))
             goto fail;
         sched->entries[i].runtime = json_integer_value(cur_obj);
-        printf("JSON %d %s %ld\n", i, sched->entries[i].dom_name, sched->entries[i].runtime);
+
+        cur_obj = json_object_get(cur_entry, "providers");
+        if (!cur_obj || !json_is_array(cur_obj))
+            goto fail;
+        arr_providers = cur_obj;
+
+        sched->entries[i].num_providers = json_array_size(arr_providers);
+        sched->entries[i].providers = malloc(sched->entries[i].num_providers * sizeof(struct sched_provider_t));
+
+        json_array_foreach(arr_providers, j, cur_obj) {
+            json_t *cur_provider = cur_obj;
+
+            if (!cur_provider || !json_is_object(cur_provider))
+                goto fail;
+
+            cur_obj = json_object_get(cur_provider, "dom_name");
+            if (!cur_obj || !json_is_string(cur_obj))
+                goto fail;
+            sched->entries[i].providers[j].dom_name = json_string_value(cur_obj);
+            sched->entries[i].providers[j].vcpu_id = VCPU_ID;
+        }
     }
 
     return 0;
@@ -140,18 +162,22 @@ int main(int argc, char *argv[])
     a653sched.num_sched_entries = sched.num_entries;
     for (i = 0; i < sched.num_entries; i++) {
         int j;
-        const char *entry_name = sched.entries[i].dom_name;
-        for (j = 0; j < num_domains && strcmp(entry_name, domlist[j].dom_name); j++);
-
-        char uuid_str[40];
-        libxl_uuid_copy(ctx, (libxl_uuid *)&a653sched.sched_entries[i].dom_handle,
-                &domlist[j].uuid);
-        a653sched.sched_entries[i].vcpu_id = VCPU_ID;
+        a653sched.sched_entries[i].service_id = sched.entries[i].service_id;
         a653sched.sched_entries[i].runtime = sched.entries[i].runtime;
+        printf("Service %d\n", sched.entries[i].service_id);
+        printf("Service runtime is %ld\n", a653sched.sched_entries[i].runtime);
+        for (j = 0; j < sched.entries[i].num_providers; j++) {
+            const char *entry_name = sched.entries[i].providers[j].dom_name;
+            for (j = 0; j < num_domains && strcmp(entry_name, domlist[j].dom_name); j++);
 
-        uuid_unparse((const char *)&a653sched.sched_entries[i].dom_handle, uuid_str);
-        printf("- %s\n", uuid_str);
-        printf("Domain runtime is %ld\n", a653sched.sched_entries[i].runtime);
+            char uuid_str[40];
+            libxl_uuid_copy(ctx, (libxl_uuid *)&a653sched.sched_entries[i].service_providers[j].dom_handle,
+                    &domlist[j].uuid);
+            a653sched.sched_entries[i].service_providers[j].vcpu_id = sched.entries[i].providers[j].vcpu_id;
+
+            uuid_unparse((const char *)&a653sched.sched_entries[i].service_providers[j].dom_handle, uuid_str);
+            printf("- %s\n", uuid_str);
+        }
     }
     printf("Major frame is %ld\n", a653sched.major_frame);
 
