@@ -48,8 +48,8 @@ int extract_config(struct schedule_t *sched, char *config_path)
     fseek(fp, 0, SEEK_END);
     size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
-    config_json = malloc(size * sizeof(char));
-    fread(config_json, sizeof(char), size, fp);
+    config_json = malloc(size * sizeof(*config_json));
+    fread(config_json, sizeof(*config_json), size, fp);
 
     root = json_loads(config_json, 0, &error);
     free(config_json);
@@ -59,7 +59,7 @@ int extract_config(struct schedule_t *sched, char *config_path)
         return 1;
     }
 
-    memset(sched, 0, sizeof(struct schedule_t));
+    memset(sched, 0, sizeof(*sched));
 
     /* get major time frame */
     cur_obj = json_object_get(root, "major_frame");
@@ -74,7 +74,7 @@ int extract_config(struct schedule_t *sched, char *config_path)
     arr_entries = cur_obj;
 
     sched->num_entries = json_array_size(arr_entries);
-    sched->entries = malloc(sched->num_entries * sizeof(struct sched_entry_t));
+    sched->entries = malloc(sched->num_entries * sizeof(*sched->entries));
 
     json_array_foreach(arr_entries, i, cur_obj) {
         json_t *cur_entry = cur_obj;
@@ -98,7 +98,7 @@ int extract_config(struct schedule_t *sched, char *config_path)
         arr_providers = cur_obj;
 
         sched->entries[i].num_providers = json_array_size(arr_providers);
-        sched->entries[i].providers = malloc(sched->entries[i].num_providers * sizeof(struct sched_provider_t));
+        sched->entries[i].providers = malloc(sched->entries[i].num_providers * sizeof(*sched->entries[i].providers));
 
         json_array_foreach(arr_providers, j, cur_obj) {
             json_t *cur_provider = cur_obj;
@@ -109,8 +109,10 @@ int extract_config(struct schedule_t *sched, char *config_path)
             cur_obj = json_object_get(cur_provider, "dom_name");
             if (!cur_obj || !json_is_string(cur_obj))
                 goto fail;
+
             sched->entries[i].providers[j].dom_name = json_string_value(cur_obj);
             sched->entries[i].providers[j].vcpu_id = VCPU_ID;
+	    printf("i,j = %d,%d vcpu = %d\n", i, j, sched->entries[i].providers[j].vcpu_id);
         }
     }
 
@@ -144,7 +146,7 @@ int main(int argc, char *argv[])
     libxl_ctx_alloc(&ctx, LIBXL_VERSION, 0, NULL);
     dominfo = libxl_list_domain(ctx, &num_domains);
 
-    domlist = malloc(num_domains * sizeof(struct dominfo_t));
+    domlist = malloc(num_domains * sizeof(*domlist));
     for (i = 0; i < num_domains; i++) {
         const char *name = libxl_domid_to_name(ctx, dominfo[i].domid);
 	libxl_uuid_copy(ctx, &domlist[i].uuid, &dominfo[i].uuid);
@@ -179,19 +181,21 @@ int main(int argc, char *argv[])
         for (j = 0; j < sched.entries[i].num_providers; j++) {
             const char *entry_name = sched.entries[i].providers[j].dom_name;
             char uuid_str[40];
+	    int k;
 
-	    for (j = 0; j < num_domains && strcmp(entry_name, domlist[j].dom_name); j++);
-            if (j >= num_domains) {
+	    for (k = 0; k < num_domains && strcmp(entry_name, domlist[k].dom_name); k++);
+            if (k >= num_domains) {
                 fprintf(stderr, "domain name %s is not found.\n", entry_name);
                 return 1;
             }
 
             libxl_uuid_copy(ctx, (libxl_uuid *)&a653sched.sched_entries[i].service_providers[j].dom_handle,
-                    &domlist[j].uuid);
+                    &domlist[k].uuid);
             a653sched.sched_entries[i].service_providers[j].vcpu_id = sched.entries[i].providers[j].vcpu_id;
 
-            uuid_unparse((const char *)&a653sched.sched_entries[i].service_providers[j].dom_handle, uuid_str);
-            printf("- %s at VCPU %d\n", uuid_str, a653sched.sched_entries[i].service_providers[j].vcpu_id);
+            uuid_unparse((const unsigned char *)&a653sched.sched_entries[i].service_providers[j].dom_handle, uuid_str);
+            printf("- %s (%d,%d) at VCPU %d (from %d)\n", uuid_str, i, j, a653sched.sched_entries[i].service_providers[j].vcpu_id,
+			    sched.entries[i].providers[j].vcpu_id);
         }
     }
     printf("Major frame is %ld.\n", a653sched.major_frame);
