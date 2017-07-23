@@ -165,10 +165,6 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	struct timespec res;
-	clock_getres(CLOCK_ID, &res);
-	printf("clock resolution = %ld.%09lds.\n", res.tv_sec, res.tv_nsec);
-
 	sock_master = connect_to_master(argv[1], atoi(argv[2]));
 
 	if (sock_master == -1) {
