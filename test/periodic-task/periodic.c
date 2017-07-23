@@ -1,6 +1,8 @@
-#define _POSIX_C_SOURCE 199309L
+#define _POSIX_C_SOURCE 200112L
+#define _DEFAULT_SOURCE
 
 #include <stdio.h>
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
@@ -8,201 +10,192 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdbool.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
+
+#define SIGRT1 SIGRTMIN
 
 #define CLOCK_ID CLOCK_MONOTONIC
-#define _STRINGIFY(s) #s
-#define STRINGIFY(s) _STRINGIFY(s)
-#define MILLISECS(s) ((s) * 1000 * 1000)
 
-#define MAX_SAMPLE_SIZE 100000
+int sock_master;
 
-#ifdef STATS
-#include <gsl/gsl_statistics_double.h>
-#define _STAT_VARNAME(_var) _stats##_var
-#define _STAT_IDXNAME(_var) _STAT_VARNAME(_idx##_var)
-
-#define DECLARE_STATVAR(_var) \
-    static double _STAT_VARNAME(_var)[MAX_SAMPLE_SIZE]; \
-    static size_t _STAT_IDXNAME(_var) = 0
-
-#define PUT_STATVAR(_var,_val) \
-    _STAT_VARNAME(_var)[ _STAT_IDXNAME(_var) ] = (_val); \
-    _STAT_IDXNAME(_var)++
-
-#define STAT_VARNAME(_var) _STAT_VARNAME(_var)
-#define STAT_VARSIZE(_var) _STAT_IDXNAME(_var)
-
-#define _VAR_GSLARGS(_var) STAT_VARNAME(_var), 1, STAT_VARSIZE(_var)
-
-#define GET_STATVAR(_msg, _var) \
-    printf(_msg ": avg = %lf, var = %lf, sd = %lf, min %lf, max = %lf\n", \
-            gsl_stats_mean(_VAR_GSLARGS(_var)), \
-            gsl_stats_variance(_VAR_GSLARGS(_var)), \
-            gsl_stats_sd(_VAR_GSLARGS(_var)), \
-            gsl_stats_min(_VAR_GSLARGS(_var)), \
-            gsl_stats_max(_VAR_GSLARGS(_var)))
-#else
-#define DECLARE_STATVAR(_var)
-#define PUT_STATVAR(_var, _val)
-#define GET_STATVAR(_msg, _var)
-#endif
-
-DECLARE_STATVAR(deltatime);
-
-void end()
+void close_socket(int sockfd)
 {
-#ifdef STATS
-	puts("Statistics:");
-	GET_STATVAR("delta (s)", deltatime);
-#endif
+#define BUFSIZE 4096
+	char buf[BUFSIZE];
+
+	shutdown(sockfd, SHUT_RDWR);
+	while (!read(sockfd, buf, BUFSIZE));
+	close(sockfd);
 }
 
-void install_sigusr1()
+void sigint_handler(int signo)
 {
 	struct sigaction act = {
-		.sa_handler = end
+		.sa_handler = SIG_DFL,
+		.sa_flags = 0
 	};
-	sigaction(SIGUSR1, &act, NULL);
+
+	puts("Cleaning sockets . . .");
+	close_socket(sock_master);
+
+	puts("Terminating . . .");
+	sigaction(signo, &act, NULL);
+	raise(signo);
 }
 
+int connect_to_master(char * address, int port)
+{
+	int sock_master;
+	int ret;
+
+	sock_master = socket(AF_INET, SOCK_STREAM, 0);
+	struct sockaddr_in addr_master;
+
+	addr_master.sin_family = AF_INET;
+	addr_master.sin_port = htons(port);
+	inet_aton(address, &addr_master.sin_addr);
+
+	while ( (ret = connect(sock_master, (const struct sockaddr *)&addr_master,
+                             sizeof(addr_master))) == -1) {
+                usleep(100 * 1000);
+                if (errno == ECONNREFUSED) {
+                	return -1;
+                }
+        }
+
+	return sock_master;
+
+}
+
+char hostname[256];
 struct routine_t {
 	timer_t timerid;
-	struct timespec saved_timesp;
-	int samples;
+	int sockfd;
+	uint32_t len_hostname;
+	char * hostname;
+	bool done;
 };
 
-void routine(union sigval val)
+void routine(int signo, siginfo_t *siginfo, void *ctx)
 {
 	int ret;
 
-	struct routine_t * routine_data = ((struct routine_t *)val.sival_ptr);
-	struct timespec saved_timesp = routine_data->saved_timesp;
-	struct timespec timesp, delta;
-	ret = clock_gettime(CLOCK_ID, &timesp);
-
-	if (ret == -1) {
-		fprintf(stderr, "Error getting current time.\n");
-		return;
-	}
-	
-	delta.tv_sec  = timesp.tv_sec - saved_timesp.tv_sec;
-	delta.tv_nsec = timesp.tv_nsec - saved_timesp.tv_nsec;
-
-	if (delta.tv_nsec < 0) {
-		delta.tv_sec  -= 1;
-		delta.tv_nsec += 1000 * 1000 * 1000;
-	}
-	/* save time */
-	routine_data->saved_timesp = timesp;
-
-	/* stats */
-#ifdef STATS
-	double d;
-	d = ((double)delta.tv_sec) + ((double)delta.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
-#endif
-	PUT_STATVAR(deltatime, d);
-	routine_data->samples--;
-
-	printf("Current time = %ld.%09lds with delta = %ld.%09lds.\n", timesp.tv_sec, timesp.tv_nsec, delta.tv_sec, delta.tv_nsec);
-
-	if (!routine_data->samples) {
-		struct itimerspec disarm;
-		memset(&disarm, 0, sizeof(disarm));
-
-		ret = timer_settime(routine_data->timerid, 0, &disarm, NULL);
-
-		if (ret == -1) {
-			fprintf(stderr, "Error disarming timer.\n");
-			return;
-		}
-
-		free(routine_data);
-		kill(getpid(), SIGUSR1);
-	}
+	struct routine_t * routine_data = ((struct routine_t *)siginfo->si_value.sival_ptr);
+	ret = send(routine_data->sockfd, &routine_data->len_hostname,
+                   sizeof(routine_data->len_hostname), MSG_MORE);
+        assert(ret == sizeof(routine_data->len_hostname));
+	ret = send(routine_data->sockfd, routine_data->hostname, routine_data->len_hostname, 0);
+	assert(ret == routine_data->len_hostname);
 }
 
-int create_periodic_task(int num_samples, int period)
+struct routine_t * setup_periodic_heartbeat(int master_socket, uint64_t period)
 {
 	int ret, flags = 0;
 	timer_t timerid;
-	struct routine_t * routine_data = malloc(sizeof(struct routine_t));
+	sigset_t mask, oldmask;
+	struct routine_t * routine_data = malloc(sizeof(*routine_data));
 	struct sigevent sevp = {
-		.sigev_notify          = SIGEV_THREAD,
-		.sigev_notify_function = routine,
+		.sigev_notify          = SIGEV_SIGNAL,
+		.sigev_signo           = SIGRT1,
 		.sigev_value           = { .sival_ptr = (void *)routine_data }
 	};
+	struct sigaction act = {
+		.sa_sigaction = routine,
+		.sa_flags = SA_SIGINFO
+	};
 	const struct timespec interval = {
-		.tv_sec  = 0,
-		.tv_nsec = MILLISECS(period)
+		.tv_sec  = period / (1000L * 1000L * 1000L),
+		.tv_nsec = period % (1000L * 1000L * 1000L)
 	};
 	const struct itimerspec timersp = {
 		.it_interval = interval,
 		.it_value    = interval
 	};
-	struct itimerspec saved_timersp;
 
-	if (num_samples > MAX_SAMPLE_SIZE) {
-		fprintf(stderr, "Too many samples specified.\n");
-		return -1;
-	}
+	printf("Sending heartbeat every %lu\n", period);
+
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGRT1);
+	sigprocmask(SIG_BLOCK, &mask, &oldmask);
+	sigaction(SIGRT1, &act, NULL);
 
 	ret = timer_create(CLOCK_ID, &sevp, &timerid);
 
 	if (ret == -1) {
 		fprintf(stderr, "Error creating timer.\n");
-		return -1;
+		return NULL;
 	}
 
 	/* initialize routine data */
+	gethostname(hostname, 256);
 	routine_data->timerid = timerid;
-	routine_data->samples = num_samples;
-	ret = clock_gettime(CLOCK_ID, &routine_data->saved_timesp);
+	routine_data->sockfd = master_socket;
+	routine_data->hostname = hostname;
+	routine_data->len_hostname = strlen(routine_data->hostname)+1;
+	routine_data->done = false;
+
+	ret = timer_settime(timerid, flags, &timersp, NULL);
 
 	if (ret == -1) {
-		fprintf(stderr, "Error cannot get current time.\n");
-		return -1;
+		fprintf(stderr, "Error setting timer interval.\n");
+		return NULL;
 	}
 
-	ret = timer_settime(timerid, flags, &timersp, &saved_timersp);
+	sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
-	if (ret == -1) {
-		fprintf(stderr, "Error settings timer interval.\n");
-		return -1;
-	}
-	return 0;
+	return routine_data;
 }
 
 int main(int argc, char *argv[])
 {
-	int num_samples, period;
-	int ret;
-	sigset_t mask, oldmask;
+	sigset_t mask;
+	struct sigaction act = {
+		.sa_handler = sigint_handler,
+		.sa_flags = 0
+	};
 
-	install_sigusr1();
+	sigaction(SIGINT, &act, NULL);
 
 	if (argc != 3) {
-		fprintf(stderr, "Usage: %s [period] [num_samples]\n", argv[0]);
+		fprintf(stderr, "Usage: %s [server address] [server port]\n", argv[0]);
 		return 1;
 	}
-
-	period = atoi(argv[1]);
-	num_samples = atoi(argv[2]);
 
 	struct timespec res;
 	clock_getres(CLOCK_ID, &res);
 	printf("clock resolution = %ld.%09lds.\n", res.tv_sec, res.tv_nsec);
 
-	sigemptyset(&mask);
-	sigaddset(&mask, SIGUSR1);
-	sigprocmask(SIG_BLOCK, &mask, &oldmask);
+	sock_master = connect_to_master(argv[1], atoi(argv[2]));
 
-	ret = create_periodic_task(num_samples, period);
-
-	if (!ret) {
-		sigsuspend(&oldmask);
-		return 0;
-	}
-	else {
+	if (sock_master == -1) {
+		fprintf(stderr, "cannot connect to %s:%s\n", argv[1], argv[2]);
+		perror("");
 		return 1;
 	}
+	/* for (;;) { */
+		int rdsize;
+		uint64_t period;
+
+		rdsize = recv(sock_master, &period, sizeof(period), MSG_WAITALL);
+
+		if (rdsize == 0) {
+			puts("Socket closed abruptly");
+			close_socket(sock_master);
+			return 1;
+		}
+		else {
+			struct routine_t * handle = setup_periodic_heartbeat(sock_master, period);
+
+			sigemptyset(&mask);
+			while (!handle->done) {
+				sigsuspend(&mask);
+			}
+		}
+	/* } */
+	close_socket(sock_master);
+	return 0;
 }
