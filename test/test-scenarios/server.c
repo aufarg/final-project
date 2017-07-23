@@ -211,8 +211,8 @@ void setup_master_slave(int sock_master, int num_slaves, fd_set *rfds)
 
 	while (num_slaves) {
 		int sock_cli;
-		struct sockaddr addr_cli;
-		socklen_t addr_len_cli;
+		struct sockaddr_in addr_cli;
+		socklen_t addr_len_cli = sizeof(addr_cli);
 
 		printf("Waiting for connections from slaves (%d more) . . .\n", num_slaves);
 		sock_cli = accept(sock_master, (struct sockaddr *)&addr_cli, &addr_len_cli);
@@ -227,7 +227,7 @@ schedule_t * choose_test_scheme(char * config_base)
 {
 	schedule_t * schedule;
 	int ret, selection, num_opt;
-	char config_path[256];
+	char config_path[512];
 	DIR * dirp;
 	struct dirent * dir;
 
