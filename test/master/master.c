@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
+#include <stdbool.h>
+#include <errno.h>
 
 #define CLOCK_ID CLOCK_MONOTONIC
 
@@ -22,17 +24,18 @@
 
 int num_sockets;
 int maxfds;
-int sock_serv, sock_fds[256];
+int sock_serv = -1, sock_fds[256];
 
 struct timespec last_stamp[256];
 
 void close_socket(int sockfd)
 {
 #define BUFSIZE 4096
+	int ret;
 	char buf[BUFSIZE];
 
 	shutdown(sockfd, SHUT_RDWR);
-	while (!read(sockfd, buf, BUFSIZE));
+	while ((ret = read(sockfd, buf, BUFSIZE)) > 0);
 	close(sockfd);
 }
 
@@ -45,13 +48,24 @@ void sigint_handler(int signo)
 	};
 
 	puts("Cleaning sockets before terminating . . .");
-	close_socket(sock_serv);
-	for ( i = 0 ; i < num_sockets; i++ )
+	if (sock_serv != -1)
 		close_socket(sock_serv);
+	for ( i = 0 ; i < num_sockets; i++ )
+		close_socket(sock_fds[i]);
 
 	puts("Terminating . . .");
 	sigaction(signo, &act, NULL);
 	raise(signo);
+}
+
+void sigint_finish_test(int signo)
+{
+	int i;
+	bool done = true;
+	puts("Sending finish packet . . .");
+	for ( i = 0; i < num_sockets; ++i ) {
+		send(sock_fds[i], &done, sizeof(done), 0);
+	}
 }
 
 void list_add_socket(int sockfd)
@@ -98,6 +112,19 @@ typedef struct schedule_s {
 	int num_entries;
 } schedule_t;
 
+void sched_free(schedule_t * sched)
+{
+	if (sched->entries != NULL) {
+		int i;
+		for ( i = 0; i < sched->num_entries; i++ ) {
+			if (sched->entries[i].providers != NULL) {
+				free(sched->entries[i].providers);
+			}
+		}
+		free(sched->entries);
+	}
+}
+
 int lookup_service_provider(const char * hostname, schedule_t * sched)
 {
 	int i, j, num_entry = sched->num_entries;
@@ -114,32 +141,30 @@ int lookup_service_provider(const char * hostname, schedule_t * sched)
 
 }
 
-int extract_config(schedule_t *sched, char *config_path)
+char * readall(char *file)
 {
-	json_t *root, *cur_obj, *arr_entries;
-	json_error_t error;
-	char *config_json;
 	size_t size;
-	unsigned int i, j;
-
-	FILE *fp = fopen(config_path, "r");
+	char * out;
+	FILE *fp;
+	
+	fp = fopen(file, "r");
 	if (fp == NULL)
-		return 1;
+		return NULL;
+
 	fseek(fp, 0, SEEK_END);
 	size = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
-	config_json = malloc(size * sizeof(char));
-	fread(config_json, sizeof(char), size, fp);
 
-	root = json_loads(config_json, 0, &error);
-	free(config_json);
+	out = malloc(size * sizeof(char));
+	fread(out, sizeof(char), size, fp);
+	fclose(fp);
 
-	if (!root) {
-		fprintf(stderr, "error: on line %d: %s\n", error.line, error.text);
-		return 1;
-	}
-
-	memset(sched, 0, sizeof(schedule_t));
+	return out;
+}
+int extract_schedule(json_t *root, schedule_t *sched)
+{
+	json_t *cur_obj, *arr_entries;
+	unsigned int i, j;
 
 	/* get major time frame */
 	cur_obj = json_object_get(root, "major_frame");
@@ -154,7 +179,7 @@ int extract_config(schedule_t *sched, char *config_path)
 	arr_entries = cur_obj;
 
 	sched->num_entries = json_array_size(arr_entries);
-	sched->entries = malloc(sched->num_entries * sizeof(sched_entry_t));
+	sched->entries = calloc(1, sched->num_entries * sizeof(sched_entry_t));
 
 	json_array_foreach(arr_entries, i, cur_obj) {
 		json_t *cur_entry = cur_obj;
@@ -178,7 +203,7 @@ int extract_config(schedule_t *sched, char *config_path)
 		arr_providers = cur_obj;
 
 		sched->entries[i].num_providers = json_array_size(arr_providers);
-		sched->entries[i].providers = malloc(sched->entries[i].num_providers * sizeof(sched_provider_t));
+		sched->entries[i].providers = calloc(1, sched->entries[i].num_providers * sizeof(sched_provider_t));
 
 		json_array_foreach(arr_providers, j, cur_obj) {
 			json_t *cur_provider = cur_obj;
@@ -196,16 +221,14 @@ int extract_config(schedule_t *sched, char *config_path)
 	return 0;
 
 fail:
-	if (sched->entries)
-		free(sched->entries);
-	free(sched);
+	sched_free(sched);
 	sched = NULL;
+	json_decref(root);
 	return 1;
 }
 
-void setup_master_slave(int sock_master, int num_slaves, fd_set *rfds)
+void setup_master_slave(int sock_master, int num_slaves)
 {
-	FD_ZERO(rfds);
 	num_sockets = 0;
 	maxfds = 0;
 
@@ -218,17 +241,15 @@ void setup_master_slave(int sock_master, int num_slaves, fd_set *rfds)
 		addr_len_cli = sizeof(addr_cli);
 		sock_cli = accept(sock_master, (struct sockaddr *)&addr_cli, &addr_len_cli);
 		list_add_socket(sock_cli);
-		FD_SET(sock_cli, rfds);
 
 		num_slaves--;
 	}
 }
 
-schedule_t * choose_test_scheme(char * config_base)
+char * choose_test_scheme(char *config_base)
 {
-	schedule_t * schedule;
-	int ret, selection, num_opt;
-	char config_path[512];
+	int selection, num_opt, len;
+	char * config_path;
 	DIR * dirp;
 	struct dirent * dir;
 
@@ -250,26 +271,30 @@ schedule_t * choose_test_scheme(char * config_base)
 	printf("Selection: ");
 	scanf("%d", &selection);
 
+	if (selection == 0)
+		return NULL;
+
 	dirp = opendir(config_base);
 	while (selection > 0) {
 		dir = readdir(dirp);
+		if (dir == NULL)
+			break;
 		if (dir->d_name[0] != '.') {
 			--selection;
 		}
 	}
 
-	sprintf(config_path, "%s/%s", config_base, dir->d_name);
-
-	schedule = malloc(sizeof(*schedule));
-	ret = extract_config(schedule, config_path);
-
-	if (ret) {
-		fprintf(stderr, "cannot parse config on file %s.\n", config_path);
-		free(schedule);
+	if (selection != 0) {
 		return NULL;
 	}
+	else {
+		len = strlen(config_base) + strlen(dir->d_name) + 2;
+		config_path = malloc(len);
+		snprintf(config_path, len, "%s/%s", config_base, dir->d_name);
+		closedir(dirp);
+	}
 
-	return schedule;
+	return config_path;
 }
 
 void logtime(int entry_index)
@@ -284,37 +309,81 @@ void logtime(int entry_index)
 	}
 	last = last_stamp[entry_index];
 
-	delta.tv_sec  = now.tv_sec - last.tv_sec;
-	delta.tv_nsec = now.tv_nsec - last.tv_nsec;
+	if (last.tv_sec != 0 && last.tv_nsec != 0) {
+		delta.tv_sec  = now.tv_sec - last.tv_sec;
+		delta.tv_nsec = now.tv_nsec - last.tv_nsec;
 
-	if (delta.tv_nsec < 0) {
-		delta.tv_sec  -= 1;
-		delta.tv_nsec += 1000 * 1000 * 1000;
+		if (delta.tv_nsec < 0) {
+			delta.tv_sec  -= 1;
+			delta.tv_nsec += 1000 * 1000 * 1000;
+		}
+
+		d = ((double)delta.tv_sec) + ((double)delta.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
+
+		printf("Entry %d Delta %.09lfs\n", entry_index, d);
+	}
+	last_stamp[entry_index] = now;
+}
+
+void initfds(fd_set *rfds)
+{
+	int i;
+
+	FD_ZERO(rfds);
+	/* add sockets to fd set */
+	for ( i = 0; i < num_sockets; i++ ) {
+		if (sock_fds[i] != -1) {
+			FD_SET(sock_fds[i], rfds);
+		}
 	}
 
-	d = ((double)delta.tv_sec) + ((double)delta.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
-
-	printf("Entry %d Delta %.09lfs\n", entry_index, d);
-	last_stamp[entry_index] = now;
 }
 
 void do_testing(schedule_t * schedule, fd_set *rfds)
 {
 	int ret, i;
+	struct sigaction oldact;
+	struct timeval select_to;
+	struct sigaction act = {
+		.sa_handler = sigint_finish_test,
+		.sa_flags = 0
+	};
+	int timeout_ns = schedule->major_frame * 10;
+	const struct timeval timeout = {
+		.tv_sec = timeout_ns / ( 1000 * 1000 * 1000 ),
+		.tv_usec = (timeout_ns % ( 1000 * 1000 * 1000 )) / 1000
+	};
 	
+	/* testing banner */
 	puts("Start testing . . .");
+
+	/* install new handler for SIGINT. SIGINT now cancel
+	 * the test, but not terminate the process*/
+	sigaction(SIGINT, &act, &oldact);
+
+	/* reset time stamp */
+	for ( int i = 0; i < schedule->num_entries; i++ ) {
+		last_stamp[i].tv_sec = 0;
+		last_stamp[i].tv_nsec = 0;
+	}
+
+	/* send period to slaves */
 	for ( i = 0; i < num_sockets; i++ ) {
 		write(sock_fds[i], &schedule->major_frame, sizeof(schedule->major_frame));
 	}
 
+	/* receive heartbeat from slaves
+	 * from select(2), timeout is undefined after select returns
+	 * we should reinitialize timeout before using select again */
 	i = 0;
-	while ( (ret = select(maxfds+1, rfds, NULL, NULL, NULL)) > 0 ) {
-		int sock_cli;
+	while ( select_to = timeout, initfds(rfds),
+		ret = select(maxfds+1, rfds, NULL, NULL, &select_to), ret > 0 ) {
 		ssize_t rdsize;
 		uint32_t msgsize;
 		char * hostname;
-		int entry_idx;
+		int sock_cli, entry_idx;
 
+		/* client sockets ready */
 		for (;; i = (i+1) % num_sockets) {
 			if (FD_ISSET(sock_fds[i], rfds)) {
 				break;
@@ -322,32 +391,38 @@ void do_testing(schedule_t * schedule, fd_set *rfds)
 		}
 
 		sock_cli = sock_fds[i];
-		/* one of client sockets ready */
 		rdsize = recv(sock_cli, &msgsize, sizeof(msgsize), MSG_WAITALL);
 		if (rdsize == 0) {
 			/* socket is closed */
-			FD_CLR(sock_fds[i], rfds);
+			sock_fds[i] = -1;
 		}
 		else {
 			assert(rdsize == sizeof(msgsize));
 
 			hostname = malloc(msgsize);
 			rdsize = recv(sock_cli, hostname, msgsize, MSG_WAITALL);
-			assert(rdsize == msgsize);
+
+			if (rdsize == -1)
+				break;
 
 			entry_idx = lookup_service_provider(hostname, schedule);
 			logtime(entry_idx);
-		}
 
+			free(hostname);
+		}
 	}
 
+	/* reinstall previous handler */
+	if (ret == 0 || errno == EINTR)
+		sigaction(SIGINT, &oldact, NULL);
+	else
+		perror("");
 }
 
 int main(int argc, char *argv[])
 {
 	int num_slaves;
 	char * config_base;
-	fd_set rfds;
 	struct sigaction act = {
 		.sa_handler = sigint_handler,
 		.sa_flags = 0
@@ -364,15 +439,59 @@ int main(int argc, char *argv[])
 	config_base = argv[2];
 
 	sock_serv = socket_init();
-	setup_master_slave(sock_serv, num_slaves, &rfds);
+	setup_master_slave(sock_serv, num_slaves);
 
 	for (;;) {
-		schedule_t * schedule = choose_test_scheme(config_base);
-		if (schedule == NULL)
+		fd_set rfds;
+		json_t * handle;
+		json_error_t error;
+		schedule_t * schedule;
+		char *config_path, *config;
+		int ret;
+
+		config_path = choose_test_scheme(config_base);
+
+		if (config_path == NULL) {
+			int i;
+			int64_t dummy_period = 0;
+			for ( i = 0; i < num_sockets; i++ )
+				send(sock_fds[i], &dummy_period, sizeof(dummy_period), 0);
+			raise(SIGINT);
+			break;
+		}
+
+		config = readall(config_path);
+
+		printf("%s\n", config);
+		
+		if (!config) {
+			fprintf(stderr, "cannot read from %s\n", config_path);
 			return 1;
+		}
+
+		handle = json_loads(config, 0, &error);
+
+		if (!handle) {
+			fprintf(stderr, "error: on line %d: %s\n", error.line, error.text);
+			return 1;
+		}
+
+		schedule = calloc(1, sizeof(*schedule));
+
+		ret = extract_schedule(handle, schedule);
+
+		if (ret) {
+			fprintf(stderr, "cannot parse config on file %s.\n", config_path);
+			sched_free(schedule);
+			return 1;
+		}
 
 		do_testing(schedule, &rfds);
-		free(schedule);
+
+		json_decref(handle);
+		sched_free(schedule);
+		free(config);
+		free(config_path);
 	}
 
 	return 0;

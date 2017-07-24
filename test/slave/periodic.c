@@ -25,10 +25,11 @@ int sock_master;
 void close_socket(int sockfd)
 {
 #define BUFSIZE 4096
+	int ret;
 	char buf[BUFSIZE];
 
 	shutdown(sockfd, SHUT_RDWR);
-	while (!read(sockfd, buf, BUFSIZE));
+	while ((ret = read(sockfd, buf, BUFSIZE)) > 0);
 	close(sockfd);
 }
 
@@ -82,21 +83,16 @@ struct routine_t {
 
 void routine(int signo, siginfo_t *siginfo, void *ctx)
 {
-	int ret;
-
 	struct routine_t * routine_data = ((struct routine_t *)siginfo->si_value.sival_ptr);
-	ret = send(routine_data->sockfd, &routine_data->len_hostname,
+	send(routine_data->sockfd, &routine_data->len_hostname,
                    sizeof(routine_data->len_hostname), MSG_MORE);
-        assert(ret == sizeof(routine_data->len_hostname));
-	ret = send(routine_data->sockfd, routine_data->hostname, routine_data->len_hostname, 0);
-	assert(ret == routine_data->len_hostname);
+	send(routine_data->sockfd, routine_data->hostname, routine_data->len_hostname, 0);
 }
 
-struct routine_t * setup_periodic_heartbeat(int master_socket, uint64_t period)
+struct routine_t * setup_periodic_heartbeat(int master_socket)
 {
-	int ret, flags = 0;
+	int ret;
 	timer_t timerid;
-	sigset_t mask, oldmask;
 	struct routine_t * routine_data = malloc(sizeof(*routine_data));
 	struct sigevent sevp = {
 		.sigev_notify          = SIGEV_SIGNAL,
@@ -107,20 +103,7 @@ struct routine_t * setup_periodic_heartbeat(int master_socket, uint64_t period)
 		.sa_sigaction = routine,
 		.sa_flags = SA_SIGINFO
 	};
-	const struct timespec interval = {
-		.tv_sec  = period / (1000L * 1000L * 1000L),
-		.tv_nsec = period % (1000L * 1000L * 1000L)
-	};
-	const struct itimerspec timersp = {
-		.it_interval = interval,
-		.it_value    = interval
-	};
 
-	printf("Sending heartbeat every %lu\n", period);
-
-	sigemptyset(&mask);
-	sigaddset(&mask, SIGRT1);
-	sigprocmask(SIG_BLOCK, &mask, &oldmask);
 	sigaction(SIGRT1, &act, NULL);
 
 	ret = timer_create(CLOCK_ID, &sevp, &timerid);
@@ -138,25 +121,45 @@ struct routine_t * setup_periodic_heartbeat(int master_socket, uint64_t period)
 	routine_data->len_hostname = strlen(routine_data->hostname)+1;
 	routine_data->done = false;
 
-	ret = timer_settime(timerid, flags, &timersp, NULL);
+	return routine_data;
+}
+
+void periodic_heartbeat(timer_t timerid, int64_t period)
+{
+	int ret;
+	sigset_t mask, oldmask;
+	const struct timespec interval = {
+		.tv_sec  = period / (1000L * 1000L * 1000L),
+		.tv_nsec = period % (1000L * 1000L * 1000L)
+	};
+	const struct itimerspec timersp = {
+		.it_interval = interval,
+		.it_value    = interval
+	};
+
+	printf("Sending heartbeat every %lu\n", period);
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGRT1);
+	sigprocmask(SIG_BLOCK, &mask, &oldmask);
+
+	ret = timer_settime(timerid, 0, &timersp, NULL);
 
 	if (ret == -1) {
 		fprintf(stderr, "Error setting timer interval.\n");
-		return NULL;
+		return;
 	}
 
 	sigprocmask(SIG_UNBLOCK, &mask, NULL);
-
-	return routine_data;
 }
 
 int main(int argc, char *argv[])
 {
-	sigset_t mask;
 	struct sigaction act = {
 		.sa_handler = sigint_handler,
 		.sa_flags = 0
 	};
+	struct routine_t * handle;
+
 
 	sigaction(SIGINT, &act, NULL);
 
@@ -172,7 +175,10 @@ int main(int argc, char *argv[])
 		perror("");
 		return 1;
 	}
-	/* for (;;) { */
+
+	handle = setup_periodic_heartbeat(sock_master);
+
+	for (;;) {
 		int rdsize;
 		uint64_t period;
 
@@ -183,15 +189,26 @@ int main(int argc, char *argv[])
 			close_socket(sock_master);
 			return 1;
 		}
+		else if (rdsize == -1) {
+			perror("");
+			break;
+		}
 		else {
-			struct routine_t * handle = setup_periodic_heartbeat(sock_master, period);
-
-			sigemptyset(&mask);
+			if (period == 0)
+				break;
+			periodic_heartbeat(handle->timerid, period);
 			while (!handle->done) {
-				sigsuspend(&mask);
+				bool done = false;
+				rdsize = recv(sock_master, &done, sizeof(done), MSG_WAITALL);
+				if (rdsize != -1) {
+					struct itimerspec disarm = {0};
+					timer_settime(handle->timerid, 0, &disarm, NULL);
+					assert(done);
+					break;
+				}
 			}
 		}
-	/* } */
+	}
 	close_socket(sock_master);
 	return 0;
 }

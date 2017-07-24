@@ -1,8 +1,8 @@
 CFLAGS      = -Wall
 LDFLAGS     = -lm -lrt -ljansson
 
-PROG    = server
-SRC     = server.c
+PROG    = master
+SRC     = master.c
 OBJ     = ${SRC:.c=.o}
 
 all: build
