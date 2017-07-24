@@ -205,6 +205,7 @@ int main(int argc, char *argv[])
 				rdsize = recv(sock_master, &done, sizeof(done), MSG_WAITALL);
 				if (rdsize != -1) {
 					struct itimerspec disarm = {0};
+					puts("Disarming heartbeat");
 					timer_settime(handle->timerid, 0, &disarm, NULL);
 					assert(done);
 					break;

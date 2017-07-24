@@ -34,9 +34,8 @@ void close_peer_socket(int sockfd)
 	int ret;
 	char buf[BUFSIZE];
 
-	shutdown(sockfd, SHUT_WR);
 	while ((ret = read(sockfd, buf, BUFSIZE)) > 0);
-	perror("");
+	shutdown(sockfd, SHUT_RD);
 	close(sockfd);
 #undef BUFSIZE
 }
