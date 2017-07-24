@@ -17,8 +17,14 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <libxl.h>
+#include <libxl_utils.h>
+#include <xenctrl.h>
 
 #define CLOCK_ID CLOCK_MONOTONIC
+
+#define SCHED_POOLID 0
+#define VCPU_ID 0
 
 #define max(a,b) ((a > b) ? a : b)
 
@@ -105,6 +111,7 @@ int socket_init(void)
 
 typedef struct sched_provider_s {
 	const char *dom_name;
+	int vcpu_id;
 } sched_provider_t;
 
 typedef struct sched_entry_s {
@@ -163,8 +170,10 @@ char * readall(char *file)
 	size = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
 
-	out = malloc(size * sizeof(char));
+	/* +1 for null bytes */
+	out = malloc((size+1) * sizeof(char));
 	fread(out, sizeof(char), size, fp);
+	out[size] = '\0';
 	fclose(fp);
 
 	return out;
@@ -223,6 +232,7 @@ int extract_schedule(json_t *root, schedule_t *sched)
 			if (!cur_obj || !json_is_string(cur_obj))
 				goto fail;
 			sched->entries[i].providers[j].dom_name = json_string_value(cur_obj);
+			sched->entries[i].providers[j].vcpu_id = VCPU_ID;
 		}
 	}
 
@@ -347,6 +357,95 @@ void initfds(fd_set *rfds)
 
 }
 
+char * process_socket(int sock_rdy)
+{
+	ssize_t rdsize;
+	uint32_t msgsize;
+	char * msg;
+
+	rdsize = recv(sock_rdy, &msgsize, sizeof(msgsize), MSG_WAITALL);
+	if (rdsize == 0) {
+		/* socket is closed */
+		return NULL;
+	}
+	else {
+		assert(rdsize == sizeof(msgsize));
+
+		msg = malloc(msgsize);
+		rdsize = recv(sock_rdy, msg, msgsize, MSG_WAITALL);
+
+		if (rdsize == -1)
+			return NULL;
+
+		return msg;
+	}
+}
+
+struct dominfo_t {
+    const char *dom_name;
+    libxl_uuid uuid;
+    domid_t domid;
+};
+
+int set_schedule(schedule_t * sched)
+{
+    struct xen_sysctl_arinc653_schedule a653sched;
+    struct dominfo_t *domlist;
+    xc_interface *xci;
+    libxl_ctx *ctx;
+    libxl_dominfo *dominfo;
+    int64_t total_runtime = 0;
+    int i;
+    int ret, num_domains;
+
+    libxl_ctx_alloc(&ctx, LIBXL_VERSION, 0, NULL);
+    dominfo = libxl_list_domain(ctx, &num_domains);
+
+    domlist = malloc(num_domains * sizeof(*domlist));
+    for (i = 0; i < num_domains; i++) {
+        const char *name = libxl_domid_to_name(ctx, dominfo[i].domid);
+	libxl_uuid_copy(ctx, &domlist[i].uuid, &dominfo[i].uuid);
+        domlist[i].dom_name = name;
+        domlist[i].domid = dominfo[i].domid;
+    }
+
+    for (i = 0; i < sched->num_entries; i++)
+        total_runtime += sched->entries[i].runtime;
+
+    if (total_runtime > sched->major_frame)
+    	    return 1;
+
+    a653sched.major_frame = sched->major_frame;
+    a653sched.num_sched_entries = sched->num_entries;
+    for (i = 0; i < sched->num_entries; i++) {
+        int j;
+
+        a653sched.sched_entries[i].service_id = sched->entries[i].service_id;
+        a653sched.sched_entries[i].runtime = sched->entries[i].runtime;
+        a653sched.sched_entries[i].num_providers = sched->entries[i].num_providers;
+
+        for (j = 0; j < sched->entries[i].num_providers; j++) {
+            const char *entry_name = sched->entries[i].providers[j].dom_name;
+	    int k;
+
+	    for (k = 0; k < num_domains && strcmp(entry_name, domlist[k].dom_name); k++);
+            if (k >= num_domains)
+                return 1;
+
+            libxl_uuid_copy(ctx, (libxl_uuid *)&a653sched.sched_entries[i].service_providers[j].dom_handle,
+                    &domlist[k].uuid);
+            a653sched.sched_entries[i].service_providers[j].vcpu_id = sched->entries[i].providers[j].vcpu_id;
+        }
+    }
+
+    xci = xc_interface_open(NULL, NULL, 0);
+
+    ret = xc_sched_arinc653_schedule_set(xci, SCHED_POOLID, &a653sched);
+    if (ret)
+        return ret;
+    return 0;
+}
+
 void do_testing(schedule_t * schedule, fd_set *rfds)
 {
 	int ret, i;
@@ -375,6 +474,12 @@ void do_testing(schedule_t * schedule, fd_set *rfds)
 		last_stamp[i].tv_nsec = 0;
 	}
 
+	/* set schedule */
+	ret = set_schedule(schedule);
+	
+	if (ret)
+		return;
+
 	/* send period to slaves */
 	for ( i = 0; i < num_sockets; i++ ) {
 		send(sock_fds[i], &schedule->major_frame, sizeof(schedule->major_frame), 0);
@@ -386,37 +491,24 @@ void do_testing(schedule_t * schedule, fd_set *rfds)
 	i = 0;
 	while ( select_to = timeout, initfds(rfds),
 		ret = select(maxfds+1, rfds, NULL, NULL, &select_to), ret > 0 ) {
-		ssize_t rdsize;
-		uint32_t msgsize;
-		char * hostname;
-		int sock_cli, entry_idx;
 
 		/* client sockets ready */
-		for (;; i = (i+1) % num_sockets) {
+		for (i = 0; i < num_sockets; i++) {
 			if (FD_ISSET(sock_fds[i], rfds)) {
-				break;
+				int entry_idx;
+				char * hostname;
+				hostname = process_socket(sock_fds[i]);
+
+				if (hostname == NULL) {
+					sock_fds[i] = -1;
+					continue;
+				}
+
+				entry_idx = lookup_service_provider(hostname, schedule);
+				logtime(entry_idx);
+
+				free(hostname);
 			}
-		}
-
-		sock_cli = sock_fds[i];
-		rdsize = recv(sock_cli, &msgsize, sizeof(msgsize), MSG_WAITALL);
-		if (rdsize == 0) {
-			/* socket is closed */
-			sock_fds[i] = -1;
-		}
-		else {
-			assert(rdsize == sizeof(msgsize));
-
-			hostname = malloc(msgsize);
-			rdsize = recv(sock_cli, hostname, msgsize, MSG_WAITALL);
-
-			if (rdsize == -1)
-				break;
-
-			entry_idx = lookup_service_provider(hostname, schedule);
-			logtime(entry_idx);
-
-			free(hostname);
 		}
 	}
 
@@ -460,8 +552,7 @@ int main(int argc, char *argv[])
 		config_path = choose_test_scheme(config_base);
 
 		if (config_path == NULL) {
-			raise(SIGINT);
-			break;
+			goto fail;
 		}
 
 		config = readall(config_path);
@@ -470,14 +561,14 @@ int main(int argc, char *argv[])
 		
 		if (!config) {
 			fprintf(stderr, "cannot read from %s\n", config_path);
-			return 1;
+			goto fail;
 		}
 
 		handle = json_loads(config, 0, &error);
 
 		if (!handle) {
 			fprintf(stderr, "error: on line %d: %s\n", error.line, error.text);
-			return 1;
+			goto fail;
 		}
 
 		schedule = calloc(1, sizeof(*schedule));
@@ -487,7 +578,7 @@ int main(int argc, char *argv[])
 		if (ret) {
 			fprintf(stderr, "cannot parse config on file %s.\n", config_path);
 			sched_free(schedule);
-			return 1;
+			goto fail;
 		}
 
 		do_testing(schedule, &rfds);
@@ -499,4 +590,8 @@ int main(int argc, char *argv[])
 	}
 
 	return 0;
+fail:
+	
+	raise(SIGINT);
+	return 1;
 }
