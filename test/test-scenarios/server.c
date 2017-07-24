@@ -212,9 +212,10 @@ void setup_master_slave(int sock_master, int num_slaves, fd_set *rfds)
 	while (num_slaves) {
 		int sock_cli;
 		struct sockaddr_in addr_cli;
-		socklen_t addr_len_cli = sizeof(addr_cli);
+		socklen_t addr_len_cli;
 
 		printf("Waiting for connections from slaves (%d more) . . .\n", num_slaves);
+		addr_len_cli = sizeof(addr_cli);
 		sock_cli = accept(sock_master, (struct sockaddr *)&addr_cli, &addr_len_cli);
 		list_add_socket(sock_cli);
 		FD_SET(sock_cli, rfds);
