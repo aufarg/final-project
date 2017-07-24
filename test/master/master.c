@@ -34,10 +34,7 @@ void close_peer_socket(int sockfd)
 	int ret;
 	char buf[BUFSIZE];
 
-	while ((ret = read(sockfd, buf, BUFSIZE)) > 0) {
-		printf("%d %s\n", ret, buf);
-	};
-	shutdown(sockfd, SHUT_WR);
+	while ((ret = read(sockfd, buf, BUFSIZE)) > 0);
 	close(sockfd);
 #undef BUFSIZE
 }
@@ -55,7 +52,6 @@ void sigint_handler(int signo)
 	for ( i = 0; i < num_sockets; i++ ) {
 		send(sock_fds[i], &dummy_period, sizeof(dummy_period), 0);
 	}
-	sleep(1);
 	puts("Cleaning sockets before terminating . . .");
 	for ( i = 0; i < num_sockets; i++ ) {
 		close_peer_socket(sock_fds[i]);
