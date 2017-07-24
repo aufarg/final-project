@@ -24,13 +24,7 @@ int sock_master;
 
 void close_peer_socket(int sockfd)
 {
-#define BUFSIZE 4096
-	int ret;
-	char buf[BUFSIZE];
-
-	while ((ret = read(sockfd, buf, BUFSIZE)) > 0);
 	close(sockfd);
-#undef BUFSIZE
 }
 
 void sigint_handler(int signo)

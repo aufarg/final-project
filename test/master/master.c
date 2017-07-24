@@ -34,7 +34,9 @@ void close_peer_socket(int sockfd)
 	int ret;
 	char buf[BUFSIZE];
 
-	while ((ret = read(sockfd, buf, BUFSIZE)) > 0);
+	while ((ret = read(sockfd, buf, BUFSIZE)) > 0) {
+		printf("%d %s\n", ret, buf);
+	};
 	shutdown(sockfd, SHUT_WR);
 	close(sockfd);
 #undef BUFSIZE
@@ -43,19 +45,22 @@ void close_peer_socket(int sockfd)
 void sigint_handler(int signo)
 {
 	int i;
-	int64_t dummy_period = 0;
+	uint64_t dummy_period = 0;
 	struct sigaction act = {
 		.sa_handler = SIG_DFL,
 		.sa_flags = 0
 	};
 
-	puts("Cleaning sockets before terminating . . .");
 	/* send dummy period */
-	for ( i = 0; i < num_sockets; i++ )
+	for ( i = 0; i < num_sockets; i++ ) {
 		send(sock_fds[i], &dummy_period, sizeof(dummy_period), 0);
-
-	for ( i = 0 ; i < num_sockets; i++ )
+	}
+	sleep(1);
+	puts("Cleaning sockets before terminating . . .");
+	for ( i = 0; i < num_sockets; i++ ) {
 		close_peer_socket(sock_fds[i]);
+	}
+
 	if (sock_serv != -1) {
 		close(sock_serv);
 	}
@@ -114,7 +119,7 @@ typedef struct sched_entry_s {
 } sched_entry_t;
 
 typedef struct schedule_s {
-	int64_t major_frame;
+	uint64_t major_frame;
 	sched_entry_t *entries;
 	int num_entries;
 } schedule_t;
@@ -376,7 +381,7 @@ void do_testing(schedule_t * schedule, fd_set *rfds)
 
 	/* send period to slaves */
 	for ( i = 0; i < num_sockets; i++ ) {
-		write(sock_fds[i], &schedule->major_frame, sizeof(schedule->major_frame));
+		send(sock_fds[i], &schedule->major_frame, sizeof(schedule->major_frame), 0);
 	}
 
 	/* receive heartbeat from slaves
