@@ -28,14 +28,15 @@ int sock_serv = -1, sock_fds[256];
 
 struct timespec last_stamp[256];
 
-void close_socket(int sockfd)
+void close_peer_socket(int sockfd)
 {
 #define BUFSIZE 4096
 	int ret;
 	char buf[BUFSIZE];
 
-	shutdown(sockfd, SHUT_RDWR);
+	shutdown(sockfd, SHUT_WR);
 	while ((ret = read(sockfd, buf, BUFSIZE)) > 0);
+	perror("");
 	close(sockfd);
 #undef BUFSIZE
 }
@@ -43,16 +44,22 @@ void close_socket(int sockfd)
 void sigint_handler(int signo)
 {
 	int i;
+	int64_t dummy_period = 0;
 	struct sigaction act = {
 		.sa_handler = SIG_DFL,
 		.sa_flags = 0
 	};
 
 	puts("Cleaning sockets before terminating . . .");
-	if (sock_serv != -1)
-		close_socket(sock_serv);
+	/* send dummy period */
+	for ( i = 0; i < num_sockets; i++ )
+		send(sock_fds[i], &dummy_period, sizeof(dummy_period), 0);
+
 	for ( i = 0 ; i < num_sockets; i++ )
-		close_socket(sock_fds[i]);
+		close_peer_socket(sock_fds[i]);
+	if (sock_serv != -1) {
+		close(sock_serv);
+	}
 
 	puts("Terminating . . .");
 	sigaction(signo, &act, NULL);
@@ -453,10 +460,6 @@ int main(int argc, char *argv[])
 		config_path = choose_test_scheme(config_base);
 
 		if (config_path == NULL) {
-			int i;
-			int64_t dummy_period = 0;
-			for ( i = 0; i < num_sockets; i++ )
-				send(sock_fds[i], &dummy_period, sizeof(dummy_period), 0);
 			raise(SIGINT);
 			break;
 		}

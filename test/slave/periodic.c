@@ -22,14 +22,15 @@
 
 int sock_master;
 
-void close_socket(int sockfd)
+void close_peer_socket(int sockfd)
 {
 #define BUFSIZE 4096
 	int ret;
 	char buf[BUFSIZE];
 
-	shutdown(sockfd, SHUT_RDWR);
+	shutdown(sockfd, SHUT_WR);
 	while ((ret = read(sockfd, buf, BUFSIZE)) > 0);
+	perror("");
 	close(sockfd);
 #undef BUFSIZE
 }
@@ -42,7 +43,7 @@ void sigint_handler(int signo)
 	};
 
 	puts("Cleaning sockets . . .");
-	close_socket(sock_master);
+	close_peer_socket(sock_master);
 
 	puts("Terminating . . .");
 	sigaction(signo, &act, NULL);
@@ -187,8 +188,7 @@ int main(int argc, char *argv[])
 
 		if (rdsize == 0) {
 			puts("Socket closed abruptly");
-			close_socket(sock_master);
-			return 1;
+			break;
 		}
 		else if (rdsize == -1) {
 			perror("");
@@ -197,7 +197,9 @@ int main(int argc, char *argv[])
 		else {
 			if (period == 0)
 				break;
+
 			periodic_heartbeat(handle->timerid, period);
+
 			while (!handle->done) {
 				bool done = false;
 				rdsize = recv(sock_master, &done, sizeof(done), MSG_WAITALL);
@@ -210,6 +212,8 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-	close_socket(sock_master);
+
+	close_peer_socket(sock_master);
+
 	return 0;
 }
