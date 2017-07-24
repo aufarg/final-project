@@ -31,6 +31,7 @@ void close_socket(int sockfd)
 	shutdown(sockfd, SHUT_RDWR);
 	while ((ret = read(sockfd, buf, BUFSIZE)) > 0);
 	close(sockfd);
+#undef BUFSIZE
 }
 
 void sigint_handler(int signo)
