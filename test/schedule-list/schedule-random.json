@@ -1,16 +1,9 @@
 {
-  "major_frame": 40000000,
+  "major_frame": 60000000,
   "entries": [
     {
-      "service_id": 0,
-      "runtime": 5000000,
-      "providers": [
-        { "dom_name": "Domain-0" }
-      ]
-    },
-    {
       "service_id": 1,
-      "runtime": 10000000,
+      "runtime": 30000000,
       "providers": [
         { "dom_name": "xen-vm1" },
         { "dom_name": "xen-vm4" }
@@ -18,7 +11,7 @@
     },
     {
       "service_id": 2,
-      "runtime": 10000000,
+      "runtime": 20000000,
       "providers": [
         { "dom_name": "xen-vm2" },
         { "dom_name": "xen-vm6" },

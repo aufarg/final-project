@@ -1,13 +1,6 @@
 {
-  "major_frame": 100000000,
+  "major_frame": 90000000,
   "entries": [
-    {
-      "service_id": 0,
-      "runtime": 5000000,
-      "providers": [
-        { "dom_name": "Domain-0" }
-      ]
-    },
     {
       "service_id": 1,
       "runtime": 10000000,

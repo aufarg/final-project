@@ -3,13 +3,6 @@
   "entries": [
     {
       "service_id": 0,
-      "runtime": 5000000,
-      "providers": [
-        { "dom_name": "Domain-0" }
-      ]
-    },
-    {
-      "service_id": 1,
       "runtime": 10000000,
       "providers": [
         { "dom_name": "xen-vm1" },
@@ -17,7 +10,7 @@
       ]
     },
     {
-      "service_id": 2,
+      "service_id": 1,
       "runtime": 10000000,
       "providers": [
         { "dom_name": "xen-vm2" },
@@ -25,7 +18,7 @@
       ]
     },
     {
-      "service_id": 3,
+      "service_id": 2,
       "runtime": 10000000,
       "providers": [
         { "dom_name": "xen-vm3" },
@@ -33,7 +26,7 @@
       ]
     },
     {
-      "service_id": 4,
+      "service_id": 3,
       "runtime": 10000000,
       "providers": [
         { "dom_name": "xen-vm4" },
