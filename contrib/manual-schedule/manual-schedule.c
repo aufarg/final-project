@@ -9,7 +9,7 @@
 
 #define MILLISECS(_ms)  ((_ms) * 1000000ULL)
 
-#define SCHED_POOLID 0
+#define SCHED_POOLID 1
 #define VCPU_ID 0
 
 struct sched_provider_t {
