@@ -23,7 +23,7 @@
 
 #define CLOCK_ID CLOCK_MONOTONIC
 
-#define SCHED_POOLID 0
+#define SCHED_POOLID 1
 #define VCPU_ID 0
 
 #define max(a,b) ((a > b) ? a : b)
@@ -315,11 +315,14 @@ char * choose_test_scheme(char *config_base)
 	return config_path;
 }
 
-void logtime(int entry_index)
+void logtime(int entry_index, int expected_ns)
 {
 	int ret;
-	double d;
-	struct timespec now, last, delta;
+	struct timespec now, last, delta, delta_exp;
+	struct timespec expected = {
+		.tv_sec = expected_ns / (1000 * 1000 * 1000),
+		.tv_nsec = expected_ns % (1000 * 1000 * 1000)
+	};
 	ret = clock_gettime(CLOCK_ID, &now);
 	if (ret == -1) {
 		fprintf(stderr, "Error getting current time.\n");
@@ -336,9 +339,19 @@ void logtime(int entry_index)
 			delta.tv_nsec += 1000 * 1000 * 1000;
 		}
 
-		d = ((double)delta.tv_sec) + ((double)delta.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
+		delta_exp.tv_sec  = expected.tv_sec - delta.tv_sec;
+		delta_exp.tv_nsec = expected.tv_nsec - delta.tv_nsec;
 
-		printf("Entry %d Delta %.09lfs\n", entry_index, d);
+		if (delta_exp.tv_nsec < 0) {
+			delta.tv_sec -= 1;
+			delta.tv_nsec += 1000 * 1000 * 1000;
+		}
+
+		if (delta_exp.tv_sec < 0)
+			delta.tv_sec *= -1;
+
+		printf("entry %d: time since last = %ld.%09lds, delta expected = %ld.%09lds\n",
+                        entry_index, delta.tv_sec, delta.tv_nsec, delta_exp.tv_sec, delta.tv_nsec);
 	}
 	last_stamp[entry_index] = now;
 }
@@ -505,7 +518,7 @@ void do_testing(schedule_t * schedule, fd_set *rfds)
 				}
 
 				entry_idx = lookup_service_provider(hostname, schedule);
-				logtime(entry_idx);
+				logtime(entry_idx, schedule->major_frame);
 
 				free(hostname);
 			}

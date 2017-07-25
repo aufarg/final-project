@@ -1,4 +1,4 @@
-CFLAGS      = -Wall
+CFLAGS      = -Wall -O2
 LDFLAGS     = -lm -lrt -ljansson -lxenctrl -lxenlight
 
 PROG    = master

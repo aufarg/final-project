@@ -1,4 +1,4 @@
-CFLAGS      = -Wall
+CFLAGS      = -Wall -O2
 LIB_RT      = -lrt
 LDFLAGS     = ${LIB_RT}
 
