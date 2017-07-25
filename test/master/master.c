@@ -138,6 +138,7 @@ void sched_free(schedule_t * sched)
 		}
 		free(sched->entries);
 	}
+	free(sched);
 }
 
 int lookup_service_provider(const char * hostname, schedule_t * sched)
@@ -158,6 +159,7 @@ int lookup_service_provider(const char * hostname, schedule_t * sched)
 
 char * readall(char *file)
 {
+	int ret;
 	size_t size;
 	char * out;
 	FILE *fp;
@@ -172,12 +174,15 @@ char * readall(char *file)
 
 	/* +1 for null bytes */
 	out = malloc((size+1) * sizeof(char));
-	fread(out, sizeof(char), size, fp);
-	out[size] = '\0';
+	ret = fread(out, sizeof(char), size, fp);
 	fclose(fp);
+	if (ret != size)
+		return NULL;
+	out[size] = '\0';
 
 	return out;
 }
+
 int extract_schedule(json_t *root, schedule_t *sched)
 {
 	json_t *cur_obj, *arr_entries;
@@ -266,7 +271,7 @@ void setup_master_slave(int sock_master, int num_slaves)
 
 char * choose_test_scheme(char *config_base)
 {
-	int selection, num_opt, len;
+	int ret, selection, num_opt, len;
 	char * config_path;
 	DIR * dirp;
 	struct dirent * dir;
@@ -287,7 +292,7 @@ char * choose_test_scheme(char *config_base)
 	closedir(dirp);
 
 	printf("Selection: ");
-	scanf("%d", &selection);
+	ret = scanf("%d", &selection);
 
 	if (selection == 0)
 		return NULL;
@@ -315,10 +320,11 @@ char * choose_test_scheme(char *config_base)
 	return config_path;
 }
 
-void logtime(int entry_index, int expected_ns)
+void logtime(int entry_index, int expected_ns, char * hostname)
 {
 	int ret;
-	struct timespec now, last, delta, delta_exp;
+	static struct timespec last_call;
+	struct timespec now, last, delta, delta_exp, delta_lastcall;
 	struct timespec expected = {
 		.tv_sec = expected_ns / (1000 * 1000 * 1000),
 		.tv_nsec = expected_ns % (1000 * 1000 * 1000)
@@ -339,21 +345,39 @@ void logtime(int entry_index, int expected_ns)
 			delta.tv_nsec += 1000 * 1000 * 1000;
 		}
 
-		delta_exp.tv_sec  = expected.tv_sec - delta.tv_sec;
-		delta_exp.tv_nsec = expected.tv_nsec - delta.tv_nsec;
+		if (expected.tv_sec > delta.tv_sec ||
+		    (expected.tv_sec == delta.tv_sec && expected.tv_nsec > delta.tv_nsec)) {
+			delta_exp.tv_sec  = expected.tv_sec - delta.tv_sec;
+			delta_exp.tv_nsec = expected.tv_nsec - delta.tv_nsec;
+
+		}
+		else {
+			delta_exp.tv_sec  = delta.tv_sec - expected.tv_sec;
+			delta_exp.tv_nsec = delta.tv_nsec - expected.tv_nsec;
+		}
 
 		if (delta_exp.tv_nsec < 0) {
 			delta_exp.tv_sec -= 1;
 			delta_exp.tv_nsec += 1000 * 1000 * 1000;
 		}
 
-		if (delta_exp.tv_sec < 0)
-			delta.tv_sec *= -1;
+		delta_lastcall.tv_sec  = now.tv_sec - last_call.tv_sec;
+		delta_lastcall.tv_nsec = now.tv_nsec - last_call.tv_nsec;
 
-		printf("entry %d: time since last = %ld.%09lds, delta expected = %ld.%09lds\n",
-                        entry_index, delta.tv_sec, delta.tv_nsec, delta_exp.tv_sec, delta.tv_nsec);
+		if (delta_lastcall.tv_nsec < 0) {
+			delta_lastcall.tv_sec  -= 1;
+			delta_lastcall.tv_nsec += 1000 * 1000 * 1000;
+		}
+
+		printf("entry %d (%s): time since last = %ld.%09lds, "
+                        "delta from expected = %ld.%09lds, "
+                        "from last call = %ld.%09lds\n",
+                        entry_index, hostname, delta.tv_sec, delta.tv_nsec,
+                        delta_exp.tv_sec, delta_exp.tv_nsec,
+                        delta_lastcall.tv_sec, delta_lastcall.tv_nsec);
 	}
 	last_stamp[entry_index] = now;
+	last_call = now;
 }
 
 void initfds(fd_set *rfds)
@@ -454,12 +478,13 @@ int set_schedule(schedule_t * sched)
     xci = xc_interface_open(NULL, NULL, 0);
 
     ret = xc_sched_arinc653_schedule_set(xci, SCHED_POOLID, &a653sched);
-    if (ret)
-        return ret;
-    return 0;
+
+    xc_interface_close(xci);
+
+    return ret;
 }
 
-void do_testing(schedule_t * schedule, fd_set *rfds)
+int do_testing(schedule_t * schedule, fd_set *rfds)
 {
 	int ret, i;
 	struct sigaction oldact;
@@ -491,7 +516,7 @@ void do_testing(schedule_t * schedule, fd_set *rfds)
 	ret = set_schedule(schedule);
 	
 	if (ret)
-		return;
+		return ret;
 
 	/* send period to slaves */
 	for ( i = 0; i < num_sockets; i++ ) {
@@ -518,23 +543,28 @@ void do_testing(schedule_t * schedule, fd_set *rfds)
 				}
 
 				entry_idx = lookup_service_provider(hostname, schedule);
-				logtime(entry_idx, schedule->major_frame);
+				logtime(entry_idx, schedule->major_frame, hostname);
 
 				free(hostname);
 			}
 		}
 	}
 
-	/* reinstall previous handler */
-	if (ret == 0 || errno == EINTR)
-		sigaction(SIGINT, &oldact, NULL);
-	else
+	/* error and not because syscall interruption */
+	if (ret == -1 && errno != EINTR) {
 		perror("");
+		return ret;
+	}
+
+	/* reinstall previous handler */
+	sigaction(SIGINT, &oldact, NULL);
+
+	return 0;
 }
 
 int main(int argc, char *argv[])
 {
-	int num_slaves;
+	int ret, num_slaves;
 	char * config_base;
 	struct sigaction act = {
 		.sa_handler = sigint_handler,
@@ -560,7 +590,6 @@ int main(int argc, char *argv[])
 		json_error_t error;
 		schedule_t * schedule;
 		char *config_path, *config;
-		int ret;
 
 		config_path = choose_test_scheme(config_base);
 
@@ -571,13 +600,15 @@ int main(int argc, char *argv[])
 		config = readall(config_path);
 
 		printf("%s\n", config);
-		
+		free(config_path);
+
 		if (!config) {
 			fprintf(stderr, "cannot read from %s\n", config_path);
 			goto fail;
 		}
 
 		handle = json_loads(config, 0, &error);
+		free(config);
 
 		if (!handle) {
 			fprintf(stderr, "error: on line %d: %s\n", error.line, error.text);
@@ -590,7 +621,6 @@ int main(int argc, char *argv[])
 
 		if (ret) {
 			fprintf(stderr, "cannot parse config on file %s.\n", config_path);
-			sched_free(schedule);
 			goto fail;
 		}
 
@@ -598,8 +628,6 @@ int main(int argc, char *argv[])
 
 		json_decref(handle);
 		sched_free(schedule);
-		free(config);
-		free(config_path);
 	}
 
 	return 0;

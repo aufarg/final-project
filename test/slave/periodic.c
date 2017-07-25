@@ -128,7 +128,7 @@ void periodic_heartbeat(timer_t timerid, int64_t period)
 	};
 	const struct itimerspec timersp = {
 		.it_interval = interval,
-		.it_value    = interval
+		.it_value    = 0
 	};
 
 	printf("Sending heartbeat every %lu\n", period);
