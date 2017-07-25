@@ -343,8 +343,8 @@ void logtime(int entry_index, int expected_ns)
 		delta_exp.tv_nsec = expected.tv_nsec - delta.tv_nsec;
 
 		if (delta_exp.tv_nsec < 0) {
-			delta.tv_sec -= 1;
-			delta.tv_nsec += 1000 * 1000 * 1000;
+			delta_exp.tv_sec -= 1;
+			delta_exp.tv_nsec += 1000 * 1000 * 1000;
 		}
 
 		if (delta_exp.tv_sec < 0)
