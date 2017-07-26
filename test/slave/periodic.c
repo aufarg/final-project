@@ -78,6 +78,8 @@ struct routine_t {
 void routine(int signo, siginfo_t *siginfo, void *ctx)
 {
 	struct routine_t * routine_data = ((struct routine_t *)siginfo->si_value.sival_ptr);
+	static long long val = 0;
+	printf("Sending heartbeat [%lld]", val++);
 	send(routine_data->sockfd, &routine_data->len_hostname,
                    sizeof(routine_data->len_hostname), MSG_MORE);
 	send(routine_data->sockfd, routine_data->hostname, routine_data->len_hostname, 0);
