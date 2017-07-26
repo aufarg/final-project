@@ -130,7 +130,13 @@ void periodic_heartbeat(timer_t timerid, int64_t period)
 	};
 	const struct itimerspec timersp = {
 		.it_interval = interval,
-		.it_value    = {0}
+		/* the timer should right now, but giving zeroes to it_value means
+		 * disarming the timer. thus we let 1 nsec to pass before setting
+		 * up the timer. */
+		.it_value    = {
+			.tv_sec = 0,
+			.tv_nsec = 1
+		}
 	};
 
 	printf("Sending heartbeat every %lu\n", period);
