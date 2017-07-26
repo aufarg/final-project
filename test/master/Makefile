@@ -1,5 +1,5 @@
 CFLAGS      = -Wall -O2
-LDFLAGS     = -lm -lrt -ljansson -lxenctrl -lxenlight
+LDFLAGS     = -lm -lrt -ljansson -lxenctrl -lxenlight -lgsl -lgslcblas
 
 PROG    = master
 SRC     = master.c

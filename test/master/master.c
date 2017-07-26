@@ -21,6 +21,8 @@
 #include <libxl_utils.h>
 #include <xenctrl.h>
 
+#include <gsl/gsl_rstat.h>
+
 #define CLOCK_ID CLOCK_MONOTONIC
 
 #define SCHED_POOLID 1
@@ -30,7 +32,10 @@
 
 int num_sockets;
 int maxfds;
-int sock_serv = -1, sock_fds[256];
+int sock_serv = -1, sock_fds[16];
+
+gsl_rstat_workspace * acc_delta[16];
+gsl_rstat_workspace * acc_err[16];
 
 struct timespec last_stamp[256];
 
@@ -320,11 +325,16 @@ char * choose_test_scheme(char *config_base)
 	return config_path;
 }
 
+double ts2d(struct timespec ts)
+{
+	return ts.tv_sec + (ts.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
+}
 void logtime(int entry_index, int expected_ns, char * hostname)
 {
 	int ret;
+	double d;
 	static struct timespec last_call;
-	struct timespec now, last, delta, delta_exp, delta_lastcall;
+	struct timespec now, last, delta, error, delta_lastcall;
 	struct timespec expected = {
 		.tv_sec = expected_ns / (1000 * 1000 * 1000),
 		.tv_nsec = expected_ns % (1000 * 1000 * 1000)
@@ -347,18 +357,18 @@ void logtime(int entry_index, int expected_ns, char * hostname)
 
 		if (expected.tv_sec > delta.tv_sec ||
 		    (expected.tv_sec == delta.tv_sec && expected.tv_nsec > delta.tv_nsec)) {
-			delta_exp.tv_sec  = expected.tv_sec - delta.tv_sec;
-			delta_exp.tv_nsec = expected.tv_nsec - delta.tv_nsec;
+			error.tv_sec  = expected.tv_sec - delta.tv_sec;
+			error.tv_nsec = expected.tv_nsec - delta.tv_nsec;
 
 		}
 		else {
-			delta_exp.tv_sec  = delta.tv_sec - expected.tv_sec;
-			delta_exp.tv_nsec = delta.tv_nsec - expected.tv_nsec;
+			error.tv_sec  = delta.tv_sec - expected.tv_sec;
+			error.tv_nsec = delta.tv_nsec - expected.tv_nsec;
 		}
 
-		if (delta_exp.tv_nsec < 0) {
-			delta_exp.tv_sec -= 1;
-			delta_exp.tv_nsec += 1000 * 1000 * 1000;
+		if (error.tv_nsec < 0) {
+			error.tv_sec -= 1;
+			error.tv_nsec += 1000 * 1000 * 1000;
 		}
 
 		delta_lastcall.tv_sec  = now.tv_sec - last_call.tv_sec;
@@ -370,12 +380,18 @@ void logtime(int entry_index, int expected_ns, char * hostname)
 		}
 
 		printf("entry %d (%s): time since last = %ld.%09lds, "
-                        "delta from expected = %ld.%09lds, "
+                        "error = %ld.%09lds, "
                         "from last call = %ld.%09lds\n",
-                        entry_index, hostname, delta.tv_sec, delta.tv_nsec,
-                        delta_exp.tv_sec, delta_exp.tv_nsec,
+                        entry_index+1, hostname, delta.tv_sec, delta.tv_nsec,
+                        error.tv_sec, error.tv_nsec,
                         delta_lastcall.tv_sec, delta_lastcall.tv_nsec);
+
+                d = ts2d(delta);
+		gsl_rstat_add(d, acc_delta[entry_index]);
+                d = ts2d(error);
+		gsl_rstat_add(d, acc_err[entry_index]);
 	}
+
 	last_stamp[entry_index] = now;
 	last_call = now;
 }
@@ -507,9 +523,15 @@ int do_testing(schedule_t * schedule, fd_set *rfds)
 	sigaction(SIGINT, &act, &oldact);
 
 	/* reset time stamp */
-	for ( int i = 0; i < schedule->num_entries; i++ ) {
+	for ( i = 0; i < schedule->num_entries; i++ ) {
 		last_stamp[i].tv_sec = 0;
 		last_stamp[i].tv_nsec = 0;
+	}
+
+	/* initialize stats accumulators */
+	for ( i = 0; i < schedule->num_entries; i++ ) {
+		acc_delta[i] = gsl_rstat_alloc();
+		acc_err[i] = gsl_rstat_alloc();
 	}
 
 	/* set schedule */
@@ -548,6 +570,31 @@ int do_testing(schedule_t * schedule, fd_set *rfds)
 				free(hostname);
 			}
 		}
+	}
+
+	for ( i = 0; i < schedule->num_entries; i++ ) {
+		printf("\n");
+		printf("Statistics for entry %d\n", i);
+		printf("deltas(s): mean=%.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
+                        gsl_rstat_mean(acc_delta[i]),
+                        gsl_rstat_sd(acc_delta[i]),
+                        gsl_rstat_min(acc_delta[i]),
+                        gsl_rstat_max(acc_delta[i]),
+			gsl_rstat_n(acc_delta[i]));
+
+		printf("errors(s): mean=%.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
+                        gsl_rstat_mean(acc_err[i]),
+                        gsl_rstat_sd(acc_err[i]),
+                        gsl_rstat_min(acc_err[i]),
+                        gsl_rstat_max(acc_err[i]),
+                        gsl_rstat_n(acc_err[i]));
+                printf("\n");
+	}
+
+	/* free statistics accumulators */
+	for ( i = 0; i < schedule->num_entries; i++ ) {
+		gsl_rstat_free(acc_delta[i]);
+		gsl_rstat_free(acc_err[i]);
 	}
 
 	/* error and not because syscall interruption */
