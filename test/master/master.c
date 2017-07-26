@@ -623,6 +623,9 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	setlinebuf(stdout);
+	setlinebuf(stderr);
+
 	sigaction(SIGINT, &act, NULL);
 
 	num_slaves = atoi(argv[1]);
