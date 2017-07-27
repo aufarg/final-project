@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#include <sched.h>
 
 #define CLOCK_ID CLOCK_MONOTONIC
 #define _STRINGIFY(s) #s
@@ -208,6 +209,8 @@ int main(int argc, char *argv[])
 	int num_samples, period;
 	int ret;
 	sigset_t mask, oldmask;
+	struct sched_param param;
+	int prio;
 
 	install_sigusr1();
 
@@ -215,6 +218,10 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Usage: %s [period] [num_samples]\n", argv[0]);
 		return 1;
 	}
+
+	prio = sched_get_priority_min(SCHED_FIFO);
+	param.sched_priority = prio;
+	sched_setscheduler(0, SCHED_FIFO, &param);
 
 	period = atoi(argv[1]);
 	num_samples = atoi(argv[2]);
