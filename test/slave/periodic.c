@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sched.h>
 #include <signal.h>
 #include <unistd.h>
 #include <errno.h>
@@ -161,14 +162,19 @@ int main(int argc, char *argv[])
 		.sa_flags = 0
 	};
 	struct routine_t * handle;
-
-
-	sigaction(SIGINT, &act, NULL);
+	struct sched_param param;
+	int prio;
 
 	if (argc != 3) {
 		fprintf(stderr, "Usage: %s [server address] [server port]\n", argv[0]);
 		return 1;
 	}
+
+	prio = sched_get_priority_min(SCHED_FIFO);
+	param.sched_priority = prio;
+	sched_setscheduler(0, SCHED_FIFO, &param);
+
+	sigaction(SIGINT, &act, NULL);
 
 	sock_master = connect_to_master(argv[1], atoi(argv[2]));
 

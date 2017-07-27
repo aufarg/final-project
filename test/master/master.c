@@ -7,6 +7,7 @@
 #include <netinet/ip.h>
 #include <time.h>
 #include <unistd.h>
+#include <sched.h>
 #include <assert.h>
 #include <jansson.h>
 #include <dirent.h>
@@ -618,10 +619,17 @@ int main(int argc, char *argv[])
 		.sa_flags = 0
 	};
 
+	struct sched_param param;
+	int prio;
+
 	if (argc != 3) {
 		fprintf(stderr, "Usage: %s [slaves number] [config base path]", argv[0]);
 		return 1;
 	}
+
+	prio = sched_get_priority_min(SCHED_FIFO);
+	param.sched_priority = prio;
+	sched_setscheduler(0, SCHED_FIFO, &param);
 
 	setlinebuf(stdout);
 	setlinebuf(stderr);
