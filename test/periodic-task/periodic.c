@@ -81,6 +81,7 @@ void routine(union sigval val)
 	struct routine_t * routine_data = ((struct routine_t *)val.sival_ptr);
 	struct timespec saved_timesp = routine_data->saved_timesp;
 	struct timespec timesp, delta, error;
+	static struct timespec drift = {0};
 	ret = clock_gettime(CLOCK_ID, &timesp);
 
 	if (ret == -1) {
@@ -123,9 +124,16 @@ void routine(union sigval val)
 	PUT_STATVAR(error, d);
 #endif
 	routine_data->samples--;
+        drift.tv_sec  += delta.tv_sec-routine_data->interval.tv_sec;
+        drift.tv_nsec += delta.tv_nsec-routine_data->interval.tv_nsec;
 
-	printf("Current time = %ld.%09lds, delta = %ld.%09lds, error = %ld.%09ld.\n",
-		timesp.tv_sec, timesp.tv_nsec, delta.tv_sec, delta.tv_nsec, error.tv_sec, error.tv_nsec);
+	if (drift.tv_nsec < 0) {
+		drift.tv_sec -= 1;
+		drift.tv_nsec += 1000 * 1000 * 1000;
+	}
+
+	printf("Current time = %ld.%09lds, delta = %ld.%09lds, error = %ld.%09lds drift = %ld.%09lds.\n",
+		timesp.tv_sec, timesp.tv_nsec, delta.tv_sec, delta.tv_nsec, error.tv_sec, error.tv_nsec, drift.tv_sec, drift.tv_nsec);
 
 	if (!routine_data->samples) {
 		struct itimerspec disarm;
