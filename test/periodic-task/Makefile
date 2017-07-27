@@ -1,5 +1,4 @@
-WITH_STATS  = -DSTATS
-CFLAGS      = -Wall -O2 ${WITH_STATS}
+CFLAGS      = -Wall -O2
 LIB_GSL     = -lgsl -lgslcblas
 LIB_RT      = -lrt
 LIB_PTHREAD = -lpthread
