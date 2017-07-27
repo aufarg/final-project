@@ -290,10 +290,17 @@ char * choose_test_scheme(char *config_base)
 
 	num_opt = 0;
 	while ( (dir = readdir(dirp)) != NULL ) {
-		if (dir->d_name[0] != '.') {
-			++num_opt;
-			printf("%d. %s\n", num_opt, dir->d_name);
-		}
+		if (dir == NULL)
+			break;
+		if (dir->d_name[0] == '.')
+			continue;
+
+		len = strlen(dir->d_name);
+		if (strncmp(&dir->d_name[len-5], ".json", 5))
+			continue;
+
+		++num_opt;
+		printf("%d. %s\n", num_opt, dir->d_name);
 	}
 	closedir(dirp);
 
@@ -308,16 +315,21 @@ char * choose_test_scheme(char *config_base)
 		dir = readdir(dirp);
 		if (dir == NULL)
 			break;
-		if (dir->d_name[0] != '.') {
-			--selection;
-		}
+		if (dir->d_name[0] == '.')
+			continue;
+
+		len = strlen(dir->d_name);
+		if (strncmp(&dir->d_name[len-5], ".json", 5)) /* ".json" is 5 bytes */
+			continue;
+
+		--selection;
 	}
 
 	if (selection != 0) {
 		return NULL;
 	}
 	else {
-		len = strlen(config_base) + strlen(dir->d_name) + 2;
+		len = strlen(config_base) + strlen(dir->d_name) + 2; /* '/' and '\0' is 2 bytes */
 		config_path = malloc(len);
 		snprintf(config_path, len, "%s/%s", config_base, dir->d_name);
 		closedir(dirp);
@@ -330,7 +342,23 @@ double ts2d(struct timespec ts)
 {
 	return ts.tv_sec + (ts.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
 }
-void logtime(int entry_index, int expected_ns, char * hostname)
+
+FILE * logopen(char *path, char *remark)
+{
+	FILE * ret;
+	char * logpath;
+	ssize_t len;
+
+	len = strlen(path) + strlen(remark) + 6; /* "-" is 1 byte, ".csv\0" is 5 bytes" */
+	logpath = malloc(len);
+	snprintf(logpath, len, "%s-%s.csv", path, remark);
+	ret = fopen(logpath, "w");
+	free(logpath);
+
+	return ret;
+}
+
+void logtime(int entry_index, int expected_ns, char * hostname, FILE * logfile)
 {
 	int ret;
 	double d;
@@ -380,10 +408,9 @@ void logtime(int entry_index, int expected_ns, char * hostname)
 			delta_lastcall.tv_nsec += 1000 * 1000 * 1000;
 		}
 
-		printf("entry %d (%s): time since last = %ld.%09lds, "
-                        "error = %ld.%09lds, "
-                        "from last call = %ld.%09lds\n",
-                        entry_index+1, hostname, delta.tv_sec, delta.tv_nsec,
+		fprintf(logfile, "%d,%s,%ld.%09ld,%ld.%09ld,%ld.%09ld\n",
+                        entry_index+1, hostname,
+                        delta.tv_sec, delta.tv_nsec,
                         error.tv_sec, error.tv_nsec,
                         delta_lastcall.tv_sec, delta_lastcall.tv_nsec);
 
@@ -501,7 +528,7 @@ int set_schedule(schedule_t * sched)
     return ret;
 }
 
-int do_testing(schedule_t * schedule, fd_set *rfds)
+int do_testing(schedule_t * schedule, fd_set *rfds, FILE *logfile)
 {
 	int ret, i;
 	struct sigaction oldact;
@@ -542,9 +569,11 @@ int do_testing(schedule_t * schedule, fd_set *rfds)
 		return ret;
 
 	/* send period to slaves */
-	for ( i = 0; i < num_sockets; i++ ) {
+	for ( i = 0; i < num_sockets; i++ )
 		send(sock_fds[i], &schedule->major_frame, sizeof(schedule->major_frame), 0);
-	}
+
+	/* logfile header */
+	fprintf(logfile, "entry,hostname,delta,error,lastcall\n");
 
 	/* receive heartbeat from slaves
 	 * from select(2), timeout is undefined after select returns
@@ -556,7 +585,7 @@ int do_testing(schedule_t * schedule, fd_set *rfds)
 		/* client sockets ready */
 		for (i = 0; i < num_sockets; i++) {
 			if (FD_ISSET(sock_fds[i], rfds)) {
-				int entry_idx;
+				int entry_idx, samples;
 				char * hostname;
 				hostname = process_socket(sock_fds[i]);
 
@@ -566,7 +595,10 @@ int do_testing(schedule_t * schedule, fd_set *rfds)
 				}
 
 				entry_idx = lookup_service_provider(hostname, schedule);
-				logtime(entry_idx, schedule->major_frame, hostname);
+				logtime(entry_idx, schedule->major_frame, hostname, logfile);
+				samples = gsl_rstat_n(acc_delta[entry_idx]);
+				if (samples % 100 == 0)
+					printf("collected %d samples for entry %d\n", samples, entry_idx);
 
 				free(hostname);
 			}
@@ -574,22 +606,24 @@ int do_testing(schedule_t * schedule, fd_set *rfds)
 	}
 
 	for ( i = 0; i < schedule->num_entries; i++ ) {
-		printf("\n");
-		printf("Statistics for entry %d\n", i);
-		printf("deltas(s): mean=%.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
+		fprintf(logfile, "\n");
+		fprintf(logfile, "Statistics for entry %d\n", i);
+		fprintf(logfile, "deltas(s): mean=%.09lf, median=%0.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
                         gsl_rstat_mean(acc_delta[i]),
+                        gsl_rstat_median(acc_delta[i]),
                         gsl_rstat_sd(acc_delta[i]),
                         gsl_rstat_min(acc_delta[i]),
                         gsl_rstat_max(acc_delta[i]),
 			gsl_rstat_n(acc_delta[i]));
 
-		printf("errors(s): mean=%.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
+		fprintf(logfile, "errors(s): mean=%.09lf, median=%0.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
                         gsl_rstat_mean(acc_err[i]),
+                        gsl_rstat_median(acc_err[i]),
                         gsl_rstat_sd(acc_err[i]),
                         gsl_rstat_min(acc_err[i]),
                         gsl_rstat_max(acc_err[i]),
                         gsl_rstat_n(acc_err[i]));
-                printf("\n");
+                fprintf(logfile, "\n");
 	}
 
 	/* free statistics accumulators */
@@ -647,7 +681,8 @@ int main(int argc, char *argv[])
 		json_t * handle;
 		json_error_t error;
 		schedule_t * schedule;
-		char *config_path, *config;
+		char *config_path, *config, remark[256];
+		FILE *logfile;
 
 		config_path = choose_test_scheme(config_base);
 
@@ -656,8 +691,13 @@ int main(int argc, char *argv[])
 		}
 
 		config = readall(config_path);
+		
+		
+		puts("Test remark (255 bytes at most)");
+		scanf("%s", remark);
 
-		printf("%s\n", config);
+		logfile = logopen(config_path, remark);
+
 		free(config_path);
 
 		if (!config) {
@@ -682,8 +722,9 @@ int main(int argc, char *argv[])
 			goto fail;
 		}
 
-		do_testing(schedule, &rfds);
+		do_testing(schedule, &rfds, logfile);
 
+		fclose(logfile);
 		json_decref(handle);
 		sched_free(schedule);
 	}

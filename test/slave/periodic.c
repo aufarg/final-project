@@ -135,7 +135,7 @@ void periodic_heartbeat(timer_t timerid, int64_t period)
 		 * disarming the timer. thus we let 1 nsec to pass before setting
 		 * up the timer. */
 		.it_value    = {
-			.tv_sec = 0,
+			.tv_sec  = 0,
 			.tv_nsec = 1
 		}
 	};
