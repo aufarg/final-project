@@ -80,10 +80,12 @@ void routine(int signo, siginfo_t *siginfo, void *ctx)
 {
 	struct routine_t * routine_data = ((struct routine_t *)siginfo->si_value.sival_ptr);
 	static long long val = 0;
-	printf("Sending heartbeat [%lld]\n", val++);
+        static long long total_overrun = 0;
 	send(routine_data->sockfd, &routine_data->len_hostname,
                    sizeof(routine_data->len_hostname), MSG_MORE);
 	send(routine_data->sockfd, routine_data->hostname, routine_data->len_hostname, 0);
+        total_overrun += timer_getoverrun(routine_data->timerid);
+	printf("Send heartbeat [%lld] (%lld overrun(s) happened)\n", val++, total_overrun);
 }
 
 struct routine_t * setup_periodic_heartbeat(int master_socket)
