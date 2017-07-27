@@ -88,6 +88,12 @@ void routine(union sigval val)
 		fprintf(stderr, "Error getting current time.\n");
 		return;
 	}
+
+	if (routine_data->saved_timesp.tv_sec == 0 &&
+            routine_data->saved_timesp.tv_nsec == 0) {
+		routine_data->saved_timesp = timesp;
+		return;
+        }
 	
 	delta.tv_sec  = timesp.tv_sec - saved_timesp.tv_sec;
 	delta.tv_nsec = timesp.tv_nsec - saved_timesp.tv_nsec;
@@ -127,13 +133,8 @@ void routine(union sigval val)
         drift.tv_sec  += delta.tv_sec-routine_data->interval.tv_sec;
         drift.tv_nsec += delta.tv_nsec-routine_data->interval.tv_nsec;
 
-	if (drift.tv_nsec < 0) {
-		drift.tv_sec -= 1;
-		drift.tv_nsec += 1000 * 1000 * 1000;
-	}
-
-	printf("Current time = %ld.%09lds, delta = %ld.%09lds, error = %ld.%09lds drift = %ld.%09lds.\n",
-		timesp.tv_sec, timesp.tv_nsec, delta.tv_sec, delta.tv_nsec, error.tv_sec, error.tv_nsec, drift.tv_sec, drift.tv_nsec);
+	printf("Current time = %ld.%09lds, delta = %ld.%09lds, error = %ld.%09lds drift = %9ldns.\n",
+		timesp.tv_sec, timesp.tv_nsec, delta.tv_sec, delta.tv_nsec, error.tv_sec, error.tv_nsec, drift.tv_nsec);
 
 	if (!routine_data->samples) {
 		struct itimerspec disarm;
@@ -167,7 +168,10 @@ int create_periodic_task(int num_samples, int period)
 	};
 	const struct itimerspec timersp = {
 		.it_interval = interval,
-		.it_value    = interval
+		.it_value    = {
+			.tv_sec = 0,
+			.tv_nsec = 1
+		}
 	};
 	struct itimerspec saved_timersp;
 
@@ -187,12 +191,8 @@ int create_periodic_task(int num_samples, int period)
 	routine_data->timerid = timerid;
 	routine_data->samples = num_samples;
 	routine_data->interval = interval;
-	ret = clock_gettime(CLOCK_ID, &routine_data->saved_timesp);
-
-	if (ret == -1) {
-		fprintf(stderr, "Error cannot get current time.\n");
-		return -1;
-	}
+	routine_data->saved_timesp.tv_sec = 0;
+	routine_data->saved_timesp.tv_nsec = 0;
 
 	ret = timer_settime(timerid, flags, &timersp, &saved_timersp);
 

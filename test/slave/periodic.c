@@ -81,11 +81,14 @@ void routine(int signo, siginfo_t *siginfo, void *ctx)
 	struct routine_t * routine_data = ((struct routine_t *)siginfo->si_value.sival_ptr);
 	static long long val = 0;
         static long long total_overrun = 0;
+	struct timespec now;
 	send(routine_data->sockfd, &routine_data->len_hostname,
                    sizeof(routine_data->len_hostname), MSG_MORE);
 	send(routine_data->sockfd, routine_data->hostname, routine_data->len_hostname, 0);
+	clock_gettime(CLOCK_ID, &now);
         total_overrun += timer_getoverrun(routine_data->timerid);
-	printf("Send heartbeat [%lld] (%lld overrun(s) happened)\n", val++, total_overrun);
+	printf("Send heartbeat [%lld] (%lld overrun(s) happened) at time %ld.%09ld\n",
+                val++, total_overrun, now.tv_sec, now.tv_nsec);
 }
 
 struct routine_t * setup_periodic_heartbeat(int master_socket)
@@ -203,13 +206,13 @@ int main(int argc, char *argv[])
 			break;
 		}
 		else {
+			bool done = false;
 			if (period == 0)
 				break;
 
 			periodic_heartbeat(handle->timerid, period);
 
 			while (!handle->done) {
-				bool done = false;
 				rdsize = recv(sock_master, &done, sizeof(done), MSG_WAITALL);
 				if (rdsize != -1) {
 					struct itimerspec disarm = {0};
