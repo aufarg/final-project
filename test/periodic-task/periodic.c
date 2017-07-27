@@ -41,7 +41,7 @@ void end(int signo)
 			gsl_rstat_min(acc_error),
 			gsl_rstat_max(acc_error),
 			gsl_rstat_n(acc_error));
-	printf("drift(s): mean=%.09lf, median=%0.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
+	printf("drift(s): mean=%.09lf, median=%.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
 			gsl_rstat_mean(acc_drift),
 			gsl_rstat_median(acc_drift),
 			gsl_rstat_sd(acc_drift),

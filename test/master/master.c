@@ -36,7 +36,7 @@ int maxfds;
 int sock_serv = -1, sock_fds[16];
 
 gsl_rstat_workspace * acc_delta[16];
-gsl_rstat_workspace * acc_err[16];
+gsl_rstat_workspace * acc_error[16];
 
 struct timespec last_stamp[256];
 
@@ -375,7 +375,7 @@ void logtime(int entry_index, int expected_ns, char * hostname, FILE * logfile)
 	}
 	last = last_stamp[entry_index];
 
-	if (last.tv_sec != 0 && last.tv_nsec != 0) {
+	if (last.tv_sec != 0 || last.tv_nsec != 0) {
 		delta.tv_sec  = now.tv_sec - last.tv_sec;
 		delta.tv_nsec = now.tv_nsec - last.tv_nsec;
 
@@ -417,7 +417,7 @@ void logtime(int entry_index, int expected_ns, char * hostname, FILE * logfile)
                 d = ts2d(delta);
 		gsl_rstat_add(d, acc_delta[entry_index]);
                 d = ts2d(error);
-		gsl_rstat_add(d, acc_err[entry_index]);
+		gsl_rstat_add(d, acc_error[entry_index]);
 	}
 
 	last_stamp[entry_index] = now;
@@ -559,7 +559,7 @@ int do_testing(schedule_t * schedule, fd_set *rfds, FILE *logfile)
 	/* initialize stats accumulators */
 	for ( i = 0; i < schedule->num_entries; i++ ) {
 		acc_delta[i] = gsl_rstat_alloc();
-		acc_err[i] = gsl_rstat_alloc();
+		acc_error[i] = gsl_rstat_alloc();
 	}
 
 	/* set schedule */
@@ -608,7 +608,7 @@ int do_testing(schedule_t * schedule, fd_set *rfds, FILE *logfile)
 	for ( i = 0; i < schedule->num_entries; i++ ) {
 		fprintf(logfile, "\n");
 		fprintf(logfile, "Statistics for entry %d\n", i);
-		fprintf(logfile, "deltas(s): mean=%.09lf, median=%0.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
+		fprintf(logfile, "delta(s): mean=%.09lf, median=%0.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
                         gsl_rstat_mean(acc_delta[i]),
                         gsl_rstat_median(acc_delta[i]),
                         gsl_rstat_sd(acc_delta[i]),
@@ -616,20 +616,20 @@ int do_testing(schedule_t * schedule, fd_set *rfds, FILE *logfile)
                         gsl_rstat_max(acc_delta[i]),
 			gsl_rstat_n(acc_delta[i]));
 
-		fprintf(logfile, "errors(s): mean=%.09lf, median=%0.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
-                        gsl_rstat_mean(acc_err[i]),
-                        gsl_rstat_median(acc_err[i]),
-                        gsl_rstat_sd(acc_err[i]),
-                        gsl_rstat_min(acc_err[i]),
-                        gsl_rstat_max(acc_err[i]),
-                        gsl_rstat_n(acc_err[i]));
+		fprintf(logfile, "error(s): mean=%.09lf, median=%0.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
+                        gsl_rstat_mean(acc_error[i]),
+                        gsl_rstat_median(acc_error[i]),
+                        gsl_rstat_sd(acc_error[i]),
+                        gsl_rstat_min(acc_error[i]),
+                        gsl_rstat_max(acc_error[i]),
+                        gsl_rstat_n(acc_error[i]));
                 fprintf(logfile, "\n");
 	}
 
 	/* free statistics accumulators */
 	for ( i = 0; i < schedule->num_entries; i++ ) {
 		gsl_rstat_free(acc_delta[i]);
-		gsl_rstat_free(acc_err[i]);
+		gsl_rstat_free(acc_error[i]);
 	}
 
 	/* error and not because syscall interruption */

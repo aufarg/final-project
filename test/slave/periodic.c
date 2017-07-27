@@ -87,8 +87,8 @@ void routine(int signo, siginfo_t *siginfo, void *ctx)
 	send(routine_data->sockfd, routine_data->hostname, routine_data->len_hostname, 0);
 	clock_gettime(CLOCK_ID, &now);
         total_overrun += timer_getoverrun(routine_data->timerid);
-	printf("Send heartbeat [%lld] (%lld overrun(s) happened) at time %ld.%09ld\n",
-                val++, total_overrun, now.tv_sec, now.tv_nsec);
+	printf("Send heartbeat [%lld] at time %ld.%09ld (%lld overrun(s) happened)\n",
+                val++, now.tv_sec, now.tv_nsec, total_overrun);
 }
 
 struct routine_t * setup_periodic_heartbeat(int master_socket)
