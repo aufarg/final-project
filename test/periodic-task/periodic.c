@@ -10,7 +10,6 @@
 #include <errno.h>
 #include <signal.h>
 #include <sched.h>
-#include <math.h>
 
 #define SIGRT1 SIGRTMIN
 #define MAXFSIZE 8192
