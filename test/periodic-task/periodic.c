@@ -12,6 +12,7 @@
 #include <sched.h>
 
 #define SIGRT1 SIGRTMIN
+#define MAXFSIZE 8192
 
 #define CLOCK_ID CLOCK_MONOTONIC
 
@@ -22,14 +23,21 @@ gsl_rstat_workspace * acc_delta;
 gsl_rstat_workspace * acc_error;
 gsl_rstat_workspace * acc_drift;
 
+char pathbuf[4096];
+const char * logpath;
+FILE * fp = NULL;
+
 void end(int signo)
 {
 	struct sigaction act = {
 		.sa_handler = SIG_DFL
 	};
-	printf("\n");
-	printf("Statistics:\n");
-	printf("delta(s): mean=%.09lf, median=%0.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
+
+	sprintf(pathbuf, "%s.stat", logpath);
+	FILE * f = fopen(pathbuf,"w");
+
+	fprintf(f, "Statistics:\n");
+	fprintf(f, "delta(s): mean=%.09lf, median=%0.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
 			gsl_rstat_mean(acc_delta),
 			gsl_rstat_median(acc_delta),
 			gsl_rstat_sd(acc_delta),
@@ -37,21 +45,27 @@ void end(int signo)
 			gsl_rstat_max(acc_delta),
 			gsl_rstat_n(acc_delta));
 
-	printf("error(s): mean=%.09lf, median=%0.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
+	fprintf(f, "error(s): mean=%.09lf, median=%0.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
 			gsl_rstat_mean(acc_error),
 			gsl_rstat_median(acc_error),
 			gsl_rstat_sd(acc_error),
 			gsl_rstat_min(acc_error),
 			gsl_rstat_max(acc_error),
 			gsl_rstat_n(acc_error));
-	printf("drift(s): mean=%.09lf, median=%.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
+	fprintf(f, "drift(s): mean=%.09lf, median=%.09lf, sd=%.09lf, min=%0.9lf, max=%0.9lf (%lu samples)\n",
 			gsl_rstat_mean(acc_drift),
 			gsl_rstat_median(acc_drift),
 			gsl_rstat_sd(acc_drift),
 			gsl_rstat_min(acc_drift),
 			gsl_rstat_max(acc_drift),
 			gsl_rstat_n(acc_drift));
-	printf("\n");
+
+	fclose(f);
+
+	if (fp != NULL) {
+		fflush(fp);
+		fclose(fp);
+	}
 
 	sigaction(SIGINT, &act, NULL);
 	raise(SIGINT);
@@ -75,6 +89,7 @@ void routine(int signo, siginfo_t *siginfo, void *ctx)
 	int ret;
 	double d;
 
+	static long long sample = 0;
 	struct routine_t * routine_data = ((struct routine_t *)siginfo->si_value.sival_ptr);
 	struct timespec saved_timesp = routine_data->saved_timesp;
 	struct timespec timesp, delta, error;
@@ -133,9 +148,18 @@ void routine(int signo, siginfo_t *siginfo, void *ctx)
 		d = ((double)drift.tv_sec) + ((double)drift.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
 		gsl_rstat_add(d, acc_drift);
 
-		printf("Current time = %ld.%09lds, delta = %ld.%09lds, error = %ld.%09lds drift = %s%ld.%09lds.\n",
-				timesp.tv_sec, timesp.tv_nsec, delta.tv_sec, delta.tv_nsec, error.tv_sec, error.tv_nsec,
-				(drift.tv_sec < 0 || drift.tv_nsec < 0) ? "-" : "", labs(drift.tv_sec), labs(drift.tv_nsec));
+		if (sample % MAXFSIZE == 0) {
+			if (fp != NULL)
+				fclose(fp);
+			long long rotate_no = sample / MAXFSIZE;
+			sprintf(pathbuf, "%s.log.%lld", logpath, rotate_no);
+			printf("Change log file to %s\n", pathbuf);
+			fp = fopen(pathbuf, "w");
+		}
+		sample++;
+		fprintf(fp, "%ld.%09ld,%ld.%09ld,%ld.%09ld,%s%ld.%09ld\n",
+                       timesp.tv_sec, timesp.tv_nsec, delta.tv_sec, delta.tv_nsec, error.tv_sec, error.tv_nsec,
+                       (drift.tv_sec < 0 || drift.tv_nsec < 0) ? "-" : "", labs(drift.tv_sec), labs(drift.tv_nsec));
 
 	}
 	/* save time */
@@ -223,16 +247,17 @@ int main(int argc, char *argv[])
 
 	install_sigint();
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s [period]\n", argv[0]);
+	if (argc != 3) {
+		fprintf(stderr, "Usage: %s [period] [logpath]\n", argv[0]);
 		return 1;
 	}
 
-	prio = sched_get_priority_max(SCHED_FIFO);
+	prio = sched_get_priority_max(SCHED_FIFO)-1;
 	param.sched_priority = prio;
 	sched_setscheduler(0, SCHED_FIFO, &param);
 
 	period = atoi(argv[1]);
+	logpath = argv[2];
 
 	struct timespec res;
 	clock_getres(CLOCK_ID, &res);
