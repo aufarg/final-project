@@ -661,7 +661,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	prio = sched_get_priority_min(SCHED_FIFO);
+	prio = sched_get_priority_max(SCHED_FIFO);
 	param.sched_priority = prio;
 	sched_setscheduler(0, SCHED_FIFO, &param);
 
