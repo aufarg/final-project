@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 199309L
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -9,6 +10,8 @@
 #include <errno.h>
 #include <signal.h>
 #include <sched.h>
+
+#define SIGRT1 SIGRTMIN
 
 #define CLOCK_ID CLOCK_MONOTONIC
 
@@ -67,12 +70,12 @@ struct routine_t {
 	struct timespec saved_timesp, interval;
 };
 
-void routine(union sigval val)
+void routine(int signo, siginfo_t *siginfo, void *ctx)
 {
 	int ret;
 	double d;
 
-	struct routine_t * routine_data = ((struct routine_t *)val.sival_ptr);
+	struct routine_t * routine_data = ((struct routine_t *)siginfo->si_value.sival_ptr);
 	struct timespec saved_timesp = routine_data->saved_timesp;
 	struct timespec timesp, delta, error;
 	static struct timespec drift = {0};
@@ -139,34 +142,32 @@ void routine(union sigval val)
 	routine_data->saved_timesp = timesp;
 }
 
-int create_periodic_task(int period)
+struct routine_t * setup_periodic_heartbeat(int64_t period)
 {
-	int ret, flags = 0;
+	int ret;
 	timer_t timerid;
-	struct routine_t * routine_data = malloc(sizeof(struct routine_t));
+	struct routine_t * routine_data = malloc(sizeof(*routine_data));
 	struct sigevent sevp = {
-		.sigev_notify          = SIGEV_THREAD,
-		.sigev_notify_function = routine,
+		.sigev_notify          = SIGEV_SIGNAL,
+		.sigev_signo           = SIGRT1,
 		.sigev_value           = { .sival_ptr = (void *)routine_data }
 	};
+	struct sigaction act = {
+		.sa_sigaction = routine,
+		.sa_flags = SA_SIGINFO
+	};
 	const struct timespec interval = {
-		.tv_sec  = period / (1000 * 1000 * 1000),
-		.tv_nsec = period % (1000 * 1000 * 1000)
+		.tv_sec  = period / (1000L * 1000L * 1000L),
+		.tv_nsec = period % (1000L * 1000L * 1000L)
 	};
-	const struct itimerspec timersp = {
-		.it_interval = interval,
-		.it_value    = {
-			.tv_sec = 0,
-			.tv_nsec = 1
-		}
-	};
-	struct itimerspec saved_timersp;
+
+	sigaction(SIGRT1, &act, NULL);
 
 	ret = timer_create(CLOCK_ID, &sevp, &timerid);
 
 	if (ret == -1) {
 		fprintf(stderr, "Error creating timer.\n");
-		return -1;
+		return NULL;
 	}
 
 	/* initialize routine data */
@@ -175,22 +176,50 @@ int create_periodic_task(int period)
 	routine_data->saved_timesp.tv_sec = 0;
 	routine_data->saved_timesp.tv_nsec = 0;
 
-	ret = timer_settime(timerid, flags, &timersp, &saved_timersp);
+	return routine_data;
+}
+
+void periodic_heartbeat(timer_t timerid, int64_t period)
+{
+	int ret;
+	sigset_t mask, oldmask;
+	const struct timespec interval = {
+		.tv_sec  = period / (1000L * 1000L * 1000L),
+		.tv_nsec = period % (1000L * 1000L * 1000L)
+	};
+	const struct itimerspec timersp = {
+		.it_interval = interval,
+		/* the timer should right now, but giving zeroes to it_value means
+		 * disarming the timer. thus we let 1 nsec to pass before setting
+		 * up the timer. */
+		.it_value    = {
+			.tv_sec  = 0,
+			.tv_nsec = 1
+		}
+	};
+
+	printf("Sending heartbeat every %lu\n", period);
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGRT1);
+	sigprocmask(SIG_BLOCK, &mask, &oldmask);
+
+	ret = timer_settime(timerid, 0, &timersp, NULL);
 
 	if (ret == -1) {
-		fprintf(stderr, "Error settings timer interval.\n");
-		return -1;
+		fprintf(stderr, "Error setting timer interval.\n");
+		return;
 	}
-	return 0;
+
+	sigprocmask(SIG_UNBLOCK, &mask, NULL);
 }
 
 int main(int argc, char *argv[])
 {
 	int period;
-	int ret;
-	sigset_t mask, oldmask;
+	sigset_t mask;
 	struct sched_param param;
 	int prio;
+	struct routine_t * handle;
 
 	install_sigint();
 
@@ -213,17 +242,10 @@ int main(int argc, char *argv[])
 	acc_error = gsl_rstat_alloc();
 	acc_drift = gsl_rstat_alloc();
 
-	sigemptyset(&mask);
-	sigaddset(&mask, SIGUSR1);
-	sigprocmask(SIG_BLOCK, &mask, &oldmask);
+	handle = setup_periodic_heartbeat(period);
+	periodic_heartbeat(handle->timerid, period);
 
-	ret = create_periodic_task(period);
-
-	if (!ret) {
-		sigsuspend(&oldmask);
-		return 0;
-	}
-	else {
-		return 1;
-	}
+	for (;;)
+		sigsuspend(&mask);
+	return 0;
 }

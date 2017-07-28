@@ -73,7 +73,6 @@ struct routine_t {
 	int sockfd;
 	uint32_t len_hostname;
 	char * hostname;
-	bool done;
 };
 
 void routine(int signo, siginfo_t *siginfo, void *ctx)
@@ -121,7 +120,6 @@ struct routine_t * setup_periodic_heartbeat(int master_socket)
 	routine_data->sockfd = master_socket;
 	routine_data->hostname = hostname;
 	routine_data->len_hostname = strlen(routine_data->hostname)+1;
-	routine_data->done = false;
 
 	return routine_data;
 }
@@ -212,16 +210,14 @@ int main(int argc, char *argv[])
 
 			periodic_heartbeat(handle->timerid, period);
 
-			while (!handle->done) {
+			do {
 				rdsize = recv(sock_master, &done, sizeof(done), MSG_WAITALL);
-				if (rdsize != -1) {
-					struct itimerspec disarm = {0};
-					puts("Disarming heartbeat");
-					timer_settime(handle->timerid, 0, &disarm, NULL);
-					assert(done);
-					break;
-				}
-			}
+			} while (rdsize == -1 && errno == EINTR);
+
+			struct itimerspec disarm = {0};
+			puts("Disarming heartbeat");
+			timer_settime(handle->timerid, 0, &disarm, NULL);
+			assert(done);
 		}
 	}
 
