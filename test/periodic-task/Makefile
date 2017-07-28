@@ -1,8 +1,5 @@
 CFLAGS      = -Wall -O2
-LIB_GSL     = -lgsl -lgslcblas
-LIB_RT      = -lrt
-LIB_PTHREAD = -lpthread
-LDFLAGS     = ${LIB_GSL} ${LIB_RT} ${LIB_PTHREAD}
+LDFLAGS     = -lgsl -lgslcblas -lrt
 
 PROG    = periodic
 SRC     = periodic.c

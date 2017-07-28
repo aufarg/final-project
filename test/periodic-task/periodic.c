@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <sched.h>
+#include <math.h>
 
 #define SIGRT1 SIGRTMIN
 #define MAXFSIZE 8192
@@ -90,10 +91,11 @@ void routine(int signo, siginfo_t *siginfo, void *ctx)
 	double d;
 
 	static long long sample = 0;
+	static struct timespec start_time;
 	struct routine_t * routine_data = ((struct routine_t *)siginfo->si_value.sival_ptr);
 	struct timespec saved_timesp = routine_data->saved_timesp;
 	struct timespec timesp, delta, error;
-	static struct timespec drift = {0};
+	double drift, interval_d;
 	ret = clock_gettime(CLOCK_ID, &timesp);
 
 	if (ret == -1) {
@@ -127,40 +129,38 @@ void routine(int signo, siginfo_t *siginfo, void *ctx)
 			error.tv_nsec += 1000 * 1000 * 1000;
 		}
 
-		drift.tv_sec  += delta.tv_sec - routine_data->interval.tv_sec;
-		drift.tv_nsec += delta.tv_nsec - routine_data->interval.tv_nsec;
-		if ( (drift.tv_sec > 0 && drift.tv_nsec >= 1000 * 1000 * 1000)
-				|| (drift.tv_sec < 0 && drift.tv_nsec > 0) ) {
-			drift.tv_sec++;
-			drift.tv_nsec -= 1000 * 1000 * 1000;
-		}
-		else if ( (drift.tv_sec > 0 && drift.tv_nsec < 0)
-				|| (drift.tv_sec < 0 && drift.tv_nsec <= -1000 * 1000 * 1000) ) {
-			drift.tv_sec--;
-			drift.tv_nsec += 1000 * 1000 * 1000;
-		}
-
-		/* stats */
-		d = ((double)delta.tv_sec) + ((double)delta.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
-		gsl_rstat_add(d, acc_delta);
-		d = ((double)error.tv_sec) + ((double)error.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
-		gsl_rstat_add(d, acc_error);
-		d = ((double)drift.tv_sec) + ((double)drift.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
-		gsl_rstat_add(d, acc_drift);
-
+		drift = (double)(timesp.tv_sec + timesp.tv_nsec / (1000.0 * 1000.0 * 1000.0))
+			- (double)(start_time.tv_sec + start_time.tv_nsec / (1000.0 * 1000.0 * 1000.0));
+		interval_d = ((double)routine_data->interval.tv_sec)
+			     + ((double)routine_data->interval.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
 		if (sample % MAXFSIZE == 0) {
-			if (fp != NULL)
+			if (fp != NULL) {
+				fflush(fp);
 				fclose(fp);
+			}
 			long long rotate_no = sample / MAXFSIZE;
 			sprintf(pathbuf, "%s.log.%lld", logpath, rotate_no);
 			printf("Change log file to %s\n", pathbuf);
 			fp = fopen(pathbuf, "w");
 		}
 		sample++;
-		fprintf(fp, "%ld.%09ld,%ld.%09ld,%ld.%09ld,%s%ld.%09ld\n",
-                       timesp.tv_sec, timesp.tv_nsec, delta.tv_sec, delta.tv_nsec, error.tv_sec, error.tv_nsec,
-                       (drift.tv_sec < 0 || drift.tv_nsec < 0) ? "-" : "", labs(drift.tv_sec), labs(drift.tv_nsec));
 
+		drift -= (sample) * interval_d;
+
+		/* stats */
+		d = ((double)delta.tv_sec) + ((double)delta.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
+		gsl_rstat_add(d, acc_delta);
+		d = ((double)error.tv_sec) + ((double)error.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
+		gsl_rstat_add(d, acc_error);
+		d = drift;
+		gsl_rstat_add(d, acc_drift);
+
+		fprintf(fp, "%ld.%09ld,%ld.%09ld,%ld.%09ld,%.09lf\n",
+                       timesp.tv_sec, timesp.tv_nsec, delta.tv_sec, delta.tv_nsec, error.tv_sec, error.tv_nsec, drift);
+
+	}
+	else {
+		start_time = timesp;
 	}
 	/* save time */
 	routine_data->saved_timesp = timesp;
