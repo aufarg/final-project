@@ -12,7 +12,7 @@
 #include <sched.h>
 
 #define SIGRT1 SIGRTMIN
-#define MAXFSIZE 8192
+#define MAXFSIZE 2048
 
 #define CLOCK_ID CLOCK_MONOTONIC
 
