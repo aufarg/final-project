@@ -269,6 +269,7 @@ int main(int argc, char *argv[])
 	handle = setup_periodic_heartbeat(period);
 	periodic_heartbeat(handle->timerid, period);
 
+        sigemptyset(&mask);
 	for (;;)
 		sigsuspend(&mask);
 	return 0;
