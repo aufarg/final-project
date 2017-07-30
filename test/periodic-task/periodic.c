@@ -14,7 +14,7 @@
 #define SIGRT1 SIGRTMIN
 #define MAXFSIZE 2048
 
-#define CLOCK_ID CLOCK_REALTIME
+#define CLOCK_ID CLOCK_MONOTONIC
 
 #include <gsl/gsl_statistics_double.h>
 #include <gsl/gsl_rstat.h>
