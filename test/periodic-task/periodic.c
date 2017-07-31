@@ -104,8 +104,6 @@ void routine(int signo, siginfo_t *siginfo, void *ctx)
 
 	if (saved_timesp.tv_sec != 0 || saved_timesp.tv_nsec != 0) {
 
-		struct itimerspec curtimer;
-
 		delta.tv_sec  = timesp.tv_sec - saved_timesp.tv_sec;
 		delta.tv_nsec = timesp.tv_nsec - saved_timesp.tv_nsec;
 
@@ -156,15 +154,8 @@ void routine(int signo, siginfo_t *siginfo, void *ctx)
 		d = drift;
 		gsl_rstat_add(d, acc_drift);
 
-		timer_gettime(routine_data->timerid, &curtimer);
-		fprintf(fp, "%ld.%09ld,%ld.%09ld,%ld.%09ld,%.09lf,%ld.%09ld,%ld.%09ld\n",
-                       timesp.tv_sec, timesp.tv_nsec, delta.tv_sec, delta.tv_nsec,
-                       error.tv_sec, error.tv_nsec, drift,
-                       curtimer.it_value.tv_sec, curtimer.it_value.tv_nsec,
-                       curtimer.it_interval.tv_sec,curtimer.it_interval.tv_nsec);
-                curtimer.it_value.tv_sec -= (time_t)drift;
-                curtimer.it_value.tv_nsec -= ((long)(drift * 1000 * 1000 * 1000)) % (1000 * 1000 * 1000);
-                timer_settime(routine_data->timerid, 0, &curtimer, NULL);
+		fprintf(fp, "%ld.%09ld,%ld.%09ld,%ld.%09ld,%.09lf\n",
+                       timesp.tv_sec, timesp.tv_nsec, delta.tv_sec, delta.tv_nsec, error.tv_sec, error.tv_nsec, drift);
 
 	}
 	else {
