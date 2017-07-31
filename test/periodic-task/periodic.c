@@ -164,6 +164,7 @@ void routine(int signo, siginfo_t *siginfo, void *ctx)
                        curtimer.it_interval.tv_sec,curtimer.it_interval.tv_nsec);
                 curtimer.it_value.tv_sec -= (time_t)drift;
                 curtimer.it_value.tv_nsec -= ((long)(drift * 1000 * 1000 * 1000)) % (1000 * 1000 * 1000);
+                timer_settime(routine_data->timerid, 0, &curtimer, NULL);
 
 	}
 	else {
