@@ -89,6 +89,7 @@ volume           = {{volume}{vol.}},
 \newcommand{\chapterautorefname}{Bab}
 \newcommand{\tableautorefname}{Tabel}
 \newcommand{\figureautorefname}{Gambar}
+\newcommand{\equationautorefname}{Persamaan}
 \newcommand{\sectionautorefname}{Subbab}
 \newcommand{\subsectionautorefname}{Subbab}
 \newcommand{\subsubsectionautorefname}{Subbab}
@@ -115,6 +116,7 @@ volume           = {{volume}{vol.}},
 \titlecontents{figure}[0.0em]{\addvspace{0.5pc}}{\figureautorefname\ \thecontentslabel.\ }{}{\titlerule*[\tocdotswidth]{.}\contentspage}
 \contentsuse{lstlisting}{lol}
 \titlecontents{lstlisting}[0.0em]{\addvspace{0.5pc}}{Kode \thecontentslabel.\ }{}{\titlerule*[\tocdotswidth]{.}\contentspage}[]
+
 % Appendix
 
 \usepackage[titletoc]{appendix}
@@ -148,10 +150,43 @@ volume           = {{volume}{vol.}},
 \usepackage{hyperref}
 \usepackage{siunitx}
 
+\usepackage{tikz}
+\usetikzlibrary{patterns, fit}
+\usepackage{pgfplots}
+\usepgfplotslibrary{external}
+\tikzexternalize
+
+\tikzset{%
+    % Add size information to the .dpth file (png is in density not size)
+    /pgf/images/external info,
+    % Use the png export AND the import
+    use png/.style={png export,png import},
+    png export/.style={
+	    external/system call=%
+	    {xelatex \tikzexternalcheckshellescape -halt-on-error -interaction=batchmode -jobname
+		    "\image" "\texsource";%
+		    convert -density 300 -transparent white "\image.pdf" "\image.png"; rm -f
+	    "\image.pdf"},
+    },
+    png import/.code={%
+        \tikzset{%
+            /pgf/images/include external/.code={%
+                % Here you can alter to whatever you want
+                % \pgfexternalwidth is only available if /pgf/images/external info
+                % is set
+                \includegraphics%
+                [width=\pgfexternalwidth,height=\pgfexternalheight]%
+                {{##1}.png}%
+            }%
+        }%
+    }%
+}
+\tikzset{use png}
+
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
 
 %-------------------- META --------------------%
-\newcommand{\context}{Laporan Tugas Akhir II}
+\newcommand{\context}{Draft Laporan Tugas Akhir}
 \newcommand{\matakuliah}{IF4092/Tugas Akhir II}
 \newcommand{\judul}{%
 	\MakeUppercase{Pengembangan Keandalan Sistem ARINC 653}\\
@@ -159,11 +194,12 @@ volume           = {{volume}{vol.}},
 	\MakeUppercase{\textit{Fault-Tolerant Partition Scheduling}}
 }
 \newcommand{\penulis}{\MakeUppercase{Aufar Gilbran}}
+\newcommand{\penulislower}{Aufar Gilbran}
 \newcommand{\nimpenulis}{13513015}
 \newcommand{\pembimbing}{Achmad Imam Kistijantoro, ST., M.Sc., Ph.D.}
 \newcommand{\nippembimbing}{197308092006041001}
-\newcommand{\tanggal}{7}
-\newcommand{\bulan}{Juli}
+\newcommand{\tanggal}{3}
+\newcommand{\bulan}{Agustus}
 \newcommand{\tahun}{2017}
 
 % vim: tw=120

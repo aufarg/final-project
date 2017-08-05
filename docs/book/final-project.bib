@@ -256,3 +256,40 @@ title = {{Real-Time Computing: A New Discipline of Computer Science and Engineer
 volume = {82},
 year = {1994}
 }
+@online{Larry2009,
+author = {Larry M. Kinnan},
+title  = {Linux, ARINC 653 and OpenGL Team Up for Avionics Prototyping},
+url    = {http://archive.cotsjournalonline.com/articles/print_article/100736},
+year   = {2009}
+}
+@online{POSIX,
+author = {{Institute of Electrical and Electronics Engineers}},
+title  = {IEEE Std 1003.1™-2008 and The Open Group Technical Standard Base Specifications, Issue 7},
+url    = {http://pubs.opengroup.org/onlinepubs/9699919799/},
+year   = {2016}
+}
+@article{Adamczyk2015,
+abstract = {Virtual Machine Monitors (VMM) have become popular in different application areas. Some applications may require to generate the timer events with high resolution and precision. This however may be challenging due to the complexity of VMMs. In this paper we focus on the timer functionality provided by five different VMMs-Xen, KVM, Qemu, VirtualBox and VMWare. Firstly, we evaluate resolutions and precisions of their timer events. Apparently, provided resolutions and precisions are far too low for some applications (e.g. networking applications with the quality of service). Then, using Xen virtualization we demonstrate the improved timer design that greatly enhances both the resolution and precision of achieved timer events.},
+author = {Adamczyk, Blazej and Chydzinski, Andrzej},
+doi = {10.1371/journal.pone.0130887},
+file = {:home/dancinggrass/Books/System/Realtime Xen/pone.0130887 (8).pdf:pdf},
+isbn = {19326203 (Electronic)},
+issn = {19326203},
+journal = {PLoS ONE},
+number = {7},
+pages = {1--25},
+pmid = {26177366},
+title = {{Achieving high resolution timer events in virtualized environment}},
+volume = {10},
+year = {2015}
+}
+@article{Broomhead2010,
+abstract = {We propose a new timekeeping architecture for virtu- alized systems, in the context of Xen. Built upon a feed- forward based RADclock synchronization algorithm, it ensures that the clocks in each OS sharing the hardware derive from a single central clock in a resource effective way, and that this clock is both accurate and robust. A key advantage is simple, seamless VM migration with consistent time. In contrast, the current Xen approach for timekeeping behaves very poorly under live migra- tion, posing a major problem for applications such as fi- nancial transactions, gaming, and network measurement, which are critically dependent on reliable timekeeping. We also provide a detailed examination of the HPET and Xen Clocksource counters. Results are validated using a hardware-supported testbed.},
+author = {Broomhead, Timothy and Cremean, L. and Ridoux, J. and Veitch, D.},
+file = {:home/dancinggrass/Downloads/Broomhead.pdf:pdf},
+journal = {Proceedings of the 9th USENIX conference on Operating systems design and implementation},
+pages = {1--6},
+title = {{Virtualize everything but time}},
+url = {http://www.usenix.org/events/osdi/tech/full{\_}papers/Broomhead.pdf},
+year = {2010}
+}

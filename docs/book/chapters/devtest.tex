@@ -2,32 +2,40 @@
 \chapter{PENGEMBANGAN DAN PENGUJIAN}
 
 \section{Pengembangan \textit{Primary-Backup Partition Scheduling}}
+\label{section:implementasi}
 
 Pengembangan dilakukan dengan memodifikasi kode \textit{scheduler} ARINC 653
-\textit{source-tree} pada Xen ARINC 653.  Modifikasi kode dilakukan pada modul-modul berikut.
+\textit{source-tree} pada ARLX. ARLX telah menggabungkan sumber kode \textit{scheduler} miliknya
+dengan \textit{source-tree} milik Xen. Versi Xen yang digunakan untuk implementasi adalah versi
+\textit{4.8-stable}.  Masing-masing partisi akan menggunakan Linux 4.4.75 dengan \textit{patch}
+\texttt{PREEMPT\_RT} versi 4.4.75-rt88. Hal ini diperlukan untuk menjamin \textit{latency}
+seminimal mungkin pada partisi.
+
+Modifikasi kode dilakukan pada modul-modul berikut.
 
 \begin{enumerate}
 
-	\item Modul Libxl
+	\item Modul libxl
 
 	Modul ini digunakan untuk membuat \textit{tools} yang dapat digunakan pada \textit{user
 	space} \textit{domain} \code{dom0} untuk melakukan pengaturan \textit{hypervisor}.
 
-	\item Modul Libxc
+	\item Modul libxc
 
 	Modul ini berisi fungsi-fungsi untuk menangani permintaan \textit{hypercall} dari
 	\textit{domain}.
 
-	\item Modul \textit{Public hypercall}
+	\item Modul \textit{domain hypercall}
 
 	Modul ini berisi definisi \textit{interface} yang digunakan untuk mengatur struktur data
 	yang dikirimkan pada saat mengirim data dari \textit{domain} kepada \textit{hypervisor}.
 
-	\item Modul \textit{Scheduler}
+	\item Modul \textit{scheduler}
 
 	Modul ini berisi fungsi-fungsi yang digunakan untuk mengisi definisi \textit{interface}
 	\textit{scheduler} pada Xen. Fungsi-fungsi tersebut meliputi algoritma
-	\textit{scheduler}, penanganan \textit{hypercall} terhadap \textit{scheduler}.
+	\textit{scheduler} dan penanganan \textit{hypercall} yang ditujukan kepada
+	\textit{scheduler}.
 
 \end{enumerate}
 
@@ -75,6 +83,15 @@ bagian.
 		untuk menjadwalkan partisi dapat dipilih pada saat \textit{boot}. Hal ini
 		mempermudah dalam melakukan uji coba layanan dengan \textit{scheduler} tertentu
 		guna menentukan algoritma \textit{scheduling} yang akan digunakan.
+
+	\item Daftar Jadwal
+
+		\textit{Scheduler} ARINC 653 memerlukan daftar partisi yang akan dijadwalkan
+		pada rentang waktu tertentu. Selain itu, \textit{scheduler} ARINC 653 juga
+		memerlukan periode sebuah penjadwalan. Daftar partisi yang akan dijadwalkan
+		dapat diberikan melalui \textit{hypercall}. Daftar jadwal perlu dimodifikasi
+		untuk memodelkan daftar jadwal seperti yang telah dipaparkan pada
+		\autoref{section:daftar_jadwal}.
 		
 	\item Informasi partisi
 
@@ -83,12 +100,13 @@ bagian.
 		\textit{real-time} yang harus dipenuhi. Daftar tersebut diberikan melalui
 		\textit{global hypercall}, yaitu \textit{hypercall} yang tidak dalam konteks
 		partisi tertentu. \textit{Primary-backup partition scheduling} memerlukan
-		informasi mengenai partisi tertentu seperti yang telah dijelaskan pada
+		informasi mengenai partisi tertentu seperti yang telah dipaparkan pada
 		\autoref{section:informasi_partisi}. Dengan demikian, \textit{scheduler}
 		memerlukan implementasi \textit{hypercall} spesifik domain agar \textit{user
 		space} dapat mengatur informasi partisi pada \textit{scheduler}. Untuk
-		selanjutnya, \textit{hypercall} akan mengacu pada \textit{hypercall spesifik
-		domain} karena \textit{global hypercall} tidak relevan dengan tugas akhir ini.
+		selanjutnya, \textit{hypercall} akan mengacu pada \textit{hypercall} spesifik
+		\textit{domain} karena \textit{global hypercall} tidak relevan dengan tugas
+		akhir ini.
 		
 	\item Fungsi \textit{scheduling}
 
@@ -115,7 +133,7 @@ struct task_slice (*do_schedule) (const struct scheduler *, s_time_t,
 
 Pada Xen, pendefinisian \textit{scheduler} dilakukan dengan menggunakan \textit{interface} yang
 telah disediakan~\citep[p.~218]{Chisnall2014}. \autoref{code:struct_scheduler} menampilkan
-\textit{interface} tersebut. \textit{Interface} tersebut kemudiakan didefinisikan sebagai
+\textit{interface} tersebut. \textit{Interface} tersebut kemudian didefinisikan sebagai
 struktur pada saat \textit{runtime} dengan masing-masing \textit{function pointer} menunjuk pada
 sebuah fungsi.
 
@@ -153,10 +171,7 @@ kemudian diisi dengan alamat dari fungsi yang nantinya akan menangani permintaan
 
 Pada saat \textit{boot}, konfigurasi \textit{scheduler} yang diinginkan dapat dipilih dengan
 menambahkan argumen "sched=\{scheduler\}". \textit{Hypervisor} kemudian akan mencari
-\textit{scheduler} didefinisikan dengan nilai \code{opt\_name} sama dengan "scheduler".
-
-\subsubsection{Informasi Partisi}
-\label{section:informasi_partisi_impl}
+\textit{scheduler} yang didefinisikan dengan nilai \code{opt\_name} sama dengan "scheduler".
 
 Untuk mengimplementasikan \textit{scheduler}, \textit{function pointer} \code{do\_schedule()}
 harus diisi dengan alamat dari fungsi yang akan melakukan pemilihan partisi. Pada implementasi
@@ -167,23 +182,85 @@ yang diimplementasikan, \code{opt\_name} akan diberi nilai "arinc653pb". Dengan 
 \textit{primary-backup partition scheduler} dapat digunakan dengan cara memberikan parameter
 "sched=arinc653pb" pada \textit{hypervisor} ketika \textit{boot}.
 
+\subsection{Daftar Jadwal}
+
+Pada implementasi \textit{primary-backup partition scheduler}, daftar jadwal akan
+merepresentasikan layanan yang harus dijadwalkan pada rentang waktu tertentu. Masing-masing
+layanan akan memiliki daftar partisi yang dapat menyediakan layanan tersebut dan memiliki durasi
+layanan tersebut akan disediakan. Pemodelan daftar jadwal yang baru dapat dilihat pada
+\autoref{code:daftar_jadwal}
+
+\begin{figure}[!ht]
+\begin{lstlisting}[
+	caption={Struktur untuk menyimpan daftar jadwal},
+	label=code:daftar_jadwal
+]
+typedef struct sched_providers_s
+{
+    xen_domain_handle_t dom_handle;
+    int                 vcpu_id;
+    struct vcpu *       vc;
+} sched_providers_t;
+
+typedef struct sched_entry_s
+{
+    int service_id;
+    s_time_t runtime;
+    unsigned int num_providers;
+    sched_providers_t providers[ARINC653_MAX_DOMAINS_PER_SERVICE];
+} sched_entry_t;
+\end{lstlisting}
+\end{figure}
+
+
+Pada saat sistem baru dimulai, maka sistem akan menggunakan jadwal tiruan yang akan menjalankan
+dom0 secara terus menerus. Daftar jadwal dapat diberikan dengan menggunakan \textit{global
+hypercall}.  Untuk mendukung perubahan jadwal, \textit{global hypercall} akan diperbarui agar
+dapat menerima pemodelan data baru. Modifikasi \textit{global hypercall} dapat dilihat pada
+\autoref{code:hypercall_daftar_jadwal}.
+
+\begin{figure}[!ht]
+\begin{lstlisting}[
+	caption={Struktur data untuk pemanggilan \textit{global hypercall}},
+	label=code:hypercall_daftar_jadwal
+]
+struct xen_sysctl_arinc653_schedule {
+    uint64_aligned_t     major_frame;
+    uint8_t     num_sched_entries;
+    struct {
+        int service_id;
+        uint64_aligned_t runtime;
+        uint8_t num_providers;
+        struct {
+            xen_domain_handle_t dom_handle;
+            unsigned int vcpu_id;
+        } service_providers[ARINC653_MAX_DOMAINS_PER_SERVICE];
+    } sched_entries[ARINC653_MAX_SERVICES_PER_SCHEDULE];
+};
+\end{lstlisting}
+\end{figure}
+
+Setelah melakukan \textit{hypercall}, \textit{scheduler} akan mengganti daftar jadwal yang
+sebelumnya dengan daftar jadwal yang baru.
+
+\subsubsection{Informasi Partisi}
+\label{section:informasi_partisi_impl}
+
 \begin{figure}[!ht]
 \begin{lstlisting}[
 	caption={Struktur untuk menyimpan informasi partisi},
 	label=code:struct_a653sched_domain_t
 ]
 typedef struct a653sched_domain_s {
-    domid_t parent;
-    bool primary;
     bool healthy;
 } a653sched_domain_t;
 \end{lstlisting}
 \end{figure}
 
-Pada implementasi \textit{primary-backup scheduler}, informasi partisi akan disimpan pada
-struktur data seperti yang ditampilkan oleh \autoref{code:struct_a653sched_domain_t}.
-\textit{Scheduler} mengetahui keadaan partisi apabila partisi tersebut memberikan informasi
-tentang dirinya melalui \textit{hypercall} yang akan didefinisikan pada
+Pada implementasi \textit{primary-backup partition scheduler}, informasi partisi akan disimpan
+pada struktur data seperti yang ditampilkan oleh \autoref{code:struct_a653sched_domain_t}.
+\textit{Scheduler} dapat mengetahui keadaan partisi apabila partisi tersebut memberikan
+informasi tentang dirinya melalui \textit{hypercall} yang akan didefinisikan pada
 \autoref{section:modul_public_hypercall}.
 
 \begin{figure}[!hb]
@@ -201,8 +278,6 @@ a653sched_init_domain(const struct scheduler *ops,
     if ( sdom == NULL )
         return -ENOMEM;
 
-    sdom->parent = dom->domain_id;
-    sdom->primary = true;
     sdom->healthy = true;
 
     dom->sched_priv = sdom;
@@ -217,8 +292,7 @@ Pada saat pembuatan partisi, \textit{scheduler} akan memanggil fungsi yang ditun
 \autoref{section:definisi_scheduler}. Tujuan fungsi tersebut adalah untuk mengalokasikan memori
 serta menginisialisasi informasi partisi pada saat dibuat. Fungsi tersebut diimplementasikan
 seperti pada \autoref{code:init_domain}. Setelah dibuat, informasi partisi akan memiliki nilai
-awal yang menandakan bahwa partisi tersebut sehat dan partisi tersebut memberikan layanan sesuai
-dengan identifikasi sama dengan identifikasi partisi tersebut.
+awal yang menandakan bahwa partisi tersebut sehat.
 
 
 \begin{figure}[!ht]
@@ -239,15 +313,19 @@ a653sched_destroy_domain(const struct scheduler *ops, struct domain *dom)
 Pada saat penghapusan partisi, \textit{scheduler} akan memanggil fungsi yang ditunjuk oleh
 \textit{function pointer} \code{destroy\_domain} pada struktur yang telah dijelaskan pada
 \autoref{section:definisi_scheduler}. Tujuan fungsi tersebut adalah untuk dealokasi memori yang
-digunakan oleh informasi partisi yang tersimpan pada \textit{scheduler}. Dealokasi memori akan
-membuat pengaksesan memori tersebut mengakibatkan kegagalan pada \textit{hypervisor} sehingga
-\textit{hypervisor} akan berhenti bekerja. Karena itu, memori tempat penyimpanan struktur
-informasi partisi milik partisi yang dihapus tidak boleh diakses lagi. Fungsi tersebut hanya
-akan dipanggil apabila terdapat \textit{interrupt} yang meminta agar \textit{domain} tersebut
-dihapus. Maka, penggunaan informasi partisi sebaiknya dimulai dengan permintaan \textit{lock}
-dan mematikan \textit{interrupt}, kemudian pada saat pembacaan maupun penulisan melakukan
-pengecekan nilai \textit{pointer} untuk memastikan informasi partisi masih valid, dan diakhiri
-dengan pelepasan \textit{lock} dan menyalakan \textit{interrupt}.
+digunakan oleh informasi partisi yang tersimpan pada \textit{scheduler}.
+
+Implementasi fungsi penghapusan informasi partisi dapat dilihat pada
+\autoref{code:destroy_domain}. Dealokasi memori akan membuat pengaksesan memori tersebut
+mengakibatkan kegagalan pada \textit{hypervisor} sehingga \textit{hypervisor} akan berhenti
+bekerja. Karena itu, memori tempat penyimpanan struktur informasi partisi milik partisi yang
+dihapus tidak boleh diakses lagi. Fungsi tersebut hanya akan dipanggil apabila terdapat
+\textit{interrupt} yang meminta agar \textit{domain} tersebut dihapus. Maka, penggunaan
+informasi partisi sebaiknya dimulai dengan permintaan \textit{lock} dan mematikan
+\textit{interrupt}, kemudian pada saat ingin melakukan pembacaan maupun penulisan pada
+informasi, \textit{scheduler} perlu melakukan pengecekan nilai \textit{pointer} untuk memastikan
+informasi partisi masih valid, dan diakhiri dengan pelepasan \textit{lock} dan menyalakan
+\textit{interrupt}.
 
 \subsubsection{Fungsi \textit{Scheduling}}
 \label{section:scheduling_impl}
@@ -257,7 +335,8 @@ scheduler} memiliki banyak kesamaan dengan algoritma \textit{scheduling} yang di
 \textit{scheduler} ARINC 653 pada ARLX. Dengan demikian, implementasi algoritma
 \textit{scheduling} akan menggunakan fungsi yang sudah ada pada \textit{scheduler} ARINC 653
 yang kemudian dimodifikasi sehingga bekerja sebagaimana telah dipaparkan pada
-\autoref{section:algoritma_scheduling}.
+\autoref{section:algoritma_scheduling}. Modifikasi yang dilakukan dapat dilihat pada
+\autoref{code:fungsi_scheduling}.
 
 Karena fungsi \textit{scheduling} akan dipanggil setiap kali sebuah partisi menghabiskan kuantum
 waktu atau \textit{hypervisor} mendapatkan \textit{timer interrupt}, keadaan algoritma pada
@@ -272,7 +351,7 @@ pada \textit{scheduler} ARINC 653.
 \begin{lstlisting}[
 	caption={Implementasi algoritma \textit{scheduling}},
 	label=code:fungsi_scheduling,
-	linerange={bdata-edata,balgo-ealgo},
+	linerange={balgo-ealgo},
 	escapeinside={(*@}{@*)}
 ]
 static struct task_slice
@@ -281,65 +360,51 @@ a653sched_do_schedule(
     s_time_t now,
     bool_t tasklet_work_scheduled)
 {
-    struct task_slice ret;                      /* hold the chosen domain */
-    struct vcpu * new_task = NULL;
-    static unsigned int sched_index = 0;
-    static s_time_t next_switch_time;
-    a653sched_priv_t *sched_priv = SCHED_PRIV(ops);
-    const unsigned int cpu = smp_processor_id();
-    { bdata }
+    { balgo }
     (*@{$\cdots$}@*)
-    static bool task_done[ARINC653_MAX_DOMAINS_PER_SCHEDULE] = {0};
-    static a653sched_domain_t * dom_priv = NULL;
-    unsigned long flags;
-    (*@{$\cdots$}@*)
-    { edata }
-
-    spin_lock_irqsave(&sched_priv->lock, flags);
+    static sched_entry_t * entry;
 
     if ( sched_priv->num_schedule_entries < 1 )
         sched_priv->next_major_frame = now + DEFAULT_TIMESLICE;
-    { balgo }
     else if ( now >= sched_priv->next_major_frame )
     {
         sched_index = 0;
+        entry = sched_priv->schedule;
+
         sched_priv->next_major_frame = now + sched_priv->major_frame;
-        next_switch_time = now + sched_priv->schedule[0].runtime;
-        dom_priv = DOM_PRIV(sched_priv->schedule[0].vc->domain);
-        memset(task_done, 0, sizeof(task_done));
+        next_switch_time = now + entry->runtime;
+	current_provider = providers_candidate(entry);
     }
     else
     {
-        if ( now >= next_switch_time) 
-            task_done[dom_priv->parent] = true;
-
-        while ( ( (now >= next_switch_time)
-                || (!dom_priv->healthy)
-                || (task_done[dom_priv->parent]) )
+        while ( (now >= next_switch_time)
                 && (sched_index < sched_priv->num_schedule_entries) )
         {
             /* time to switch to the next domain in this major frame */
             sched_index++;
-            if (sched_index < sched_priv->num_schedule_entries) {
-                dom_priv = DOM_PRIV(sched_priv->schedule[sched_index].vc->domain);
-                if (!task_done[dom_priv->parent])
-                    next_switch_time += sched_priv->schedule[sched_index].runtime;
-            }
+            entry = sched_priv->schedule + sched_index;
+            next_switch_time += entry->runtime;
         }
+
+        /* Choose the most appropriate provider for current entry */
+        current_provider = providers_candidate(entry);
     }
+
+    if ( current_provider != NULL )
+        new_task = current_provider->vc;
     (*@{$\cdots$}@*)
     { ealgo }
 }
 \end{lstlisting}
 \end{figure}
 
-\subsection{Modul \textit{public hypercall}}
+\subsection{Modul \textit{domain hypercall}}
 \label{section:modul_public_hypercall}
 
-Subbab ini akan membahas implementasi dan modifikasi pada modul public \textit{hypercall} agar
+Subbab ini akan membahas implementasi dan modifikasi pada modul \textit{domain hypercall} agar
 dapat mengimplementasikan \textit{hypercall} sebagai metode komunikasi dan pemindahan data
-antara \textit{user space} dengan \textit{hypervisor} terkait informasi informasi partisi
-seperti yang sudah dibahas pada \autoref{section:informasi_partisi}.
+antara \textit{user space} dengan \textit{hypervisor} terkait informasi partisi seperti yang
+sudah dibahas pada \autoref{section:informasi_partisi}.
 
 \begin{figure}
 \begin{lstlisting}[
@@ -347,7 +412,6 @@ seperti yang sudah dibahas pada \autoref{section:informasi_partisi}.
 	label=code:struct_xen_domctl_sched_arinc653
 ]
 typedef struct xen_domctl_sched_arinc653 {
-    domid_t parent;
     uint8_t healthy;
 } xen_domctl_sched_arinc653_t;
 \end{lstlisting}
@@ -355,7 +419,7 @@ typedef struct xen_domctl_sched_arinc653 {
 
 \begin{figure}
 \begin{lstlisting}[
-	caption={Data struktur untuk pemindahan data pada saat \textit{hypercall}},
+	caption={Data struktur untuk pemindahan data pada saat melakukan \textit{domain hypercall}},
 	label=code:struct_xen_domctl_scheduler_op
 ]
 struct xen_domctl_scheduler_op {
@@ -504,15 +568,10 @@ Subbab ini akan membahas implementasi dan modifikasi pada modul libxl, yaitu mod
 menangani konfigurasi \textit{domain} pada \textit{high-level}. Libxl digunakan untuk membangun
 kakas xl yang digunakan oleh administrator sistem untuk mengubah konfigurasi terkait dengan
 \textit{hypervisor} melalui \textit{user space}. Fungsionalitas yang ditawarkan libxl pada
-umumnya menggunakan fungsi-fungsi yang ditawarkan oleh libxc.
+umumnya menggunakan fungsi-fungsi yang ditawarkan oleh libxc. Dengan demikian, administrator
+dapat dengan mudah melakukan \textit{hypercall} tanpa perlu membuat program lain.
 
-Modifikasi yang dilakukan pada libxl adalah menambahkan opsi pada xl sehingga administrator
-dapat mengubah informasi mengenai partisi dan memanggil fungsi yang digunakan untuk
-berkomunikasi dengan \textit{hypervisor} melalui \textit{user space}. libxl akan memanggil kode
-libxc seperti pada \autoref{code:xl_domain_getset}. Kode tersebut memanggil fungsi-fungsi telah
-dibahas sebelumnya pada \autoref{section:modul_libxc}.
-
-\begin{figure}[!ht]
+\begin{figure}[!h]
 \begin{lstlisting}[
 	caption={xl berkomunikasi dengan menggunakan fungsi milik xc},
 	label=code:xl_domain_getset
@@ -555,44 +614,2623 @@ static int sched_arinc653_domain_set(libxl__gc *gc, uint32_t domid,
 \end{lstlisting}
 \end{figure}
 
-% \section{Pengujian}
+Modifikasi yang dilakukan pada libxl adalah menambahkan opsi pada xl sehingga administrator
+sistem dapat mengubah informasi mengenai partisi dan memanggil fungsi yang digunakan untuk
+berkomunikasi dengan \textit{hypervisor} melalui \textit{user space}. libxl akan memanggil kode
+libxc seperti pada \autoref{code:xl_domain_getset}. Kode tersebut akan memanggil fungsi-fungsi
+yang telah dibahas sebelumnya pada \autoref{section:modul_libxc}.
 
-% Pengujian dilakukan dengan mengukur keandalan sistem seperti yang sudah
-% We tested the primary-backup ARINC 653 scheduler by having five partitions, named as P1 to P5.
-% The first two partitions (P1 and P2) provide service $A$ and the last three partitions (P3, P4,
-% and P5) provide service $B$. The testing scenarios on these partitions, including the expected
-% outcome, are as follows:
+\section{Pengujian}
 
-% \begin{enumerate}
+Pengujian dilakukan dengan menggunakan perangkat lunak yang melakukan pengukuran keandalan serta
+\textit{timing} seperti yang telah dipaparkan pada \autoref{section:rancangan_pengujian}.
+\textit{Platform} yang digunakan untuk melakukan pengujian sama dengan \textit{platform} yang
+telah dipaparkan \autoref{section:implementasi}. Pengujian dilakukan pada Laptop
+Lenovo\textsuperscript{®} G40 Series. Laptop tersebut menggunakan Intel\textsuperscript{®} Core™
+i5.
 
-% 	\item Initially, all five partitions are healthy. In this scenario, the scheduler are
-% 		supposed to selects partition P1 and partition P3.
+Hasil pengujian akan ditampilkan dengan menggunakan dua buah \textit{scatter plot}.
+\textit{Scatter plot} pertama akan menampilkan hubungan antara waktu sekarang dengan $delta$,
+yaitu selisih waktu antara dua buah \textit{timing} yang berurutan. \textit{Scatter plot} kedua
+akan menampilkan hubungan antara waktu sekarang dengan $galat$, yaitu selisih waktu antara
+$delta$ dengan nilai ekspektasi. Secara formal, perhitungan $delta$ dapat dilihat pada
+\autoref{eq:delta} dan perhitungan $galat$ dapat dilihat pada \autoref{eq:galat}.
 
-% 	\item Partition P3 experienced a failure. In this scenario, the scheduler are supposed
-% 		to selects partition P1 and partition P4. This scenario is exactly the same as
-% 		illustrated in \figurename ~\ref{figure:pb_scheduling}.
+\begin{equation}\label{eq:delta}
+	delta = now - last
+\end{equation}
+Pada perhitungan nilai $delta$, nilai $now$ adalah waktu pada saat hasil \textit{timing}
+sekarang didapatkan dan nilai $last$ adalah waktu pada saat hasil \textit{timing} sebelumnya
+didapatkan. Nilai $delta$ berguna untuk melihat selisih antara dua buah \textit{timing} serta
+melihat arah dari perbedaan tersebut.
 
-% 	\item Partition P2, P3, and P5 then experienced a failure. In this scenario, the
-% 		scheduler are supposed to selects partition P1 and partition P5. This scenario is
-% 		done to test the scheduler behavior. The scheduler should still choose a
-% 		candidate which meets the running conddition, even when there are backup
-% 		partitions, which to be scheduled later than the candidate experienced a
-% 		failure.
+\begin{equation}\label{eq:galat}
+	galat = delta - expected
+\end{equation}
+Pada perhitungan nilai $galat$, nilai $delta$ didapat melalui \autoref{eq:delta} dan nilai
+$expected$ adalah nilai ekspektasi \textit{timing}. Nilai ekspektasi yang digunakan dalam
+perhitungan $galat$ adalah periode dari \textit{timing}. Nilai $galat$ berguna untuk melihat
+seberapa jauh penyimpangan antara dua buah \textit{timing} yang didapat.
 
-% \end{enumerate}
+\subsection{Pengujian Keandalan}
 
-% In the first scenario, when all partitions are healthy, the server receive service $A$ from
-% partition P1 and service P2 from partition P3. For the second scenario, the server receives
-% heartbeat from partition P1 for service $A$ and from partition P4 for service $B$. This means
-% the service still functioning correctly even when the original partition which provides the
-% service experiencing a failure. On the third scenario, the server still receives heartbeat for
-% service $A$ from partition P1 and service $B$ from partition P4. This means failured experienced
-% by backup partitions later than the supposed selected partitions do not affect scheduler
-% selection.
+Pengujian keandalan akan dilakukan dengan menggunakan skenario-skenario berikut.
 
-% In all of these scenarios, all the service required is provided, even though partitions can
-% still experience failures as base ARINC 653 scheduler. This means, while this scheme does not
-% increases the mean time to failure for each partition, it does increases mean time to failure
-% for each service. 
+\begin{enumerate}
+	\item Skenario 1
+
+		Pada skenario ini, daftar jadwal berisi 1 layanan dan memiliki 1 partisi
+		penyedia. Masing-masing akan berjalan selama \SI{20}{\milli\second} dengan
+		\textit{major time frame} keseluruhan selama \SI{20}{\milli\second}.
+
+	\item Skenario 2
+
+		Pada skenario ini, daftar jadwal berisi 1 layanan dan memiliki 2 partisi
+		penyedia. Masing-masing akan berjalan selama \SI{20}{\milli\second} dengan
+		\textit{major time frame} keseluruhan selama \SI{20}{\milli\second}.
+
+	\item Skenario 3
+
+		Pada skenario ini, daftar jadwal berisi 9 layanan dan memiliki 1 partisi
+		penyedia. Masing-masing akan berjalan selama \SI{20}{\milli\second} dengan
+		\textit{major time frame} keseluruhan selama \SI{180}{\milli\second}.
+
+	\item Skenario 4
+
+		Pada skenario ini, daftar jadwal berisi 2 layanan yang sama dan memiliki 1
+		partisi penyedia. Karena layanan tersebut merupakan layanan yang sama, maka
+		partisi penyedia layanan 1 dan layanan 2 merupakan partisi yang sama.  Partisi
+		akan berjalan selama \SI{20}{\milli\second} dan \SI{10}{\milli\second} sesuai
+		dengan urutannya. \textit{Major time frame} keseluruhan pengujian adalah
+		\SI{30}{\milli\second}.
+
+	\item Skenario 5
+
+		Pada skenario ini, daftar jadwal berisi 4 layanan dan masing-masing memiliki 2
+		partisi penyedia. Masing-masing akan berjalan selama \SI{10}{\milli\second}
+		dengan \textit{major time frame} keseluruhan selama \SI{50}{\milli\second}
+		(terdapat \SI{10}{\milli\second} partisi \textit{idle}).
+
+	\item Skenario 6
+
+		Pada skenario ini, daftar jadwal berisi 3 layanan. Layanan 1 memiliki 2 partisi
+		penyedia dan layanan akan berjalan selama \SI{30}{\milli\second}. Layanan 2
+		memiliki 3 partisi penyedia dan layanan akan berjalan selama
+		\SI{20}{\milli\second}. Layanan 3 memiliki 1 buah partisi penyedia dan layanan
+		akan berjalan selama \SI{10}{\milli\second}. \textit{Major time frame}
+		keseluruhan pengujian adalah \SI{60}{\milli\second}.
+
+\end{enumerate}
+
+Hasil pengujian keandalan sistem berdasarkan skenario-skenario pengujian akan dipaparkan.
+Pengujian diambil dengan menjalankan program pengujian selama 2 jam. Namun, hasil pengujian
+hanya akan ditampilkan sampai terlihat sebuah kecenderungan pada data.
+
+\begin{enumerate}
+
+	\item Skenario 1
+		
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s1-delta}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=3,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-domU.json-cannot-failure.csv};
+							\addlegendentry{Partisi 1};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s1-error}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=3,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-domU.json-cannot-failure.csv};
+							\addlegendentry{Partisi 1};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 1}
+			\label{figure:hasil_keandalan_s1}
+		\end{figure}
+
+		Hasil pengujian keandalan dengan menggunakan skenario 1 dapat dilihat pada
+		\autoref{figure:hasil_keandalan_s1}.  Pengujian dengan menggunakan skenario 1
+		menghasilkan \textit{timing} yang sangat presisi, dengan galat \textit{timing}
+		tertinggi dari ekspektasi periode \textit{timing} yang seharusnya hanya sekitar
+		\SI{100}{\micro\second}. Pada pengujian ini, perilaku algoritma
+		\textit{primary-backup partition scheduling} tidak dapat terlihat. Namun,
+		pengujian ini dapat digunakan sebagai referensi \textit{timing} yang seharusnya
+		didapatkan pada pengujian-pengujian berikutnya.
+
+	\item Skenario 2
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s2-delta}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-1p-1b.json-random-failure.csv.xen-vm1};
+							\addlegendentry{Partisi 1};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-1p-1b.json-random-failure.csv.xen-vm2};
+							\addlegendentry{Partisi 2};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s2-error}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-1p-1b.json-random-failure.csv.xen-vm1};
+							\addlegendentry{Partisi 1};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-1p-1b.json-random-failure.csv.xen-vm2};
+							\addlegendentry{Partisi 2};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 2}
+			\label{figure:hasil_keandalan_s2}
+		\end{figure}
+
+		Hasil pengujian keandalan dengan menggunakan skenario 2 dapat dilihat pada
+		\autoref{figure:hasil_keandalan_s2}.  Pada pengujian dengan menggunakan skenario
+		2, dapat terlihat bahwa layanan tersedia selama berjalannya program pengujian.
+		Ketika partisi 1 mengalami kegagalan, partisi 2 mengambil alih peran partisi 1
+		dalam menyediakan layanan tersebut.  Namun, semakin lama program pengujian
+		berjalan, maka semakin banyak \textit{timing} yang tidak sesuai dengan
+		ekspektasi. \textit{Timing} tersebut didapat lebih cepat dari yang seharusnya.
+		Selain itu, dapat dilihat bahwa pada saat pergantian partisi, \textit{timing}
+		layanan menjadi semakin cepat.
+
+	\item Skenario 3
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-delta-p1}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm1};
+							\addlegendentry{Partisi 1};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-error-1}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm1};
+							\addlegendentry{Partisi 1};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 3 (layanan 1)}
+			\label{figure:hasil_keandalan_s3_service1}
+		\end{figure}
+
+		Hasil pengujian keandalan dengan menggunakan skenario 3 dapat dilihat pada
+		\autoref{figure:hasil_keandalan_s3_service1},
+		\autoref{figure:hasil_keandalan_s3_service2},
+		\autoref{figure:hasil_keandalan_s3_service3},
+		\autoref{figure:hasil_keandalan_s3_service4},
+		\autoref{figure:hasil_keandalan_s3_service5},
+		\autoref{figure:hasil_keandalan_s3_service6},
+		\autoref{figure:hasil_keandalan_s3_service7},
+		\autoref{figure:hasil_keandalan_s3_service8}, dan
+		\autoref{figure:hasil_keandalan_s3_service9}. Pada layanan 1, partisi berjalan
+		dengan cukup stabil. Galat antara maksimal pengukuran \textit{timing} dengan
+		\textit{timing} ekspektasi cukup tinggi yaitu \SI{800}{\micro\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-delta-p2}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm2};
+							\addlegendentry{Partisi 2};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-error-p2}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm2};
+							\addlegendentry{Partisi 2};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 3 (layanan 2)}
+			\label{figure:hasil_keandalan_s3_service2}
+		\end{figure}
+
+		Pada layanan 2, partisi berjalan dengan sangat stabil. Galat antara maksimal pengukuran
+		\textit{timing} dengan \textit{timing} ekspektasi sangat rendah yaitu
+		\SI{15}{\micro\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-delta-p3}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm3};
+							\addlegendentry{Partisi 3};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-error-p3}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm3};
+							\addlegendentry{Partisi 3};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 3 (layanan 3)}
+			\label{figure:hasil_keandalan_s3_service3}
+		\end{figure}
+
+		Pada layanan 3, partisi berjalan dengan stabil. Namun, galat maksimal antara
+		pengukuran \textit{timing} dengan \textit{timing} ekspektasi sangat tinggi yaitu
+		hampir mencapai \SI{150}{\milli\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-delta-p4}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm4};
+							\addlegendentry{Partisi 4};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-error-p4}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm4};
+							\addlegendentry{Partisi 4};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 3 (layanan 4)}
+			\label{figure:hasil_keandalan_s3_service4}
+		\end{figure}
+
+		Pada layanan 4, partisi berjalan dengan stabil. Namun, galat maksimal antara
+		pengukuran \textit{timing} dengan \textit{timing} ekspektasi sangat tinggi yaitu
+		hampir mencapai \SI{3}{\milli\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-delta-p5}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm5};
+							\addlegendentry{Partisi 5};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-error-p5}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm5};
+							\addlegendentry{Partisi 5};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 3 (layanan 5)}
+			\label{figure:hasil_keandalan_s3_service5}
+		\end{figure}
+
+		Pada layanan 5, partisi berjalan dengan sangat stabil. Galat antara maksimal pengukuran
+		\textit{timing} dengan \textit{timing} ekspektasi sangat rendah yaitu
+		sekitar \SI{13}{\micro\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-delta-p6}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm6};
+							\addlegendentry{Partisi 6};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-error-p6}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm6};
+							\addlegendentry{Partisi 6};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 3 (layanan 6)}
+			\label{figure:hasil_keandalan_s3_service6}
+		\end{figure}
+
+		Pada layanan 6, partisi berjalan dengan sangat stabil. Galat antara maksimal pengukuran
+		\textit{timing} dengan \textit{timing} ekspektasi sangat rendah yaitu
+		\SI{13}{\micro\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-delta-p7}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm7};
+							\addlegendentry{Partisi 7};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-error-p7}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm7};
+							\addlegendentry{Partisi 7};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 3 (layanan 7)}
+			\label{figure:hasil_keandalan_s3_service7}
+		\end{figure}
+
+		Pada layanan 7, partisi berjalan dengan sangat stabil. Galat antara maksimal pengukuran
+		\textit{timing} dengan \textit{timing} ekspektasi sangat rendah yaitu
+		\SI{15}{\micro\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-delta-p8}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm8};
+							\addlegendentry{Partisi 8};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-error-p8}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm8};
+							\addlegendentry{Partisi 8};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 3 (layanan 8)}
+			\label{figure:hasil_keandalan_s3_service8}
+		\end{figure}
+
+		Pada layanan 8, partisi berjalan dengan sangat stabil. Galat antara maksimal pengukuran
+		\textit{timing} dengan \textit{timing} ekspektasi sangat rendah yaitu
+		\SI{15}{\micro\second}.
+
+		
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-delta-p9}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm9};
+							\addlegendentry{Partisi 9};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s3-error-p9}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-all.json-no-failure.csv.xen-vm9};
+							\addlegendentry{Partisi 9};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 3 (layanan 9)}
+			\label{figure:hasil_keandalan_s3_service9}
+		\end{figure}
+
+		Pada layanan 9, partisi berjalan dengan stabil. Namun, galat maksimal antara
+		pengukuran \textit{timing} dengan \textit{timing} ekspektasi sangat tinggi yaitu
+		hampir mencapai \SI{15}{\milli\second}.
+
+		Secara umum, partisi berjalan dengan sangat stabil. Namun, pada sistem
+		\textit{real-time}, hasil pengukuran terpenting adalah \textit{latency} maksimal
+		sebuah \textit{task} selesai dari jadwal \textit{task} tersebut yang seharusnya.
+		Maka, dapat dikatakan bahwa hasil pengujian dengan menggunakan skenario 3
+		sangatlah buruk.
+
+	\item Skenario 4
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s4-delta}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-domU-20-10.json-no-failure.csv};
+							\addlegendentry{Partisi 1};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s4-error}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-domU-20-10.json-no-failure.csv};
+							\addlegendentry{Partisi 1};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 4}
+			\label{figure:hasil_keandalan_s4}
+		\end{figure}
+
+		Hasil pengujian keandalan pada skenario 4 dapat dilihat pada
+		\autoref{figure:hasil_keandalan_s4}. Hasil pengujian dengan menggunakan skenario
+		4 menunjukkan bahwa apabila tidak terdapat \textit{partition switching}, maka
+		\textit{timing} yang didapat cukup presisi.  Namun, pada beberapa waktu tertentu
+		tetap terdapat galat yang cukup besar pada perbedaan \textit{timing} yang
+		didapat dengan \textit{timing} ekspektasi.
+
+	\item Skenario 5
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s5-delta-p1}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm1};
+							\addlegendentry{Partisi 1};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm5};
+							\addlegendentry{Partisi 5};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s5-error-p1}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm1};
+							\addlegendentry{Partisi 1};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm5};
+							\addlegendentry{Partisi 5};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 5
+			(layanan 1)}
+			\label{figure:hasil_keandalan_s5_service1}
+		\end{figure}
+
+		Hasil pengujian keandalan pada skenario 5 dapat dilihat pada
+		\autoref{figure:hasil_keandalan_s5_service1}.
+		\autoref{figure:hasil_keandalan_s5_service2}.
+		\autoref{figure:hasil_keandalan_s5_service3}.  dan
+		\autoref{figure:hasil_keandalan_s5_service4}.  Pada layanan 1, partisi berjalan
+		dengan stabil. Dari hasil pengujian, terlihat bahwa partisi 5 dapat mengambil
+		alih peran partisi 1 dalam menyediakan layanan 1 ketika partisi 1 mengalami
+		kegagalan. Dengan demikian, layanan 1 tersedia selama rentang waktu pengujian.
+		Namun, galat maksimal antara pengukuran \textit{timing} dengan \textit{timing}
+		ekspektasi sangat tinggi yaitu hampir mencapai \SI{40}{\milli\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s5-delta-p2}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm2};
+							\addlegendentry{Partisi 2};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm6};
+							\addlegendentry{Partisi 6};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s5-error-p2}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm2};
+							\addlegendentry{Partisi 2};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm6};
+							\addlegendentry{Partisi 6};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 5
+			(layanan 2)}
+			\label{figure:hasil_keandalan_s5_service2}
+		\end{figure}
+
+		Pada layanan 2, partisi berjalan dengan stabil. Sama seperti pada layanan 1,
+		terlihat bahwa partisi 6 dapat mengambil alih peran partisi 2 dalam menyediakan
+		layanan 2 ketika partisi 2 mengalami kegagalan. Dengan demikian, layanan 2
+		tersedia selama rentang waktu pengujian. Namun, galat maksimal antara pengukuran
+		\textit{timing} dengan \textit{timing} ekspektasi sangat tinggi yaitu hampir
+		mencapai \SI{40}{\milli\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s5-delta-p3}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm3};
+							\addlegendentry{Partisi 3};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm7};
+							\addlegendentry{Partisi 7};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s5-error-p3}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm3};
+							\addlegendentry{Partisi 3};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm7};
+							\addlegendentry{Partisi 7};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 5
+			(layanan 3)}
+			\label{figure:hasil_keandalan_s5_service3}
+		\end{figure}
+
+		Pada layanan 3, partisi berjalan dengan stabil. Sama seperti pada
+		layanan-layanan sebelumnya, terlihat bahwa partisi 7 dapat mengambil alih peran
+		partisi 3 dalam menyediakan layanan 3 ketika partisi 3 mengalami kegagalan.
+		Dengan demikian, layanan 3 tersedia selama rentang waktu pengujian. Namun, galat
+		maksimal antara pengukuran \textit{timing} dengan \textit{timing} ekspektasi
+		sangat tinggi yaitu hampir mencapai \SI{40}{\milli\second}. Selain itu, terlihat
+		beberapa titik dengan galat yang cukup tinggi berada pada waktu sekitar
+		pergantian partisi \textit{primary} dengan partisi \textit{backup}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s5-delta-p4}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm4};
+							\addlegendentry{Partisi 4};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm8};
+							\addlegendentry{Partisi 8};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s5-error-p4}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm4};
+							\addlegendentry{Partisi 4};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-4p-4b.json-random-failure.csv.xen-vm8};
+							\addlegendentry{Partisi 8};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 5 (layanan 4)}
+			\label{figure:hasil_keandalan_s5_service4}
+		\end{figure}
+
+		Pada layanan 4, partisi berjalan dengan stabil. Sama seperti pada
+		layanan-layanan sebelumnya, terlihat bahwa partisi 8 dapat mengambil alih peran
+		partisi 4 dalam menyediakan layanan 4 ketika partisi 4 mengalami kegagalan.
+		Dengan demikian, layanan 4 tersedia selama rentang waktu pengujian. Namun, galat
+		maksimal antara pengukuran \textit{timing} dengan \textit{timing} ekspektasi
+		sangat tinggi yaitu hampir mencapai \SI{40}{\milli\second}.
+
+		Sama seperti pada skenario 3, secara umum partisi berjalan dengan sangat stabil.
+		Namun, pada pengujian ini terlihat bahwa banyak titik tidak stabil berada pada
+		sekitar waktu pergantian antara partisi \textit{primary} dengan partisi
+		\textit{backup}.
+
+	\item Skenario 6
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s6-delta-p1}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-random.json-random-failure.csv.xen-vm1};
+							\addlegendentry{Partisi 1};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-random.json-random-failure.csv.xen-vm4};
+							\addlegendentry{Partisi 4};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s6-error-p1}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-random.json-random-failure.csv.xen-vm1};
+							\addlegendentry{Partisi 1};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-random.json-random-failure.csv.xen-vm4};
+							\addlegendentry{Partisi 4};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 6 (layanan 1)}
+			\label{figure:hasil_keandalan_s6_service1}
+		\end{figure}
+
+		Hasil pengujian keandalan pada skenario 6 dapat dilihat pada
+		\autoref{figure:hasil_keandalan_s6_service1},
+		\autoref{figure:hasil_keandalan_s6_service2},
+		\autoref{figure:hasil_keandalan_s6_service3}.  Pada layanan 1, partisi berjalan
+		dengan stabil.  Dari hasil pengujian, dapat terlihat bahwa partisi 4 dapat
+		menggantikan peran partisi 1 ketika mengalami partisi 1 sedang mengalami
+		kegagalan. Dengan demikian, layanan dapat tersedia selama rentang waktu
+		pengujia. Namun, galat maksimal antara pengukuran \textit{timing} dengan
+		\textit{timing} ekspektasi sangat tinggi yaitu hampir mencapai
+		\SI{60}{\milli\second}. Selain itu, terlihat beberapa titik dengan galat yang
+		cukup tinggi berada pada waktu sekitar pergantian partisi \textit{primary}
+		dengan partisi \textit{backup}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s6-delta-p2}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-random.json-random-failure.csv.xen-vm2};
+							\addlegendentry{Partisi 2};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-random.json-random-failure.csv.xen-vm6};
+							\addlegendentry{Partisi 5};
+							\addplot[only marks, mark=square, mark size=2.0,color=green] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-random.json-random-failure.csv.xen-vm7};
+							\addlegendentry{Partisi 6};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s6-error-p2}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-random.json-random-failure.csv.xen-vm2};
+							\addlegendentry{Partisi 2};
+							\addplot[only marks, mark=+, mark size=2.0,color=red] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-random.json-random-failure.csv.xen-vm6};
+							\addlegendentry{Partisi 5};
+							\addplot[only marks, mark=square, mark size=2.0,color=green] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-random.json-random-failure.csv.xen-vm7};
+							\addlegendentry{Partisi 6};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 6 (layanan 2)}
+			\label{figure:hasil_keandalan_s6_service2}
+		\end{figure}
+
+		Pada layanan 2, partisi berjalan dengan stabil. Dari hasil pengujian, terlihat
+		bahwa partisi 5 dapat menggantikan peran partisi 2 ketika terjadi kegagalan pada
+		partisi 2. Dan apabila partisi 5 juga mengalami kegagalan, partisi 6 dapat
+		menggantikan peran partisi 5. Ketika partisi 2 kembali dari kegagalan,
+		\textit{text} Namun, galat maksimal antara pengukuran \textit{timing} dengan
+		\textit{timing} ekspektasi sangat tinggi yaitu sekitar \SI{60}{\milli\second}.
+		Selain itu, terlihat beberapa titik dengan galat yang cukup tinggi berada pada
+		waktu sekitar pergantian partisi \textit{primary} dengan partisi
+		\textit{backup}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{reliability-s6-delta-p3}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=delta,col
+								sep=comma]{./data/master-slave/schedule-random.json-random-failure.csv.xen-vm3};
+							\addlegendentry{Partisi 3};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{reliability-s6-error-p3}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=lastcall,y=error,col
+								sep=comma]{./data/master-slave/schedule-random.json-random-failure.csv.xen-vm3};
+							\addlegendentry{Partisi 3};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian keandalan sistem menggunakan skenario 6 (layanan 3)}
+			\label{figure:hasil_keandalan_s6_service3}
+		\end{figure}
+
+		Pada layanan 3, partisi berjalan dengan stabil. Namun, galat maksimal antara
+		pengukuran \textit{timing} dengan \textit{timing} ekspektasi sangat tinggi yaitu
+		sekitar \SI{10}{\milli\second}.
+\end{enumerate}
+
+\subsection{Pengujian \textit{Latency}}
+
+Pada pengujian \textit{latency}, \textit{backup} untuk masing-masing layanan tidak diperlukan
+karena diasumsikan partisi tidak akan mengalami kegagalan. Dengan demikian, hasil yang
+ditampilkan hanyalah partisi yang merupakan partisi \textit{primary}.
+
+Pengujian \textit{latency} akan dilakukan dengan menggunakan skenario-skenario berikut.
+
+\begin{enumerate}
+	\item Skenario 1
+
+		Pada skenario ini, daftar jadwal berisi 1 layanan. Layanan akan berjalan
+		selama \SI{20}{\milli\second} dengan \textit{major time frame} keseluruhan
+		selama \SI{20}{\milli\second}.
+
+	\item Skenario 2
+
+		Pada skenario ini, daftar jadwal berisi 4 layanan. Masing-masing layanan akan
+		berjalan selama \SI{10}{\milli\second} dengan \textit{major time frame}
+		keseluruhan selama \SI{50}{\milli\second}.
+
+	\item Skenario 3
+
+		Pada skenario ini, daftar jadwal berisi 9 layanan. Masing-masing akan berjalan
+		selama \SI{20}{\milli\second} dengan \textit{major time frame} keseluruhan
+		selama \SI{180}{\milli\second}.
+
+\end{enumerate}
+
+Hasil pengujian \textit{latency} sistem berdasarkan skenario-skenario pengujian akan dipaparkan.
+Pengujian diambil dengan menjalankan program pengujian selama 2 jam. Namun, hasil pengujian
+hanya akan ditampilkan sampai terlihat sebuah kecenderungan pada data.
+
+\begin{enumerate}
+
+	\item Skenario 1
+		
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s1-delta}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=3,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-domU-monotonic/schedule-domU-monotonic.log};
+							\addlegendentry{Partisi 1};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s1-error}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=3,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-domU-monotonic/schedule-domU-monotonic.log};
+							\addlegendentry{Partisi 1};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 1}
+			\label{figure:hasil_latency_s1}
+		\end{figure}
+
+		Hasil pengujian \textit{latency} dengan menggunakan skenario 1 dapat dilihat
+		pada \autoref{figure:hasil_latency_s1}.  Pengujian dengan menggunakan skenario 1
+		menghasilkan \textit{timing} yang sangat presisi, dengan galat \textit{timing}
+		tertinggi dari ekspektasi periode \textit{timing} yang seharusnya hanya sekitar
+		\SI{100}{\micro\second}. Pada pengujian ini, perilaku algoritma
+		\textit{primary-backup partition scheduling} tidak dapat terlihat. Namun,
+		pengujian ini dapat digunakan sebagai referensi \textit{timing} yang seharusnya
+		didapatkan pada pengujian-pengujian berikutnya.
+
+	\item Skenario 2
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s2-delta-p1}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-4p-4b/xen-vm1/schedule-4p-4b.log};
+							\addlegendentry{Partisi 1};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s2-error-p1}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-4p-4b/xen-vm2/schedule-4p-4b.log};
+							\addlegendentry{Partisi 1};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 2
+			(layanan 1)}
+			\label{figure:hasil_latency_s2_service1}
+		\end{figure}
+
+		Hasil pengujian \textit{latency} pada skenario 2 dapat dilihat pada
+		\autoref{figure:hasil_latency_s2_service1},
+		\autoref{figure:hasil_latency_s2_service2},
+		\autoref{figure:hasil_latency_s2_service3}, dan
+		\autoref{figure:hasil_latency_s2_service4}.  Pada layanan 1, partisi berjalan
+		dengan stabil. Namun, galat maksimal antara pengukuran \textit{timing} dengan
+		\textit{timing} ekspektasi sangat tinggi yaitu sekitar \SI{40}{\milli\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s2-delta-p2}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-4p-4b/xen-vm2/schedule-4p-4b.log};
+							\addlegendentry{Partisi 2};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s2-error-p2}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-4p-4b/xen-vm2/schedule-4p-4b.log};
+							\addlegendentry{Partisi 2};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 2
+			(layanan 2)}
+			\label{figure:hasil_latency_s2_service2}
+		\end{figure}
+
+		Pada layanan 2, partisi berjalan dengan stabil. Namun, galat maksimal antara
+		pengukuran \textit{timing} dengan \textit{timing} ekspektasi sangat tinggi yaitu
+		sekitar \SI{40}{\milli\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s2-delta-p3}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-4p-4b/xen-vm3/schedule-4p-4b.log};
+							\addlegendentry{Partisi 3};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s2-error-p3}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-4p-4b/xen-vm3/schedule-4p-4b.log};
+							\addlegendentry{Partisi 3};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 2 (layanan 3)}
+			\label{figure:hasil_latency_s2_service3}
+		\end{figure}
+
+		Pada layanan 3, partisi berjalan dengan stabil. Namun, galat maksimal antara
+		pengukuran \textit{timing} dengan \textit{timing} ekspektasi sangat tinggi yaitu
+		sekitar \SI{40}{\milli\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s2-delta-p4}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-4p-4b/xen-vm4/schedule-4p-4b.log};
+							\addlegendentry{Partisi 4};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s2-error-p4}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-4p-4b/xen-vm4/schedule-4p-4b.log};
+							\addlegendentry{Partisi 4};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 2 (layanan 4)}
+			\label{figure:hasil_latency_s2_service4}
+		\end{figure}
+
+
+		Pada layanan 4, partisi berjalan dengan stabil. Namun, galat maksimal antara
+		pengukuran \textit{timing} dengan \textit{timing} ekspektasi sangat tinggi yaitu
+		sekitar \SI{40}{\milli\second}.
+
+		Hasil pengujian \textit{latency} dengan menggunakan skenario 2 memperlihatkan
+		bahwa \textit{timing} dengan galat tinggi diakibatkan karena \textit{timing}
+		berjalan lebih cepat dari yang seharusnya.
+
+	\item Skenario 3
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-delta-p1}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm1/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 1};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-error-p1}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm1/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 1};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 3 (layanan 1)}
+			\label{figure:hasil_latency_s3_service1}
+		\end{figure}
+
+		Hasil pengujian \textit{latency} pada skenario 3 dapat dilihat pada
+		\autoref{figure:hasil_latency_s3_service1},
+		\autoref{figure:hasil_latency_s3_service2},
+		\autoref{figure:hasil_latency_s3_service3},
+		\autoref{figure:hasil_latency_s3_service4},
+		\autoref{figure:hasil_latency_s3_service5},
+		\autoref{figure:hasil_latency_s3_service6},
+		\autoref{figure:hasil_latency_s3_service7},
+		\autoref{figure:hasil_latency_s3_service8},
+		dan \autoref{figure:hasil_latency_s3_service9}.
+		Pada layanan 1, partisi berjalan dengan sangat stabil. Namun, galat antara
+		maksimal pengukuran \textit{timing} dengan \textit{timing} ekspektasi cukup
+		tinggi yaitu sekitar \SI{80}{\micro\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-delta-p2}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm2/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 2};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-error-p2}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm2/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 2};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 3 (layanan 2)}
+			\label{figure:hasil_latency_s3_service2}
+		\end{figure}
+
+		Pada layanan 2, partisi berjalan dengan sangat stabil. Namun, galat antara
+		maksimal pengukuran \textit{timing} dengan \textit{timing} ekspektasi cukup
+		tinggi yaitu sekitar \SI{80}{\micro\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-delta-p3}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm3/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 3};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-error-p3}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm3/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 3};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 3 (layanan 3)}
+			\label{figure:hasil_latency_s3_service3}
+		\end{figure}
+
+		Pada layanan 3, partisi berjalan dengan cukup stabil. Namun, galat maksimal pengukuran
+		\textit{timing} dengan \textit{timing} ekspektasi cukup tinggi yaitu sekitar
+		\SI{100}{\micro\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-delta-p4}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm4/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 4};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-error-p4}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm4/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 4};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 3 (layanan 4)}
+			\label{figure:hasil_latency_s3_service4}
+		\end{figure}
+
+		Pada layanan 4, partisi berjalan dengan stabil. Namun, galat maksimal pengukuran
+		\textit{timing} dengan \textit{timing} ekspektasi sangat tinggi yaitu sekitar
+		\SI{160}{\milli\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-delta-p5}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm5/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 5};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-error-p5}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm5/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 5};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 3 (layanan 5)}
+			\label{figure:hasil_latency_s3_service5}
+		\end{figure}
+
+		Pada layanan 5, partisi berjalan dengan sangat stabil. Namun, galat maksimal
+		pengukuran \textit{timing} dengan \textit{timing} ekspektasi cukup tinggi yaitu
+		sekitar \SI{80}{\micro\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-delta-p6}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm6/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 6};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-error-p6}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm6/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 6};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 3 (layanan 6)}
+			\label{figure:hasil_latency_s3_service6}
+		\end{figure}
+
+		Pada layanan 6, partisi berjalan dengan sangat stabil. Namun, galat maksimal
+		pengukuran \textit{timing} dengan \textit{timing} ekspektasi cukup tinggi yaitu
+		sekitar \SI{100}{\micro\second}.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-delta-p7}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm7/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 7};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-error-p7}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm7/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 7};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 3 (layanan 7)}
+			\label{figure:hasil_latency_s3_service7}
+		\end{figure}
+
+		Pada layanan 7, galat maksimal pengukuran \textit{timing} dengan \textit{timing}
+		ekspektasi tidak terlalu tinggi yaitu sekitar \SI{100}{\micro\second}. Meski
+		demikian, \textit{timing} yang didapat dari layanan tersebut tidak stabil.
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-delta-p8}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm8/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 8};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-error-p8}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm8/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 8};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 3 (layanan 8)}
+			\label{figure:hasil_latency_s3_service8}
+		\end{figure}
+
+		Pada layanan 8, partisi berjalan dengan sangat stabil. Namun, galat maksimal
+		pengukuran \textit{timing} dengan \textit{timing} ekspektasi cukup tinggi yaitu
+		sekitar \SI{80}{\micro\second}.
+
+
+		\begin{figure}[!ht]
+			\centering
+			\begin{tabular}{c}
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-delta-p9}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Delta (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=delta,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm9/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 9};
+						\end{axis}
+					\end{tikzpicture}
+				} \\
+				\subfloat{
+					\tikzsetnextfilename{latency-s3-error-p9}
+					\begin{tikzpicture}
+						\begin{axis}[
+							height=4cm, width=9cm,
+							title={Timing Plot},
+							scaled ticks=false,
+							xlabel={Waktu (s)},
+							ylabel={Galat (s)},
+							grid=major,
+							xlabel near ticks,
+							ylabel near ticks,
+							yticklabel style={
+								/pgf/number format/precision=2,
+								/pgf/number format/sci,
+								/pgf/number format/sci zerofill,
+							}
+							]
+							\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+								table[x=time,y=error,col
+								sep=comma]{./data/periodic-task/schedule-all-monotonic/xen-vm9/schedule-all-monotonic.log};
+							\addlegendentry{Partisi 9};
+						\end{axis}
+					\end{tikzpicture}
+				}
+			\end{tabular}
+			\caption{Hasil pengujian \textit{latency} sistem menggunakan skenario 3 (layanan 9)}
+			\label{figure:hasil_latency_s3_service9}
+		\end{figure}
+
+		Pada layanan 9, galat maksimal pengukuran \textit{timing} dengan \textit{timing}
+		ekspektasi tidak terlalu tinggi yaitu sekitar \SI{100}{\micro\second}. Meski
+		demikian, \textit{timing} yang didapat dari layanan tersebut tidak stabil.
+
+\end{enumerate}
+
+\subsection{Pembahasan Hasil Pengujian}
+\label{section:pembahasan_pengujian}
+
+\textit{Primary-backup partition scheduler} yang dihasilkan dapat menjadwalkan partisi pengganti
+apabila partisi \textit{primary} mengalami kegagalan. \textit{Scheduler} juga dapat menjadwalkan
+partisi pengganti apabila partisi \textit{backup} juga mengalami kegagalan, seperti yang dapat
+dilihat pada \autoref{figure:hasil_keandalan_s6_service2}.
+
+\textit{Primary-backup partition scheduler} telah menyelesaikan permasalahan keandalan sistem.
+Namun, berdasarkan hasil pengujian \textit{latency}, dapat disimpulkan bahwa sistem hasil
+implementasi bukan merupakan sistem \textit{real-time} dikarenakan \textit{latency} maksimal
+yang sangat tinggi (\textit{latency} dari \textit{timing} hampir mencapai 100\%) atau
+\textit{timing} didapat jauh lebih cepat dari waktu ekspektasi \textit{timing} tersebut
+didapatkan.
+
+Untuk mencari tahu penyebab \textit{timing} yang didapat pada waktu yang tidak seharusnya, akan
+dilakukan pengujian \textit{time drift} untuk mengecek apakah terdapat \textit{time drift}
+ketika \textit{task} periodik berjalan. Pengukuran \textit{time drift} dapat dilakukan dengan
+menggunakan rumus pada \autoref{eq:drift}.
+\begin{equation}\label{eq:drift}
+	drift = now - (start + samples * expected)
+\end{equation}
+Pada perhitungan $drift$, nilai $now$ adalah waktu pada saat \textit{timing} sekarang
+didapatkan, nilai $start$ adalah waktu pada saat pengujian dimulai, nilai $samples$ adalah
+jumlah sampel yang sudah terkumpul, dan $nilai$ expected adalah nilai ekspektasi. Nilai
+ekspektasi yang digunakan dalam perhitungan $drift$ adalah periode dari \textit{timing}. Nilai
+$drift$ akan menunjukkan seberapa jauh penyimpangan waktu \textit{timing} dengan waktu
+\textit{timing} yang seharusnya.
+
+Secara intuitif, terlihat bahwa kesalahan \textit{timing} terjadi apabila terjadi pergantian
+partisi, termasuk pergantian partisi pada saat pergantian layanan. Oleh karena itu, pengujian
+\textit{time drift} akan dilakukan dengan melakukan pengujian pada sistem ketika memiliki satu
+buah partisi yang akan dijadwalkan dan sistem ketika memiliki lebih dari satu buah partisi yang
+akan dijadwalkan. Hasil pengujian \textit{time drift} pada sistem ketika memiliki satu buah
+partisi yang akan dijadwalkan dapat dilihat pada \autoref{figure:hasil_timedrift_s1}, sedangkan
+hasil pengujian \textit{time drift} pada sistem ketika memiliki lebih dari satu buah partisi
+yang akan dijadwalkan dapat dilihat pada \autoref{figure:hasil_timedrift_s2_p1},
+\autoref{figure:hasil_timedrift_s2_p2}, \autoref{figure:hasil_timedrift_s2_p3}, dan
+\autoref{figure:hasil_timedrift_s2_p4}. 
+
+\begin{figure}[!ht]
+	\centering
+	\begin{tabular}{c}
+		\tikzsetnextfilename{timedrift-s1}
+		\begin{tikzpicture}
+			\begin{axis}[
+				height=4cm, width=9cm,
+				title={Timing Plot},
+				scaled ticks=false,
+				xlabel={Waktu (s)},
+				ylabel={Drift (s)},
+				grid=major,
+				xlabel near ticks,
+				ylabel near ticks,
+				yticklabel style={
+					/pgf/number format/precision=3,
+					/pgf/number format/sci,
+					/pgf/number format/sci zerofill,
+				}
+				]
+				\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+					table[x=time,y=drift,col
+					sep=comma]{./data/periodic-task/schedule-domU-monotonic/schedule-domU-monotonic.log};
+				\addlegendentry{Partisi 1};
+			\end{axis}
+		\end{tikzpicture}
+	\end{tabular}
+	\caption{Hasil pengujian \textit{time drift} pada sistem dengan satu buah partisi yang
+	harus dijadwalkan}
+	\label{figure:hasil_timedrift_s1}
+\end{figure}
+
+\begin{figure}[!ht]
+	\centering
+	\begin{tabular}{c}
+		\tikzsetnextfilename{timedrift-s2-p1}
+		\begin{tikzpicture}
+			\begin{axis}[
+				height=4cm, width=9cm,
+				title={Timing Plot},
+				scaled ticks=false,
+				xlabel={Waktu (s)},
+				ylabel={Drift (s)},
+				grid=major,
+				xlabel near ticks,
+				ylabel near ticks,
+				yticklabel style={
+					/pgf/number format/precision=3,
+					/pgf/number format/sci,
+					/pgf/number format/sci zerofill,
+				}
+				]
+				\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+					table[x=time,y=drift,col
+					sep=comma]{./data/periodic-task/schedule-4p-4b/xen-vm1/schedule-4p-4b.log};
+				\addlegendentry{Partisi 1};
+			\end{axis}
+		\end{tikzpicture}
+	\end{tabular}
+	\caption{Hasil pengujian \textit{time drift} pada sistem dengan lebih dari satu buah
+	partisi yang harus dijadwalkan (layanan 1)}
+	\label{figure:hasil_timedrift_s2_p1}
+\end{figure}
+
+\begin{figure}[!ht]
+	\centering
+	\begin{tabular}{c}
+		\tikzsetnextfilename{timedrift-s2-p2}
+		\begin{tikzpicture}
+			\begin{axis}[
+				height=4cm, width=9cm,
+				title={Timing Plot},
+				scaled ticks=false,
+				xlabel={Waktu (s)},
+				ylabel={Drift (s)},
+				grid=major,
+				xlabel near ticks,
+				ylabel near ticks,
+				yticklabel style={
+					/pgf/number format/precision=3,
+					/pgf/number format/sci,
+					/pgf/number format/sci zerofill,
+				}
+				]
+				\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+					table[x=time,y=drift,col
+					sep=comma]{./data/periodic-task/schedule-4p-4b/xen-vm2/schedule-4p-4b.log};
+				\addlegendentry{Partisi 2};
+			\end{axis}
+		\end{tikzpicture}
+	\end{tabular}
+	\caption{Hasil pengujian \textit{time drift} pada sistem dengan lebih dari satu buah partisi yang
+	harus dijadwalkan (layanan 2)}
+	\label{figure:hasil_timedrift_s2_p2}
+\end{figure}
+
+\begin{figure}[!ht]
+	\centering
+	\begin{tabular}{c}
+		\tikzsetnextfilename{timedrift-s2-p3}
+		\begin{tikzpicture}
+			\begin{axis}[
+				height=4cm, width=9cm,
+				title={Timing Plot},
+				scaled ticks=false,
+				xlabel={Waktu (s)},
+				ylabel={Drift (s)},
+				grid=major,
+				xlabel near ticks,
+				ylabel near ticks,
+				yticklabel style={
+					/pgf/number format/precision=3,
+					/pgf/number format/sci,
+					/pgf/number format/sci zerofill,
+				}
+				]
+				\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+					table[x=time,y=drift,col
+					sep=comma]{./data/periodic-task/schedule-4p-4b/xen-vm3/schedule-4p-4b.log};
+				\addlegendentry{Partisi 3};
+			\end{axis}
+		\end{tikzpicture}
+	\end{tabular}
+	\caption{Hasil pengujian \textit{time drift} pada sistem dengan lebih dari satu buah partisi yang
+	harus dijadwalkan (layanan 3)}
+	\label{figure:hasil_timedrift_s2_p3}
+\end{figure}
+
+\begin{figure}[!ht]
+	\centering
+	\begin{tabular}{c}
+		\tikzsetnextfilename{timedrift-s2-p4}
+		\begin{tikzpicture}
+			\begin{axis}[
+				height=4cm, width=9cm,
+				title={Timing Plot},
+				scaled ticks=false,
+				xlabel={Waktu (s)},
+				ylabel={Drift (s)},
+				grid=major,
+				xlabel near ticks,
+				ylabel near ticks,
+				yticklabel style={
+					/pgf/number format/precision=3,
+					/pgf/number format/sci,
+					/pgf/number format/sci zerofill,
+				}
+				]
+				\addplot[only marks, mark=o, mark size=2.0,color=blue] %
+					table[x=time,y=drift,col
+					sep=comma]{./data/periodic-task/schedule-4p-4b/xen-vm4/schedule-4p-4b.log};
+				\addlegendentry{Partisi 4};
+			\end{axis}
+		\end{tikzpicture}
+	\end{tabular}
+	\caption{Hasil pengujian \textit{time drift} pada sistem dengan lebih dari satu buah partisi yang
+	harus dijadwalkan (layanan 4)}
+	\label{figure:hasil_timedrift_s2_p4}
+\end{figure}
+
+ Hasil pengujian tersebut menunjukkan bahwa apabila terdapat dua atau lebih partisi yang
+ berbeda, maka akan terdapat \textit{time drift} pada waktu \textit{task} periodik akan
+ dijalankan. Selain itu, hasil pengujian tersebut juga menunjukkan bahwa terdapat titik puncak
+ maksimum untuk nilai \textit{time drift} sebelum akhirnya \textit{time drift} kembali menjadi
+ $0$. Proses kembalinya nilai \textit{time drift} menjadi $0$ hanya dapat terjadi apabila sampel
+ yang didapat sebelum nilai \textit{time drift} kembali menjadi $0$ didapat dengan sangat cepat,
+ sehingga jumlah sampel bertambah tanpa terdapat perubahan yang signifikan pada nilai waktu
+ sekarang. Dengan demikian, dapat disimpulkan bahwa \textit{timing} yang didapat terlalu cepat
+ pada pengujian keandalan dan pengujian \textit{latency} diakibatkan karena adanya \textit{time
+ drift} pada \textit{periodic task}.  Selain itu, \textit{timing} dengan \textit{latency}
+ terjadi dikarenakan \textit{time drift} tersebut, yang mengakibatkan \textit{task} periodik
+ tidak mendapatkan kesempatan jalan dikarenakan waktu pada saat \textit{task} tersebut
+ mendapatkan giliran di luar dari rentang waktu layanan tersebut.
+
+\textit{Timekeeping} pada Xen merupakan permasalahan laten pada Xen \citep{Adamczyk2015}
+\citep{Broomhead2010}. Hasil pengujian \textit{time drift} menunjukkan bahwa kesalahan mulai
+terjadi apabila Xen perlu melakukan \textit{partition switching}. Dalam kasus ini, terdapat
+beberapa kemungkinan permasalahan yang terjadi. Berikut adalah daftar kemungkinan penyebab
+terjadinya \textit{time drift} pada saat pengujian.
+\begin{enumerate}
+
+	\item Perbedaan mekanisme \textit{time keeping} pada Linux dan Xen.
+
+		Linux memiliki metode yang berbeda dengan Xen untuk melakukan \textit{time
+		keeping}. Mekanisme tersebut ditunjang oleh Xen dengan menggunakan
+		\textit{virtual timer}. Meski demikian, sumber waktu yang digunakan oleh Xen dan
+		Linux merupakan sumber yang berbeda. Perbedaan metode kalibrasi waktu antara Xen
+		dengan Linux dapat mengakibatkan perbedaan waktu sehingga menghasilkan
+		\textit{time drift}. Dengan demikian, pada saat partisi dengan sistem operasi
+		Linux tidak mendapatkan waktu CPU, kalibrasi waktu CPU yang dilakukan oleh Linux
+		tidak sesuai dengan yang seharusnya.
+
+	\item Kinerja \textit{partition switching} pada Xen
+
+		Pada saat \textit{partition switching}, Xen akan menyimpan keadaan sebuah
+		partisi sebelum melakukan pergantian. Pada saat Xen akan kembali menjalankan
+		partisi tersebut, Xen perlu mengembalikan keadaan partisi seperti sebelumnya.
+		Hal ini akan mengakibatkan waktu kerja tambahan sehingga pada saat konteks
+		kembali kepada aplikasi, aplikasi sudah melewatkan waktu ketika \textit{task}
+		periodik seharusnya berjalan.
+
+	\item Desain yang tidak sesuai
+
+		Xen dan Linux tidak dibangun untuk menunjang aplikasi \textit{real-time}. Dengan
+		demikian, mekanisme internal Xen dan Linux dibangun untuk mendukung aplikasi
+		secara umum. Aplikasi secara umum memilih \textit{throughput} yang tinggi
+		ketimbang \textit{latency} yang rendah. Dengan demikian, mungkin terdapat
+		ketidaksesuaian antara kebutuhan \textit{real-time} aplikasi dengan kapabilitas
+		sistem.
+
+\end{enumerate}
+Sayangnya, mekanisme internal Xen dan Linux bukan merupakan lingkup penelitian Tugas Akhir ini,
+sehingga hasil pengujian tidak dapat digunakan untuk menyimpulkan penyebab permasalahan
+tersebut.
+
+Untuk mengatasi permasalahan tersebut, pembuat aplikasi \textit{real-time} dapat mendefinisikan
+keadaan sistem secara global yang akan diacu oleh setiap aplikasi. Setiap aplikasi akan
+menjalankan fungsionalitas tersebut apabila sudah saatnya fungsionalitas tersebut dijalankan.
+Periode dari aplikasi secara tidak langsung akan dicapai apabila daftar jadwal yang diberikan
+pada \textit{scheduler} sesuai dengan batasan waktu dan periode yang seharusnya.
 
 % vim: tw=96

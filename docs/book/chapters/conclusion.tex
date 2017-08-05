@@ -1,52 +1,99 @@
-%! TEX root = ../final-project.tex
-% \chapter{Kesimpulan}
+ % TEX root = ../final-project.tex
+\chapter{Kesimpulan dan Saran}
 
-% In this paper, we proposed a way to increases the reliability of ARINC 653 operating systems by
-% using primary-backup scheme on ARINC 653 partition scheduler. The scheduler works by giving CPU
-% time to candidate partition only when it is currently healthy and the corresponding service has
-% not provided yet. In order to let the scheduler know partition status, we define a new hypercall
-% to modify information associated to a partition. Using primary-backup scheme on ARINC 653
-% scheduler increases the reliability for each service and thus prolong the mean time to failure
-% for any service. Since we assume that services reliability is the most unreliable component on the
-% system, this means the proposed scheduler also increases the whole system reliability.
+\section{Kesimpulan}
 
-% While the result of the reliability testing is already good, the testing is done without regards
-% of processes' deadline inside of each partition. We intend to do some improvement on the testing
-% method so it also considers the deadline of each process inside of each partition. Doing so will
-% make the result more relevant to the actual use case of the system. We also plan to have
-% another type of test to measure performance difference caused by the overhead of the scheduler
-% and analyze the effect of the difference on the system.
+Pada penelitian ini, telah berhasil dikembangkan sebuah \textit{scheduler} yang menggunakan
+skema \textit{primary-backup} guna meningkatkan keandalan sistem berbasis ARINC 653. Oleh karena
+\textit{scheduler} menggunakan skema \textit{primary-bacckup} dan hanya bekerja untuk melakukan
+penjadwalan partisi, maka \textit{scheduler} tersebut disebut sebagai \textit{primary-backup
+partition scheduler}. \textit{Scheduler} bekerja dengan cara memberikan waktu CPU pada partisi
+apabila partisi tersebut dapat menyediakan layanan yang seharusnya berjalan pada waktu tersebut
+dan tidak sedang mengalami kegagalan.
 
-% As the paper proposed a new scheduler, there are some issues which need to be solved such as:
+Untuk dapat memberitahukan keadaan partisi melalui \textit{user space}, \textit{hypercall} untuk
+mengubah informasi mengenai keadaan partisi juga sudah diimplementasikan. Dengan demikian,
+kegagalan pada tingkat aplikasi juga dapat diberitahukan kepada \textit{scheduler} untuk
+kemudian ditindaklanjuti. \textit{Hypercall} dapat dilakukan melalui aplikasi dengan menggunakan
+\textit{libxc} maupun secara manual oleh administrator sistem dengan menggunakan \textit{libxl}.
 
-% \begin{enumerate}
+\textit{Primary-backup partition scheduler} dapat menangani kegagalan dengan sangat baik. Hasil
+pengujian keandalan menunjukkan bahwa terdapat 100\% \textit{uptime} pada setiap layanan. Hasil
+pengujian mungkin menaksir nilai \textit{uptime} terlalu tinggi dikarenakan tidak pernah
+terjadinya kegagalan seluruh partisi penyedia setiap layanan. Selain itu, peningkatan keandalan
+hanya berlaku untuk kasus dimana \textit{recovery action} yang dispesifikan oleh ARINC 653 tidak
+dapat menangani kegagalan yang terjadi. Meski demikian, \textit{primary-backup partition
+scheduler} tetap meningkatkan keandalan sistem pada kasus tersebut secara signifikan.
 
-% 	\item \textit{Space redundancy minimization}: Having backup partitions require extra
-% 		space linear to the average redundancy rate of primary partitions for the
-% 		system. On the assumption that the mean time to failure for each service to be
-% 		reasonably long, we might be able to reduce system required space in overall at
-% 		the cost of performance on rare events.
+Meski hasil pengujian menunjukkan bahwa \textit{primary-backup partition scheduler} meningkatkan
+keandalan sistem, terlihat bahwa terdapat permasalahan pada hasil \textit{timing} yang
+didapat pada saat pengujian. Kesalahan \textit{timing} sangat signifikan karena pada suatu saat
+sebuah layanan tidak memberikan pengukuran \textit{timing} pada satu siklus \textit{major time
+frame}. Hal ini menunjukkan bahwa fungsionalitas aplikasi dapat terlewatkan apabila
+fungsionalitas tersebut dilakukan pada selang periode tertentu. Untuk mengatasi permasalahan
+tersebut, pembuat aplikasi \textit{real-time} dapat mendefinisikan keadaan sistem yang dapat
+diakses secara global untuk memberitahukan kapan sebuah fungsionalitas harus dijalankan
+ketimbang menggunakan sistem \textit{timing}.
 
-% 	\item \textit{Automatic partition failure detection}: Telling the scheduler whether the
-% 		service on a partition is healthy or not can already be done by means of
-% 		hypercalls. This cannot be done if the environment on said partition does not
-% 		functions properly, which can be caused by transient or inherent problems. The
-% 		hypervisor must be able detect such cases automatically so the scheduler could
-% 		properly select one of the backup partitions.
+\section{Saran}
 
-% 	\item \textit{Multicore support}: Some of the inherent problems that could happen is
-% 		failure of the CPU core which the partition is supposed to run.
-% 		Having some other cores could help the scheduler schedule the backup partitions
-% 		on different core than the primary to keep the service running.
+Hasil implementasi \textit{primary-backup partition scheduler} sudah cukup baik. Hal ini
+diindikasikan oleh tercapainya peningkatan keandalan sistem ketika menggunakan
+\textit{primary-backup partition scheduler}. Namun, sebelum \textit{scheduler} tersebut dapat
+digunakan pada lingkungan produksi, terdapat beberapa permasalahan yang harus diselesaikan.
+Berikut adalah daftar permasalahan yang harus ditangani.
 
-% 	\item \textit{Automatic schedule list generator}: It is up to the engineer to provide a
-% 		schedule list which satisfies the deadline and runtime constraints. Since the
-% 		schedule list might need to be adjusted when a partition failure occurs, the
-% 		scheduler list should still satisfies the deadline and runtime constraints on
-% 		any possible partitions state. This proves to be a daunting task for the
-% 		engineer since there will be many cases (up to $2^N$ possible cases, $N$ is the
-% 		number of partitions).
+\begin{enumerate}
 
-% \end{enumerate}
+	\item \textit{Time drift} pada sistem
+
+		Seperti yang sudah dibahas pada \autoref{section:pembahasan_pengujian}, terdapat
+		permasalahan pengukuran waktu pada sistem. Perlu ada studi lebih lanjut mengenai
+		penyebab perilaku tersebut.
+
+	\item Kerangka uji yang lebih kuat
+
+		Pengujian yang dilakukan tidak mengikuti sebuah standar tertentu. Untuk menguji
+		\textit{scheduler}, metode yang akan menghasilkan hasil yang lebih menggambarkan
+		kejadian nyata adalah dengan menggunakan pemodelan dan simulasi. Penggunaan
+		metode tersebut juga dapat menunjukkan nilai optimal untuk beberapa parameter
+		penjadwalan yang sangat penting seperti jumlah partisi yang sebaiknya disediakan
+		untuk sebuah layanan dan waktu CPU yang harus diberikan oleh \textit{hypervisor}
+		untuk sebuah layanan.
+
+\end{enumerate}
+
+Selain itu, perlu adanya pengembangan beberapa fitur sehingga sistem menjadi layak pakai.
+Berikut adalah daftar fitur yang dapat ditambahkan pada sistem.
+
+\begin{enumerate}
+
+	\item Minimalisasi penggunaan memori
+
+		Memiliki partisi \textit{backup} memerlukan memori tambahan linear terhadap
+		rata-rata \textit{redundancy} yang dibutuhkan agar sistem tetap berjalan
+		sebagaimana seharusnya. Pada umumnya, \textit{mean time to failure} sebuah
+		aplikasi akan jauh lebih lambat ketimbang waktu yang dibutuhkan untuk membuat
+		partisi baru. Dengan demikian, kita dapat membuat partisi \textit{backup} pada
+		saat dibutuhkan saja. Hal ini mengakibatkan \textit{trade-off} antara penggunaan
+		memori dan performa sistem secara keseluruhan.
+
+	\item Pendeteksian partisi gagal otomatis
+
+		Untuk memberitahukan pada \textit{scheduler} bahwa sebuah partisi sedang
+		mengalami kegagalan atau tidak sudah dapat dilakukan dengan menggunakan
+		\textit{hypercall}. Namun, hal ini tidak dapat dilakukan apabila aplikasi yang
+		bertugas untuk mendeteksi kegagalan pada partisi tersebut juga mengalami
+		kegagalan. Sistem harus dapat mendeteksi kasus tersebut secara otomatis sehingga
+		\textit{scheduler} dapat memilih partisi yang tepat untuk menyediakan sebuah
+		layanan.
+
+	\item Dukungan untuk \textit{multicore}
+
+		Salah satu permasalahan yang mungkin terjadi adalah kegagalan \textit{core} dari
+		sebuah CPU. Dengan memiliki beberapa \textit{core}, maka sistem dapat tetap berjalan
+		meski terdapat kegagalan \textit{core}.
+
+\end{enumerate}
 
 % vim: tw=96

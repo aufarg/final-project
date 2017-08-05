@@ -1,0 +1,45 @@
+\clearpage
+\chapter*{ABSTRAK}
+\addcontentsline{toc}{chapter}{ABSTRAK}
+
+\begin{center}
+
+	\large \bfseries
+	Pengembangan Keandalan Sistem ARINC 653 dengan Menggunakan \textit{Fault-Tolerant Partition Scheduling}
+
+	\normalsize \normalfont Oleh
+
+	\large \penulis
+
+	\large NIM: \nimpenulis
+
+\end{center}
+
+Standar ARINC 653 memberikan spesifikasi pada komponen-komponen milik sistem operasi guna
+menyediakan isolasi antara partisi pada sistem tersebut. Hal tersebut mengakibatkan kegagalan
+pada sebuah partisi tidak berakibat apapun pada partisi lain. Meskipun demikian, kegagalan pada
+partisi tersebut tetap terjadi. ARINC 653 memberikan spesifikasi komponen \textit{health
+monitor} untuk mendeteksi dan menangani kegagalan yang terjadi pada sistem. Namun, beberapa
+kegagalan dapat bersifat persisten dan tidak dapat ditangani dengan metode penanganan yang
+dispesifikasikan oleh ARINC 653.  Kegagalan pada partisi dapat mengakibatkan layanan yang
+diberikan oleh partisi tersebut tidak bekerja sebagaimana seharusnya sehingga mengakibatkan
+kegagalan sistem secara keseluruhan.
+
+Pada Tugas Akhir ini, sebuah \textit{scheduler} yang memanfaatkan skema \textit{primary-backup}
+untuk meningkatkan keandalan sistem berbasis ARINC 653 telah dikembangkan.  \textit{Scheduler}
+dibangun dengan memodifikasi kode \textit{scheduler} ARLX, yaitu prototipe sistem berbasis ARINC
+653 yang dibangun di atas Xen \textit{hypervisor}. Modifikasi dilakukan agar \textit{scheduler}
+dapat melakukan penjadwalan partisi \textit{backup} apabila partisi \textit{primary} mengalami
+kegagalan.
+
+\textit{Scheduler} hasil implementasi diuji untuk melihat apakah terjadi peningkatan keandalan
+sistem ketika menggunakan \textit{scheduler} tertentu. Selain itu, pengujian \textit{latency}
+juga dilakukan untuk melihat \textit{latency} maksimal pada sistem sehingga terlihat apakah
+sistem layak digunakan sebagai sistem \textit{real-time} atau tidak.
+
+\textbf{Kata kunci}: \textit{hierarchical scheduling}, sistem \textit{real-time},
+\textit{scheduling}, keandalan, \textit{fault-tolerance}
+
+\clearpage
+
+% vim: tw=96

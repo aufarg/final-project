@@ -17,11 +17,11 @@ kerugian besar, atau kerusakan lingkungan.  Sistem operasi yang digunakan oleh a
 sebuah pesawat umumnya merupakan sistem \textit{real-time}, yaitu sistem yang kebenaran
 komputasinya tidak hanya ditentukan oleh kebenaran hasil komputasi secara logika, tetapi juga
 waktu pada saat hasil komputasi dapat digunakan \citep[p.~6]{Shin1994}. Dengan demikian,
-manajemen waktu adalah aspek yang sangat mendasar pada sistem \textit{real-time}. Perangkat yang
-digunakan untuk avionik memiliki beberapa standar yang wajib dipenuhi. Standar tersebut dibuat
-oleh Aeronautical Radio, Incorporated (ARINC) dalam sebuah seri standar ARINC 600. Penelitian
-ini akan mendalami lebih lanjut mengenai sistem operasi \textit{real-time} pada avionik yang
-dispesifikasikan pada penerbangan bernama ARINC 653.
+manajemen waktu komputasi adalah aspek yang sangat mendasar pada sistem \textit{real-time}.
+Perangkat yang digunakan untuk avionik memiliki beberapa standar yang wajib dipenuhi. Standar
+tersebut dibuat oleh Aeronautical Radio, Incorporated (ARINC) dalam sebuah seri standar ARINC
+600. Penelitian ini akan mendalami lebih lanjut mengenai sistem operasi \textit{real-time} pada
+avionik yang dispesifikasikan pada penerbangan bernama ARINC 653.
 
 % ARINC 653
 Standar ARINC 653 menspesifikasikan partisi ruang dan waktu pada sistem operasi
@@ -47,12 +47,12 @@ kebenaran perangkat lunak tersebut sudah terverifikasi.
 Permasalahan pada partisi yang mengalami kegagalan adalah layanan yang disediakan oleh partisi
 tersebut akan berhenti bekerja sebagaimana seharusnya. Pada avionik, hal ini dapat berakibat
 terjadinya kesalahan kalkulasi, sehingga meningkatkan ancaman keselamatan bagi manusia maupun
-lingkungan yang terlibat. Untuk mempermudah penjelasan, asumsikan terdapat hubungan satu ke satu
-antara partisi dengan layanan. Cara termudah untuk mengembalikan layanan pada keadaan semula
-adalah dengan mengembalikan keadaan partisi seperti semula. Namun, dalam kasus tertentu, keadaan
-partisi tidak dapat dikembalikan seperti semula dikarenakan kegagalan yang terjadi bersifat
-tetap. Karena itu, perlu ada mekanisme untuk menggantikan layanan pada partisi yang mengalami
-kegagalan.
+lingkungan yang terlibat. Standar ARINC 653 memberikan spesifikasi komponen untuk melakukan
+\textit{health monitoring}. Dengan adanya proses \textit{health monitoring}, sistem dapat
+mendeteksi kegagalan yang terjadi dan memberikan respons yang sesuai berdasarkan jenis kegagalan
+yang terjadi. Namun, dalam kasus tertentu, keadaan partisi tidak dapat dikembalikan seperti
+semula dikarenakan kegagalan yang terjadi bersifat tetap. Karena itu, perlu ada mekanisme untuk
+menggantikan layanan pada partisi yang mengalami kegagalan.
 
 Untuk meningkatkan keandalan sistem dalam sistem \textit{real-time}, salah satu cara yang dapat
 digunakan adalah dengan menggunakan \textit{fault-tolerant scheduling} \citep{Campbell1986}
@@ -60,7 +60,7 @@ digunakan adalah dengan menggunakan \textit{fault-tolerant scheduling} \citep{Ca
 \textit{hierarchical scheduler} seperti \textit{scheduler} ARINC 653 dapat dilakukan dengan
 menggunakan skema \textit{primary-backup} \citep{Hyun2012}. Untuk menghindari permasalahan yang
 akan muncul akibat partisi yang gagal, \textit{scheduler} dapat menjalankan partisi pengganti
-yang memilki layanan yang bersesuaian dengan partisi yang mengalami kegagalan. Partisi pengganti
+yang memiliki layanan yang bersesuaian dengan partisi yang mengalami kegagalan. Partisi pengganti
 ini disebut sebagai partisi \textit{backup}. Layanan yang diberikan partisi \textit{backup} akan
 identik dengan layanan yang diberikan oleh partisi \textit{primary}. Apabila partisi
 \textit{primary} mengalami kegagalan ketika menyediakan sebuah layanan, partisi \textit{backup}
@@ -70,11 +70,13 @@ mengalami \textit{fault} akan tetap tersedia dan sistem akan tetap berjalan seba
 seharusnya, sehingga sistem dapat dikatakan menjadi lebih andal.
 
 Meski demikian, peningkatan tersebut hanya terlihat secara teoretis dan belum ada studi mengenai
-penggunaan \textit{primary-backup scheduling} pada sistem ARINC 653. Untuk dapat melihat
-perbandingan antara \textit{primary-backup partition scheduling} dengan \textit{scheduling}
-sistem ARINC 653, perlu dilakukan pengujian keandalan sistem pada sistem yang menggunakan
-\textit{primary-backup partition scheduling} dan sistem yang menggunakan \textit{scheduling}
-sistem ARINC 653.
+penggunaan \textit{primary-backup scheduling} secara spesifik pada sistem ARINC 653. Selain itu,
+tidak ada implementasi sistem ARINC 653 menggunakan \textit{primary-backup scheduling} yang
+tersedia secara gratis sehingga peningkatan keandalan sistem dengan memanfaatkan
+\textit{primary-backup scheduling} sulit untuk dikuantifikasi. Untuk dapat melihat perbandingan
+antara \textit{primary-backup partition scheduling} dengan \textit{scheduling} sistem ARINC 653,
+perlu dilakukan pengujian keandalan sistem pada sistem yang menggunakan \textit{primary-backup
+partition scheduling} dan sistem yang menggunakan \textit{scheduling} sistem ARINC 653.
 
 % Hypervisor
 Arsitektur komputer yang dispesifikasikan pada standar ARINC 653 dapat divirtualisasikan dengan
@@ -107,7 +109,7 @@ Berikut adalah pertanyaan permasalahan yang akan dijawab dan diselesaikan pada t
 
 \begin{enumerate}
 
-    \item Bagaimana cara mengimplementasikan \textit{fault-tolerant partition scheduling} pada
+	\item \label{item:problem_fault_tolerant} Bagaimana cara mengimplementasikan \textit{fault-tolerant partition scheduling} pada
     	    sistem ARINC 653 sehingga keandalan sistem meningkat?
 
     \item Bagaimana cara melakukan pengujian keandalan sistem ARINC 653 setelah menggunakan

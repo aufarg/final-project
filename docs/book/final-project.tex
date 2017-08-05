@@ -9,14 +9,17 @@
 \pagenumbering{roman}
 
 % Front Matter
-\input{./chapters/cover}
-\input{./chapters/approval}
+\input{./chapters/cover.tex}
+\input{./chapters/approval.tex}
+\input{./chapters/abstract.tex}
+\input{./chapters/statement.tex}
+\input{./chapters/forewords.tex}
 \pagestyle{plain}
 \tableofcontents
 \listoffigures
 \lstlistoflistings
 
-% Main Matter
+% % Main Matter
 \clearpage
 \pagestyle{plain}
 \pagenumbering{arabic}
@@ -26,6 +29,6 @@
 \input{./chapters/devtest.tex}
 \input{./chapters/conclusion.tex}
 \printbibliography[heading=bibintoc]
-\input{./chapters/appendix.tex}
+% \input{./chapters/appendix.tex}
 \end{document}
 % vim: tw=120
