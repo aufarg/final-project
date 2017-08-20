@@ -46,8 +46,9 @@ disebut sebagai partisi.
 
 Setiap partisi pada dasarnya sama seperti sistem dengan satu aplikasi karena partisi memiliki
 \textit{device}, aktuator, konteks, dan data tersendiri.  Hal tersebut mengakibatkan sistem
-memiliki partisi ruang dan waktu yang kuat.  Proses dalam sebuah partisi diperbolehkan untuk
-melakukan \textit{multitasking}.
+memiliki partisi ruang dan waktu, sehingga masing-masing partisi tidak akan mempengaruhi partisi
+lain pada sistem.  Proses dalam sebuah partisi diperbolehkan untuk melakukan
+\textit{multitasking}.
 
 Perangkat lunak pada \textit{platform} ARINC 653 meliputi.
 
@@ -84,17 +85,16 @@ tersebut harus sudah selesai pada waktu yang telah ditentukan. \textit{Task} yan
 aperiodik tidak memiliki \textit{interval} reguler, namun tetap memiliki \textit{deadline} yang
 harus dipenuhi.
 
- Pada umumnya,
-\textit{task} periodik merupakan \textit{time-critical task} yang harus dijamin dapat
-diselesaikan sesuai dengan \textit{deadline}-nya dan kegagalan dalam menyelesaikan \textit{task}
-tersebut dapat mengakibatkan kegagalan sistem secara keseluruhan.  Sebagai contoh, pada aplikasi
-kendali pesawat, sebuah \textit{task} periodik mungkin melakukan pengaturan kekuatan mesin
-dengan cara menghitung jumlah bahan bakar yang harus diberikan dan memberikannya sejumlah hasil
-perhitungan pada mesin.  Kegagalan sistem operasi menyelesaikan \textit{task} tersebut dalam
-\textit{deadline} yang telah ditentukan dapat mengakibatkan jatuhnya pesawat dan hilangnya nyawa
-manusia.  Maka, sistem operasi \textit{real-time} pada aplikasi kendali pesawat harus dapat
-memberikan jaminan bahwa \textit{task} periodik aplikasi tersebut dapat diselesaikan sesuai
-dengan \textit{deadline}-nya.
+Pada umumnya, \textit{task} periodik merupakan \textit{time-critical task} yang harus dijamin
+dapat diselesaikan sesuai dengan \textit{deadline}-nya dan kegagalan dalam menyelesaikan
+\textit{task} tersebut dapat mengakibatkan kegagalan sistem secara keseluruhan.  Sebagai contoh,
+pada aplikasi kendali pesawat, sebuah \textit{task} periodik mungkin melakukan pengaturan
+kekuatan mesin dengan cara menghitung jumlah bahan bakar yang harus diberikan dan memberikannya
+sejumlah hasil perhitungan pada mesin.  Kegagalan sistem operasi menyelesaikan \textit{task}
+tersebut dalam \textit{deadline} yang telah ditentukan dapat mengakibatkan jatuhnya pesawat dan
+hilangnya nyawa manusia.  Maka, sistem operasi \textit{real-time} pada aplikasi kendali pesawat
+harus dapat memberikan jaminan bahwa \textit{task} periodik aplikasi tersebut dapat diselesaikan
+sesuai dengan \textit{deadline}-nya.
 
 Tidak semua \textit{task} harus dikerjakan dalam interval reguler. Beberapa \textit{task}
 dikerjakan apabila suatu kejadian terjadi. \textit{Task} demikian disebut dengan \textit{task}
@@ -104,10 +104,15 @@ pesawat.  \textit{Task} tersebut tidak memiliki \textit{deadline} penyelesaian. 
 Maka, \textit{task} aperiodik demikian harus diselesaikan sebelum \textit{deadline}-nya.
 
 Berdasarkan penjelasan di atas, \textit{deadline} dari sebuah sistem \textit{real-time} dapat
-diklasifikasikan menjadi \textit{hard}, \textit{firm}, dan \textit{soft}.  Sebuah deadline
-dikatakan \textit{hard} apabila konsekuensi kegagalan penyelesaiannya fatal.  Pada umumnya,
-\textit{task} periodik memiliki \textit{hard deadline}.  Sebuah deadline dikatakan \textit{hard}
-apabila konsekuensi kegagalan penyelesaiannya fatal.  Kebanyakan jenis \textit{task} aperiodik
+diklasifikasikan menjadi \textit{hard}, \textit{firm}, dan \textit{soft}.  Sebuah
+\textit{deadline} dikatakan \textit{hard} apabila konsekuensi kegagalan penyelesaiannya fatal.
+Sebuah \textit{deadline} dikatakan \textit{firm} dan \textit{soft} apabila konsekuensi kegagalan
+penyelesaiannya tidak fatal, namun akan menurunkan kualitas layanan yang ditawarkan sistem.
+Perbedaan antara \textit{soft} dan \textit{firm} adalah apabila hasil komputasi masih dapat
+digunakan setelah \textit{deadline}, maka \textit{deadline} tersebut merupakan \textit{soft
+deadline}. Sebaliknya, apabila hasil komputasi tidak dapat digunakan setelah \textit{deadline},
+maka \textit{deadline} tersebut merupakan \textit{firm deadline}.  Pada umumnya, \textit{task}
+periodik memiliki \textit{hard deadline}, sedangkan kebanyakan jenis \textit{task} aperiodik
 yang memiliki deadline termasuk dalam kategori \textit{firm deadline}, seperti transaksi pada
 sistem basis data \citep[pp.~203-241]{Haritsa1992}.
 
@@ -120,7 +125,7 @@ diselesaikan dalam waktu \SI{5}{\milli\second} dan pemberian bahan bakar harus d
 dalam waktu \SI{20}{\milli\second}.  \textit{Deadline} tersebut akan menjatuhkan
 \textit{deadline} pada \textit{subtask} masing-masing, dan seterusnya.
 
-Dari gambaran di atas, karena pengaturan kekuatan mesin harus dapat diselesaikan tanpa
+Dari gambaran di atas, oleh karena pengaturan kekuatan mesin harus dapat diselesaikan tanpa
 terkecuali, terlihat bahwa sebuah sistem \textit{real-time} harus dapat diprediksi.  Sebuah
 sistem \textit{real-time} dikatakan dapat diprediksi apabila pada saat desain dapat ditunjukkan
 bahwa seluruh \textit{deadline} \textit{task} aplikasi dapat dipenuhi selama beberapa asumsi
@@ -130,6 +135,13 @@ dapat  ditunjukkan pada saat desain bahwa seluruh \textit{deadline} \textit{task
 dipenuhi selama \textit{disk fault} yang terjadi tidak lebih dari $f$ selama $t$ detik.  Asumsi
 tersebut mengakibatkan penentuan sebuah sistem dapat diprediksi ditentukan oleh aplikasi yang
 dijalankan pada sistem tersebut.
+
+Pada sistem operasi Linux, kapabilitas \textit{real-time} dapat dicapai dengan menggunakan
+\textit{patch} \texttt{PREEMPT\_RT} \citep{RTLinux}. \textit{Patch} tersebut akan meminimalisasi
+bagian dari \textit{kernel} yang tidak \textit{preemptible} serta menambah kebijakan mengenai
+prioritas pada masing-masing \textit{process} sehingga \textit{process} dengan prioritas yang
+lebih tinggi dapat mengambil alih giliran ekseskusi dari \textit{process} dengan prioritas yang
+lebih rendah.
 
 \subsection{\textit{Real-Time Scheduling}}
 
@@ -189,7 +201,7 @@ Beberapa faktor komputer yang memengaruhi algoritma \textit{scheduling} adalah a
 
 Standar ARINC 653 menspesifikasikan arsitektur sistem menggunakan arsitektur IMA.  Setiap
 \textit{core module} dapat memiliki satu atau lebih \textit{processor}. Arsitektur dari
-\textit{core module} memengaruhi implementasi sistem operasi, namun tidak memengaruhi
+\textit{core module} memengaruhi implementasi sistem operasi, tetapi tidak memengaruhi
 \textit{interface} APEX yang digunakan oleh \textit{aplikasi} pada masing-masing partisi.
 Aplikasi harus mudah dipindahkan antar \textit{core module} dan antar \textit{processor} dari
 sebuah \textit{core module} tanpa perlu adanya modifikasi \textit{interface} dengan sistem
@@ -248,8 +260,8 @@ Inti dari standar ARINC 653 adalah konsep partisi, yaitu aplikasi yang beroperas
 dikatakan sebagai satu unit aplikasi yang didesain untuk memenuhi batasan-batasan partisi.
 
 Sistem operasi pada dasarnya sudah memiliki cara untuk melakukan partisi \textit{resource} yang
-dimilikinya.  Sistem dengan partisi yang kuat memungkinkan partisi dengan tingkat kekritisan
-yang berbeda berjalan pada satu \textit{module} yang sama tanpa memengaruhi partisi lain secara
+dimilikinya.  Sistem terpartisi memungkinkan partisi dengan tingkat kekritisan yang berbeda
+berjalan pada satu \textit{module} yang sama tanpa memengaruhi partisi lain secara
 \textit{ruang} dan waktu.  Bagian dari sistem operasi yang bekerja pada tingkat \textit{core
 module} bertanggung jawab untuk melakukan partisi dan memanajemeni partisi dalam \textit{module}
 tersebut.
@@ -277,10 +289,18 @@ partisi harus terpenuhi dengan mengatur frekuensi dan ukuran \textit{partition w
 Manajemen waktu adalah proses penting yang menjadi karakteristik sebuah sistem operasi yang
 digunakan untuk sistem \textit{real-time}. Waktu harus unik dan tidak bergantung pada eksekusi
 partisi apa pun dalam \textit{module} pada sistem ARINC 653. Seluruh nilai waktu yang digunakan
-harus terkait dengan waktu unik tersebut. Sistem operasi menyediakan \textit{time-slicing}
-untuk \textit{scheduling}, \textit{deadline}, dan \textit{periodicity} dari sebuah partisi.
-\textit{Scheduling} pada sistem ARINC 653 bekerja pada partisi-partisi pada sistem tersebut.
-Ilustrasi \textit{scheduling} pada sistem ARINC 653 dapat dilihat pada
+harus terkait dengan waktu unik tersebut. Sistem operasi menyediakan \textit{time-slicing} untuk
+\textit{scheduling}, \textit{deadline}, dan \textit{periodicity} dari sebuah partisi.
+\textit{Scheduler} yang dispesifikasikan oleh ARINC 653 merupakan \textit{hierarchical
+scheduler}, yaitu \textit{scheduler} yang bekerja pada beberapa tingkat. \textit{Scheduling}
+pada sistem ARINC 653 bekerja pada dua tingkat, yaitu pada tingkat partisi dan tingkat aplikasi.
+Pada tingkat partisi, \textit{scheduler} bekerja untuk menjadwalkan partisi-partisi pada sistem
+tersebut. Proses ini disebut sebagai \textit{partition scheduling}. Pada tingkat aplikasi,
+\textit{scheduler} bekerja untuk menjadwalkan aplikasi pada masing-masing partisi. Proses ini
+disebut sebagai \textit{process scheduling}. Penelitian ini akan berfokus pada \textit{partition
+scheduling}
+
+Ilustrasi \textit{partition scheduling} pada sistem ARINC 653 dapat dilihat pada
 \autoref{figure:arinc653_scheduling}.
 
 \begin{figure}[htbp]
@@ -290,15 +310,16 @@ Ilustrasi \textit{scheduling} pada sistem ARINC 653 dapat dilihat pada
     \label{figure:arinc653_scheduling}
 \end{figure}
 
-Sebuah kuantum waktu terasosiasi dengan setiap partisi \citep{Larry2009}. Kuantum waktu merepresentasikan waktu
-maksimal partisi tersebut dapat berjalan. Pada setiap kuantum waktu, partisi akan berjalan untuk
-menyediakan fungsi yang diharapkan. \textit{Deadline} merupakan batas waktu maksimum ketika
-hasil perhitungan partisi tersebut dapat digunakan yang merupakan syarat bahwa partisi tersebut
-berhasil dikerjakan. Selama partisi tersebut selesai dikerjakan tanpa melebihi
-\textit{deadline}, maka \textit{deadline} partisi tersebut dikatakan terpenuhi. Jika tidak, maka
-\textit{deadline} partisi tersebut tidak terpenuhi dan sistem akan menghasilkan \textit{error}.
-\textit{Error} yang diakibat oleh \textit{deadline} yang tidak terpenuhi menjadi acuan bahwa
-sistem tidak berhasil menjamin 100\% \textit{real-time}.
+Sebuah kuantum waktu terasosiasi dengan setiap partisi \citep{Larry2009}. Kuantum waktu
+merepresentasikan waktu maksimal partisi tersebut dapat berjalan. Pada setiap kuantum waktu,
+partisi akan berjalan untuk menyediakan fungsi yang diharapkan. \textit{Deadline} merupakan
+batas waktu maksimum ketika hasil perhitungan partisi tersebut dapat digunakan. Batasan tersebut
+merupakan syarat yang menentukan apakah partisi tersebut berhasil dikerjakan atau tidak. Selama
+partisi tersebut selesai dikerjakan tanpa melebihi \textit{deadline}, maka \textit{deadline}
+partisi tersebut dikatakan terpenuhi. Jika tidak, maka \textit{deadline} partisi tersebut tidak
+terpenuhi dan sistem akan menghasilkan \textit{error}.  \textit{Error} yang diakibat oleh
+\textit{deadline} yang tidak terpenuhi menjadi acuan bahwa sistem tidak berhasil menjamin 100\%
+\textit{real-time}.
 
 \subsection{\textit{Health Monitoring}}
 \label{section:health_monitoring}
@@ -310,23 +331,29 @@ kegagalan, komponen tersebut harus dapat melaporkan kegagalan yang terjadi pada 
 
 \textit{Health} monitoring pada sistem ARINC 653 bekerja pada tiga tingkatan kegagalan yang
 dapat terjadi pada sistem.
+
 \begin{enumerate}
-	\item Tingkat Proses
+
+	\item Kegagalan pada tingkat proses
+
 		Kegagalan pada level ini berakibat pada satu atau lebih proses pada sebuah
 		partisi. Contoh kegagalan pada tingkat proses seperti: kegagalan aplikasi, IRQ
 		pada O/S yang ilegal, dan kegagalan pada proses eksekusi (\textit{stack
 		overflow}, \textit{page fault}, dll).
 
-	\item Tingkat Partisi
+	\item Kegagalan pada tingkat partisi
+
 		Kegagalan pada level ini berakibat pada satu buah partisi. Contoh kegagalan pada
 		tingkat partisi seperti: kegagalan inisialisasi partisi, kegagalan yang terjadi
 		akibat manajemen proses, dan kegagalan yang terjadi karena gagal menangani
 		kegagalan aplikasi.
 
-	\item Tingkat Modul
+	\item Kegagalan pada tingkat modul
+
 		Kegagalan pada level ini berakibat pada seluruh partisi pada sebuah modul.
 		Contoh kegagalan pada tingkat modul seperti: kegagalan pada saat melakukan
 		pergantian partisi dan kegagalan pada saat mengeksekusi fungsi milik sistem.
+
 \end{enumerate}
 
 Respons yang diberikan oleh sistem pada saat kegagalan terdekteksi pada sistem ARINC 653
@@ -334,43 +361,52 @@ bergantung pada implementasi sistem. Namun, standar ARINC 653 memberikan cara pe
 kegagalan serta mekanisme untuk dapat memberikan respons.
 \begin{enumerate}
 	\item Kegagalan pada tingkat proses
+
 		Kegagalan pada level ini dideteksi menggunakan proses dengan prioritas
 		tertinggi. Proses berfungsi hanya untuk menangani kegagalan pada
 		aplikasi-aplikasi yang terdapat pada sebuah partisi.
 
 	\item Kegagalan pada tingkat partisi dan tingkat modul
+
 		Kegagalan pada level ini dideteksi dengan melakukan \textit{error handling} pada
 		sistem operasi dari sistem ARINC 653.
+
 \end{enumerate}
 
 Meski respons yang diberikan bergantung pada jenis kegagalan yang terjadi, standar ARINC 653
 memberikan spesifikasi umum respons.
 \begin{enumerate}
+
 	\item Kegagalan pada tingkat proses
+
 		Respons yang dapat dilakukan pada tingkat proses adalah:
 		\begin{enumerate}
-			\item Abaikan sambil mencatat kegagalan yang terjadi
-			\item Abaikan sampai $n$ kali sebelum melakukan \textit{recovery action}
-				lain
-			\item Mengulang proses yang mengalami kegagalan
-			\item Mengulang partisi yang memiliki proses tersebut
-			\item Mematikan partisi yang memiliki proses tersebut
+			\item abaikan sambil mencatat kegagalan yang terjadi;
+			\item abaikan sampai $n$ kali sebelum melakukan \textit{recovery action}
+				lain;
+			\item mengulang proses yang mengalami kegagalan;
+			\item mengulang partisi yang memiliki proses tersebut;
+			\item mematikan partisi yang memiliki proses tersebut.
 		\end{enumerate}
+
 	\item Kegagalan pada tingkat partisi
+
 		Respons yang dapat dilakukan pada tingkat proses adalah:
 		\begin{enumerate}
-			\item Abaikan
-			\item Mematikan partisi yang mengalami kegagalan
-			\item Mengulang partisi yang mengalami kegagalan
+			\item abaikan;
+			\item mematikan partisi yang mengalami kegagalan;
+			\item mengulang partisi yang mengalami kegagalan.
 		\end{enumerate}
 
 	\item Kegagalan pada tingkat modul
+
 		Respons yang dapat dilakukan pada tingkat proses adalah:
 		\begin{enumerate}
-			\item Abaikan
-			\item Mematikan modul yang mengalami kegagalan
-			\item Mengulang kembali modul yang mengalami kegagalan
+			\item abaikan;
+			\item mematikan modul yang mengalami kegagalan;
+			\item mengulang kembali modul yang mengalami kegagalan.
 		\end{enumerate}
+
 \end{enumerate}
 
 \section{\textit{Fault-Tolerant Partition Scheduling}}
@@ -390,17 +426,17 @@ Sebuah studi menunjukkan bahwa peningkatan keandalan \textit{hierarchical schedu
 \textit{scheduler} ARINC 653 dapat dilakukan dengan menggunakan skema \textit{primary-backup}
 \citep{Hyun2012}. \textit{Primary-backup partition scheduling} merupakan proses
 \textit{scheduling} yang terinspirasi oleh metode replikasi data. Pendekatan paling sederhana
-untuk dapat melakukan \textit{primary-backup partition scheduling} adalah dengan memberikan salinan
-untuk setiap \textit{task}, dan memberikan salinan tersebut pada \textit{processor} yang berbeda
-dengan \textit{task} aslinya.  Namun, pendekatan tersebut tidak efisien karena memerlukan banyak
-\textit{processor} tambahan \citep{Oh1994}.  \citet{Bertossi2006} menunjukkan cara
-mengimplementasikan \textit{primary-backup partition scheduling} yang lebih efisien pada sistem
-\textit{real-time} yang menggunakan algoritma \textit{scheduling} \textit{Rate-
+untuk dapat melakukan \textit{primary-backup partition scheduling} adalah dengan memberikan
+salinan untuk setiap \textit{task}, dan memberikan salinan tersebut pada \textit{processor} yang
+berbeda dengan \textit{task} aslinya.  Namun, pendekatan tersebut tidak efisien karena
+memerlukan banyak \textit{processor} tambahan \citep{Oh1994}.  \citet{Bertossi2006} menunjukkan
+cara mengimplementasikan \textit{primary-backup partition scheduling} yang lebih efisien pada
+sistem \textit{real-time} yang menggunakan algoritma \textit{scheduling} \textit{Rate-
 Monotonic-First-Fit} (RMFF) dengan memberikan \textit{task} \textit{salinan} pada
 \textit{scheduler} jika dan hanya jika \textit{task} utama mengalami kegagalan.  \citet{Jin2013}
-berhasil membuktikan bahwa penggunaan \textit{primary-backup partition scheduling} dapat
-dilakukan pada sistem \textit{uniprocessor} yang terpartisi dengan melakukan perluasan model
-\textit{resource}.
+berhasil membuktikan secara matematis bahwa penggunaan \textit{primary-backup partition
+scheduling} dapat dilakukan pada sistem \textit{uniprocessor} yang terpartisi dengan melakukan
+perluasan model \textit{resource}.
 
 \section{Virtualisasi}
 
@@ -423,13 +459,13 @@ sedang menggunakan CPU sehingga memberikan kesempatan bagi proses lain untuk men
 Sistem operasi melakukan melakukan \textit{context switch} pada proses yang terkena
 \textit{preemption} sehingga pada saat proses tersebut mendapatkan CPU pada giliran selanjutnya,
 proses tersebut dapat melanjutkan apa yang dikerjakan sebelumnya.  Sementara itu, virtualisasi
-memori yang dilakukan dengan melakukan pemetaan alamat memori virtual yang mampu memiliki
-kapasitas 2\textsuperscript{32} (2\textsuperscript{64} pada sistem 64-bit) ke alamat memori
-fisik yang memiliki kapasitas sesuai dengan perangkat keras komputer.  Kapasitas yang dapat
-digunakan oleh sebuah proses pada alamat memori fisik serta cara pemetaannya dilakukan oleh
-perangkat MMU pada komputer.  \textit{Devices} yang dimiliki oleh sebuah komputer juga
-divirtualisasikan oleh sistem operasi.  Contoh \textit{device} yang divirtualisasikan oleh
-sistem operasi adalah \textit{storage}.
+memori dilakukan dengan melakukan pemetaan alamat memori virtual dengan kapasitas
+2\textsuperscript{32} (2\textsuperscript{64} pada sistem 64-bit) ke alamat memori fisik dengan
+kapasitas sesuai dengan perangkat keras pada komputer tersebut.  Kapasitas yang dapat digunakan
+oleh sebuah proses pada alamat memori fisik serta cara pemetaannya dilakukan oleh perangkat
+\textit{memory management unit} pada komputer.  \textit{Devices} yang dimiliki oleh sebuah
+komputer juga divirtualisasikan oleh sistem operasi.  Contoh \textit{device} yang
+divirtualisasikan oleh sistem operasi adalah \textit{storage}.
 
 Salah satu kegunaan metode virtualisasi pada ranah komputasi adalah untuk membuat
 \textit{virtual machine}.  Sebuah \textit{virtual machine} adalah representasi mesin secara
@@ -456,11 +492,34 @@ berjalan di bawahnya.  Istilah \textit{hypervisor} didapatkan karena \textit{hyp
 membawahkan \textit{supervisor}, pada kasus ini \textit{supervisor}-nya merupakan sistem
 operasi.
 
+Terdapat dua tipe \textit{hypervisor}, \textit{hypervisor type-1} dan \textit{hypervisor
+type-2}. Pada \textit{hypervisor type-1}, \textit{hypervisor} berjalan langsung di atas
+perangkat keras. Karena \textit{hypervisor type-1} terhubung langsung dengan perangkat keras,
+maka aplikasi yang berjalan di atas \textit{hypervisor type-1} hanya memerlukan satu lapisan
+tambahan sebelum dapat dijalankan oleh perangkat keras. Berbeda dengan \textit{hypervisor
+type-1}, \textit{hypervisor type-2} berjalan di atas sistem operasi yang sudah berjalan.
+\textit{Hypervisor} berjalan sebagai aplikasi biasa pada sistem operasi, dengan demikian
+terdapat dua lapisan tambahan sebelum kode aplikasi dapat dijalankan oleh perangkat keras.
+
 \section{Xen}
 
-Xen merupakan sebuah perangkat lunak untuk melakukan virtualisasi yang bekerja diantara sistem
+Sampai saat ini, sudah terdapat banyak solusi virtualisasi yang tersedia. Karena fokus dari
+penelitian ini adalah pada bidang avionika, maka virtualisasi yang digunakan harus memiliki
+performa yang tinggi. Dengan demikian, solusi virtualisasi akan dipilih apabila menggunakan
+\textit{hypervisor type-1}. Terdapat beberapa solusi virtualisasi dengan \textit{hypervisor
+type-1} seperti VMWare ESXi, Microsoft Hyper-V, Oracle VM Server dan Xen. Namun, solusi
+virtualisasi dengan \textit{hypervisor type-1} yang gratis dan \textit{open source} hanya Xen.
+
+Kelebihan Xen sebagai \textit{hypervisor} \textit{open-source} memudahkan pengembang dalam
+menuliskan komponen baru yang dibutuhkan. Xen juga memberikan \textit{interface} yang
+relatif mudah untuk melakukan pengembangan komponen baru. Fokus utama pada buku ini adalah
+pembuatan \textit{scheduler} baru dan Xen telah menyediakan \textit{interface} untuk membuat
+\textit{scheduler} baru dengan mudah.  Berdasarkan kelebihan-kelebihan tersebut, maka penelitian
+akan menggunakan Xen sebagai solusi virtualisasi.
+
+Xen merupakan sebuah perangkat lunak untuk melakukan virtualisasi yang bekerja di antara sistem
 operasi dan perangkat keras. Terdapat tiga komponen utama pada sistem yang menggunakan Xen,
-yaitu \textit{hypervisor}, \textit{kernel}, dan aplikasi yang bekerja pada \textit{userspace}.
+yaitu \textit{hypervisor}, \textit{kernel}, dan aplikasi yang bekerja pada \textit{user space}.
 
 \begin{figure}[!ht]
     \includegraphics[scale=0.5]{./resources/xen-ring.png}
@@ -480,7 +539,7 @@ tetap dapat mengakses memori yang teralokasi untuk aplikasi yang berjalan di ata
 \textit{kernel} tersebut dan \textit{kernel} tetap tidak dapat mengakses maupun diakses oleh
 aplikasi yang terdapat pada \textit{kernel} lain.  \textit{Hypervisor}, yang berjalan pada
 \textit{ring} 0, terproteksi dari \textit{kernel} yang berjalan pada \textit{ring} 1 dan
-aplikasi yang berjalan pada \textit{ring} 3.  Karena \textit{kernel} berjalan pada \textit{ring}
+aplikasi yang berjalan pada \textit{ring} 3.  Oleh karena \textit{kernel} berjalan pada \textit{ring}
 1, \textit{kernel} tidak dapat menjalankan \textit{privileged instructions} seperti biasanya.
 \textit{Hypervisor} pada Xen menyediakan \textit{hypercall} sebagai pengganti \textit{privileged
 instructions}.  \textit{Hypercall} digunakan oleh \textit{hypervisor} untuk menjembatani
@@ -498,8 +557,8 @@ merupakan \textit{domain} yang dapat menggunakan \textit{privileged instructions
 memanajemeni \textit{devices} yang dijalankan oleh Xen pada saat sistem pertama kali beroperasi.
 DomU merupakan \textit{domain} yang tidak dapat menggunakan \textit{privileged instructions}.
 Kewajiban dom0 dalam menangani \textit{devices} adalah dom0 harus dapat menyediakan
-\textit{devices} untuk semua domU.  Karena perangkat keras tidak dapat diakses oleh beberapa
-sistem operasi sekaligus, maka akses \textit{devices} oleh domU harus melalui dom0.
+\textit{devices} untuk semua domU.  Oleh karena perangkat keras tidak dapat diakses oleh
+beberapa sistem operasi sekaligus, maka akses \textit{devices} oleh domU harus melalui dom0.
 \autoref{figure:xen_split_driver} mengilustrasikan bagaimana paket jaringan yang dikirim oleh
 domU melalui dom0.  Perbedaan utama pada pengiriman paket jaringan adalah pada \textit{layer}
 \textit{TCP/IP}, \textit{layer} tersebut tidak meneruskan langsung ke \textit{network device}
@@ -514,22 +573,19 @@ berbagai komponen yang membentuk Xen.
     \label{figure:xen_split_driver}
 \end{figure}
 
-Salah satu kelebihan Xen sebagai \textit{hypervisor} adalah Xen memudahkan pengembang untuk
-menuliskan komponen sesuai dengan kebutuhan.  Xen menjelaskan secara rinci bagaimana proses
-penulisan komponen dan memberikan \textit{interface} yang relatif mudah.  Xen juga merupakan
-\textit{hypervisor} \textit{open-source}, sehingga eksplorasi keseluruhan sistem lebih mudah
-dilakukan.  Fokus utama pada buku ini adalah, Xen menyediakan \textit{interface} untuk membuat
-\textit{scheduler} baru.  \textit{Scheduler} dalam kasus ini tidak bekerja pada proses,
-tetapi bekerja pada \textit{domain}.
-
 \section{ARLX}
 
-ARLX merupakan prototipe sistem ARINC 653 yang dibangun di atas Xen.  Prototipe dibangun dengan
-membuat \textit{scheduler} seperti pada spesifikasi standar ARINC 653 pada Xen.  Selain itu,
-prototipe tersebut memberikan beberapa modul \textit{kernel} untuk menangani \textit{device}
-yang terpartisi sesuai dengan spesifikasi ARINC 653. Dalam melakukan partisi memori, prototipe
-tersebut memanfaatkan mekanisme partisi memori menggunakan MMU yang sudah merupakan mekanisme
-bawaan pada Xen.
+ARLX merupakan prototipe sistem ARINC 653 yang dibangun di atas Xen oleh DornerWorks
+\citep{VanderLeest2010}. Prototipe dibangun dengan membuat \textit{scheduler} seperti pada
+spesifikasi standar ARINC 653 pada Xen. Dalam melakukan partisi memori, prototipe tersebut
+memanfaatkan mekanisme partisi memori menggunakan \textit{memory management unit} yang sudah
+merupakan mekanisme bawaan pada Xen.
+
+DornerWorks membuka kode sumber \textit{scheduler} ARINC 653 tersebut dan kode sumber tersebut
+telah digabungkan pada \textit{source tree} milik Xen. Dengan demikian, \textit{scheduler} ARINC
+653 yang dikembangkan pada ARLX juga dapat digunakan oleh Xen tanpa memerlukan lapisan eksekusi
+tambahan. Untuk selanjutnya, ARLX akan merujuk pada Xen yang menggunakan \textit{scheduler}
+tersebut.
 
 \begin{figure}[!ht]
     \centering
@@ -544,7 +600,7 @@ Xen akan digunakan sebagai partisi tempat APEX dan \textit{device driver} berada
 partisi untuk aplikasi avionik akan direpresentasikan menggunakan domU seperti pada
 \autoref{figure:xen_arinc653_partitions}.
 
-\begin{figure}[!hb]
+\begin{figure}[!ht]
     \includegraphics[scale=0.6]{resources/xen-arinc653-partition-schedule.png}
     \vspace{15pt}
     \caption{\textit{Schedule} partisi pada ARLX \citep{VanderLeest2010}}
@@ -553,17 +609,30 @@ partisi untuk aplikasi avionik akan direpresentasikan menggunakan domU seperti p
 
 \textit{Partition scheduling} dilakukan seperti yang telah dispesifikasikan pada standar ARINC
 653. Layanan sebuah partisi akan didaftarkan dengan menggunakan \textit{hypercall} seperti pada
-Xen. Partisi akan dipilih sesuai dengan urutan yang diberikan pada saat melakukan
-\textit{hypercall}.  Ilustrasi penjadwalan partisi yang dilakukan oleh \textit{partition
-scheduler} milik ARLX dapat dilihat pada \autoref{figure:xen_arinc653_partitions_schedule}.
+Xen. Partisi akan dipilih sesuai dengan urutan pada daftar jadwal yang diberikan pada saat
+melakukan \textit{hypercall}.  Ilustrasi penjadwalan partisi yang dilakukan oleh
+\textit{partition scheduler} milik ARLX dapat dilihat pada
+\autoref{figure:xen_arinc653_partitions_schedule}. Pada ilustrasi tersebut, ARLX akan
+menyediakan dua buah layanan masing-masing pada sebuah partisi tersendiri. Pada partisi pertama
+(domU1), ARLX akan menyediakan layanan bernama FMS. Pada partisi kedua (domU2), ARLX akan
+menyediakan layanan bernama TAWS.
+
 Secara umum, algoritma tersebut sama seperti algoritma \textit{scheduling} yang telah dipaparkan
 pada \autoref{section:arinc653_scheduling}. Pada saat \textit{major time frame} dimulai,
-\textit{dom0} akan berjalan dan menjalankan fungsi-fungsi yang seharusnya dilakukan oleh dom0,
+{dom0} akan berjalan dan menjalankan fungsi-fungsi yang seharusnya dilakukan oleh dom0,
 seperti manajemen I/O, menyediakan API ARINC 653 untuk partisi-partisi pada sistem, dan
 lain-lain. Setelah kuantum waktu yang dimiliki oleh dom0 habis, domU1 akan berjalan dan
 menyediakan layanan FMS. Setelah  kuantum waktu yang dimiliki oleh domU1 habis, domU2 akan
 berjalan dan menyediakan layanan TAWS. Hal ini akan dilakukan secara terus menerus sampai sistem
 dimatikan. Slot \textit{hypervisor} pada selang \textit{major time frame} digunakan oleh
 \textit{hypervisor} untuk menentukan partisi mana yang akan mendapatkan waktu CPU.
+
+Spesifikasi ARINC 653 berlaku apabila sistem operasi yang digunakan merupakan sistem operasi
+\textit{real-time}. Pada dasarnya, Xen tidak dibangun sebagai \textit{hypervisor} dengan
+kapabilitas \textit{real-time}. Terdapat sebuah proyek yang ingin membangun kapabilitas
+\textit{real-time} pada Xen. Namun, proyek tersebut tidak mendukung \textit{scheduler} ARINC 653
+yang terdapat pada ARLX. Dengan demikian, penelitian ini akan tetap menggunakan
+\textit{scheduler} ARINC 653 pada ARLX meskipun Xen tidak memiliki kapabilitas
+\textit{real-time}.
 
 % vim: tw=96

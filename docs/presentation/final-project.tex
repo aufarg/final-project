@@ -4,8 +4,10 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric}
 \usepackage{caption}
+\usepackage{subfig}
 \usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage{siunitx}
 
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
 
@@ -20,9 +22,9 @@
 \newcommand{\squarenode}[2]{\rectnode{#1}{#1}{#2}}
 
 \title{Pengembangan Keandalan Sistem ARINC 653\\dengan Menggunakan\\ \textit{Fault Tolerant Partition Scheduling}}
-\subtitle{Seminar Tugas Akhir II}
+\subtitle{Sidang Tugas Akhir}
 \author{Aufar Gilbran - 13513015}
-\date{11 Juli 2017}
+\date{8 Agustus 2017}
 
 \hypersetup{pdfstartview={FitH}}
 
@@ -151,6 +153,19 @@
 	\end{itemize}
 \end{frame}
 \begin{frame}
+	\frametitle{Rancangan Solusi --- Daftar Jadwal}
+	\begin{itemize}
+		\item Modifikasi jadwal pada ARLX.
+		\item Setiap \textit{entry} merupakan sebuah layanan.
+		\item Masing-masing \textit{entry}/layanan memiliki daftar partisi penyedia.
+	\end{itemize}
+	\centering
+	\begin{figure}
+		\includegraphics[scale=0.15]{./final-project-figure0.png}
+		\caption{Daftar Jadwal}
+	\end{figure}
+\end{frame}
+\begin{frame}
 	\frametitle{Rancangan Solusi --- Algoritma \textit{Scheduling}}
 	\begin{itemize}
 		\item Secara umum sama dengan algoritma \textit{partition scheduling} pada ARINC 653.
@@ -168,139 +183,33 @@
 \begin{frame}
 	\frametitle{Rancangan Solusi --- Informasi Partisi}
 	\begin{itemize}
-		\item \textit{Scheduler} perlu mengetahui informasi terkait keadaan partisi dan layanan pada partisi.
+		\item \textit{Scheduler} perlu mengetahui informasi terkait status partisi pada partisi.
 		\item Status partisi diperlukan untuk mengetahui apakah partisi mengalami kegagalan/tidak.
-		\item Layanan pada partisi diperlukan untuk mengetahui apakah layanan tersebut sudah tersedia.
 		\item Informasi tersebut dapat diberikan oleh partisi melalui \textit{hypercall}.
 	\end{itemize}
 \end{frame}
-\begin{frame}{Rancangan Solusi --- Alur Kerja Sistem}
+\begin{frame}{Rancangan Solusi --- Alur Informasi Sistem}
 	\centering
 	\begin{figure}
-		\begin{tikzpicture}[
-			base/.style={draw, text opacity=1.0, rounded corners, minimum width=35pt, minimum height=35pt, font=\tiny},
-			arrow/.style={font=\tiny, midway, anchor=south, text width=30pt},
-			userspace/.style={fill=blue!20},
-			kernelspace/.style={fill=orange!20},
-			partition/.style={base, userspace},
-			xl/.style={base, userspace},
-			hypervisor/.style={base, kernelspace},
-			scheduler/.style={base, kernelspace},
-		]
-
-		\node[partition] (partisi) {Partisi};
-		\node[xl, right of=partisi, xshift=50pt] (xl)  {xl};
-		\node[hypervisor, right of=xl, xshift=50pt] (hypervisor) {Hypervisor};
-		\node[scheduler, right of=hypervisor, xshift=50pt] (scheduler) {Scheduler};
-
-		\draw[->] (partisi) -- node[arrow] {mengirimkan informasi partisi} (xl);
-		\draw[->] (xl) -- node[arrow] {mengirimkan IRQ} (hypervisor);
-		\draw[->] (hypervisor) -- node[arrow] {memanggil \textit{handler}} (scheduler);
-		
-		\end{tikzpicture}
+		\includegraphics[scale=0.23]{./final-project-figure1.png}
+		\caption{Alur informasi sistem}
 	\end{figure}
 \end{frame}
 \begin{frame}{Rancangan Solusi --- Flowchart Algoritma \textit{Scheduling}}
 	\centering
 	\begin{figure}
-		\begin{tikzpicture}[
-			base/.style={scale=0.9, draw, text opacity=1.0, font=\tiny, text width=35pt},
-			block/.style={base, fill=blue!20, rounded corners, text centered},
-			decision/.style={base, fill=orange!20, diamond, inner sep=0pt, text badly centered},
-			label/.style={scale=0.9, font=\tiny, near start},
-		]
-
-		\node[block, fill=pink!80] (mulai) {Mulai};
-		\node[decision, below of=mulai, yshift=-20pt] (cek-konfigurasi) {Konfigurasi Penjadwalan Tersedia?};
-		\node[block, right of=cek-konfigurasi, xshift=30pt] (mulai-major) {Mulai Major Frame Baru};
-		\node[decision, right of=mulai-major, xshift=25pt] (cek-major) {Major Frame Habis?};
-		\node[decision, right of=cek-major, xshift=30pt]  (cek-partisi) {Terdapat Kandidat Partisi?};
-		\node[block, right of=cek-partisi, xshift=30pt] (partisi-kandidat) {Partisi Berikutnya};
-		\node[decision, below of=partisi-kandidat, yshift=-30pt] (cek-gagal) {Partisi Mengalami Kegagalan?};
-		\node[decision, below of=cek-gagal, yshift=-40pt] (cek-layanan) {Layanan Sudah Tersedia?};
-		\node[block, right of=cek-gagal, xshift=30pt] (partisi-tidak-jalan) {Partisi Tidak Diberi Kuantum Waktu CPU};
-		\node[block, left of=cek-layanan, xshift=-40pt] (partisi-jalan) {Partisi Diberi Kuantum Waktu CPU};
-		\node[block, left of=partisi-jalan, xshift=-30pt] (partisi-kuantum) {Partisi Menggunakan Kuantum};
-		\node[decision, left of=partisi-kuantum, xshift=-30pt] (cek-kuantum) {Kuantum Habis?};
-		\node[block, below of=mulai-major, yshift=-30pt] (akhir-major) {Akhir dari Major Frame};
-		\node[block, below of=cek-partisi, yshift=-30pt] (idle) {Idle};
-		
-		\draw[->] (mulai) -- (cek-konfigurasi);
-		\draw[->] (cek-konfigurasi) -- node[label, anchor=south] {ya} (mulai-major);
-		\draw[->] (cek-konfigurasi) |- ++(-30pt,-30pt) |- node[label, anchor=north] {tidak} (cek-konfigurasi);
-		\draw[->] (mulai-major) -- (cek-major);
-		\draw[->] (cek-major) |- node[label, anchor=west] {ya} (akhir-major);
-		\draw[->] (cek-partisi) -- node[label, anchor=west] {tidak} (idle);
-		\draw[->] (akhir-major) -- (mulai-major);
-		\draw[->] (cek-major) -- node[label, anchor=south] {ya} (cek-partisi);
-		\draw[->] (cek-partisi) -- node[label, anchor=south] {ya} (partisi-kandidat);
-		\draw[->] (partisi-kandidat) -- (cek-gagal);
-		\draw[->] (cek-gagal) -- node[label, anchor=south] {ya} (partisi-tidak-jalan);
-		\draw[->] (cek-gagal) -- node[label, anchor=west] {tidak} (cek-layanan);
-		\draw[->] (cek-layanan) -| node[label, anchor=south] {ya} (partisi-tidak-jalan);
-		\draw[->] (cek-layanan) -- node[label, anchor=south] {tidak} (partisi-jalan);
-		\draw[->] (partisi-kuantum) -- (cek-kuantum);
-		\draw[->] (cek-kuantum) -- ++(0pt, -30pt) -| node[label, anchor=south] {tidak} (partisi-kuantum);
-		\draw[->] (idle) -- (akhir-major);
-		\draw[->] (cek-kuantum) |- ++(14pt, 30pt) -- node[label, anchor=west] {ya} (akhir-major);
-		\draw[->] (partisi-tidak-jalan) -- ++(0pt, 90pt) -| (cek-partisi);
-		\draw[->] (partisi-jalan) -- (partisi-kuantum);
-		
-		\end{tikzpicture}
+		\includegraphics[scale=0.18]{./final-project-figure2.png}
 		\caption{Diagram \textit{Flowchart} Algoritma \textit{Scheduling}}
 	\end{figure}
 \end{frame}
 \begin{frame}{Rancangan Solusi --- Ilustrasi Algoritma}
 	\centering
 	\begin{figure}
-		\begin{tikzpicture}[
-			scale=0.8,
-			base/.style={draw, text opacity=1.0, rounded corners=1pt, minimum width=20pt, minimum height=24pt, font=\tiny},
-			partition-done/.style={base, fill=gray, fill opacity=0.10},
-			partition-healthy/.style={base, fill=green, fill opacity=0.30},
-			partition-failed/.style={base, fill=red, fill opacity=0.40},
-			candidate/.style={ultra thick},
-			]
-
-			\newcommand{\boxs}{30pt}
-			\newcommand{\off}{20pt}
-
-			\node [partition-healthy,candidate] at (0*\boxs,{1*(-\boxs-\off)}) {P1-SA};
-			\node [partition-healthy]           at (1*\boxs,{1*(-\boxs-\off)}) {P2-SA};
-			\node [partition-failed]            at (2*\boxs,{1*(-\boxs-\off)}) {P3-SB};
-			\node [partition-healthy]           at (3*\boxs,{1*(-\boxs-\off)}) {P4-SB};
-			\node [partition-healthy]           at (4*\boxs,{1*(-\boxs-\off)}) {P5-SB};
-
-			\node [partition-done]              at (0*\boxs,{2*(-\boxs-\off)}) {P1-SA};
-			\node [partition-done,candidate]    at (1*\boxs,{2*(-\boxs-\off)}) {P2-SA};
-			\node [partition-failed]            at (2*\boxs,{2*(-\boxs-\off)}) {P3-SB};
-			\node [partition-healthy]           at (3*\boxs,{2*(-\boxs-\off)}) {P4-SB};
-			\node [partition-healthy]           at (4*\boxs,{2*(-\boxs-\off)}) {P5-SB};
-
-			\node [partition-done]              at (0*\boxs,{3*(-\boxs-\off)}) {P1-SA};
-			\node [partition-done]              at (1*\boxs,{3*(-\boxs-\off)}) {P2-SA};
-			\node [partition-failed,candidate]  at (2*\boxs,{3*(-\boxs-\off)}) {P3-SB};
-			\node [partition-healthy]           at (3*\boxs,{3*(-\boxs-\off)}) {P4-SB};
-			\node [partition-healthy]           at (4*\boxs,{3*(-\boxs-\off)}) {P5-SB};
-
-			\node [partition-done]              at (0*\boxs,{4*(-\boxs-\off)}) {P1-SA};
-			\node [partition-done]              at (1*\boxs,{4*(-\boxs-\off)}) {P2-SA};
-			\node [partition-failed]            at (2*\boxs,{4*(-\boxs-\off)}) {P3-SB};
-			\node [partition-healthy,candidate] at (3*\boxs,{4*(-\boxs-\off)}) {P4-SB};
-			\node [partition-healthy]           at (4*\boxs,{4*(-\boxs-\off)}) {P5-SB};
-
-			\node [partition-done]              at (0*\boxs,{5*(-\boxs-\off)}) {P1-SA};
-			\node [partition-done]              at (1*\boxs,{5*(-\boxs-\off)}) {P2-SA};
-			\node [partition-done]              at (2*\boxs,{5*(-\boxs-\off)}) {P3-SB};
-			\node [partition-done]              at (3*\boxs,{5*(-\boxs-\off)}) {P4-SB};
-			\node [partition-done,candidate]    at (4*\boxs,{5*(-\boxs-\off)}) {P5-SB};
-
-		\end{tikzpicture}
-
-		\caption{Algoritma \textit{Primary-Backup Scheduling}}
+		\includegraphics[scale=0.15]{./final-project-figure3.png}
+		\caption{Contoh \textit{primary-backup scheduling}}
 	\end{figure}
 \end{frame}
-\begin{frame}{Rancangan Pengujian -- \textit{Reliability Testing}}
+\begin{frame}{Rancangan Pengujian -- Pengujian Keandalan}
 	\begin{itemize}
 		\item Metode:
 			\begin{enumerate}
@@ -312,24 +221,41 @@
 			\begin{enumerate}
 				\item Mengetahui jumlah layanan yang disediakan pada setiap \textit{major time frame}.
 				\item Menjamin partisi yang diberi waktu CPU adalah partisi yang seharusnya.
-				\item Menjamin layanan tidak terduplikasi.
+				\item Menghitung \textit{latency} layanan
 			\end{enumerate}
 	\end{itemize}
 \end{frame}
-\begin{frame}{Rancangan Pengujian -- \textit{Real-Time Testing}}
+\begin{frame}{Rancangan Pengujian -- Pengujian \textit{Latency}}
 	\begin{itemize}
 		\item Metode:
 			\begin{enumerate}
 				\item Partisi akan menjalankan \textit{periodic task}.
-				\item Server akan mencatat waktu \textit{task} tersebut dijalankan.
+				\item \textit{Periodic task} akan mengukur \textit{latency}.
+				\item Hasil pengukuran seluruhnya akan dicatat pada \textit{file}.
 			\end{enumerate}
 		\item Tujuan:
 			\begin{enumerate}
+				\item Menghitung \textit{latency} \textit{periodic task}
 				\item Menjamin \textit{task} akan dijalankan sebelum \textit{deadline}.
 				\item Menjamin tidak terjadi \textit{time-drift} yang signifikan.
 			\end{enumerate}
 	\end{itemize}
 \end{frame}
+\begin{frame}{Rancangan Pengujian -- Arsitektur Kerangka Uji}
+	\centering
+	\begin{figure}
+		\includegraphics[scale=0.20]{./final-project-figure4.png}
+		\caption{Arsitektur Kerangka Uji}
+	\end{figure}
+\end{frame}
+\begin{frame}{Rancangan Pengujian -- Cara Kerja Kerangka Uji}
+	\centering
+	\begin{figure}
+		\includegraphics[scale=0.20]{./final-project-figure5.png}
+		\caption{Cara Kerja Kerangka Uji}
+	\end{figure}
+\end{frame}
+
 \section{Implementasi}
 \begin{frame}
 	\frametitle{Implementasi --- \textit{Hypercall}}
@@ -348,6 +274,394 @@
 		\item Menggunakan \textit{interface} pada Xen untuk mendefinisikan \textit{scheduler}.
 	\end{itemize}
 \end{frame}
+\section{Pengujian}
+
+\begin{frame}{Pengujian -- Parameter Pengujian}
+	\begin{itemize}
+		\item Delta \textit{Timing}, untuk melihat perbandingan \textit{timing} dengan periode ekspektasi.
+
+			\begin{equation*}
+				delta = now - last
+			\end{equation*}
+
+		\item Galat \textit{Timing}, untuk melihat selisih \textit{timing} dengan periode ekspektasi.
+
+			\begin{equation*}
+				galat = delta - expected
+			\end{equation*}
+
+
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Pengujian -- Keandalan (Skenario 1)}
+	\begin{itemize}
+		\item Jumlah layanan = 1 @ \SI{20}{\milli\second}.
+		\item Jumlah partisi penyedia = 1.
+		\item \textit{Major time frame} = \SI{20}{\milli\second}.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Pengujian -- Keandalan (Skenario 1)}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s1-delta.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s1-error.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian keandalan skenario 1}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Pengujian -- Keandalan (Skenario 2)}
+	\begin{itemize}
+		\item Jumlah layanan = 1 @ \SI{20}{\milli\second}.
+		\item Jumlah partisi penyedia = 2.
+		\item \textit{Major time frame} = \SI{20}{\milli\second}.
+	\end{itemize}
+\end{frame}
+\begin{frame}{Pengujian -- Keandalan (Skenario 2)}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s2-delta.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s2-error.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian keandalan skenario 2}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Pengujian -- Keandalan (Skenario 3)}
+	\begin{itemize}
+		\item Jumlah layanan = 9 @ \SI{20}{\milli\second}.
+		\item Jumlah partisi penyedia = 1.
+		\item \textit{Major time frame} = \SI{180}{\milli\second}.
+	\end{itemize}
+\end{frame}
+\begin{frame}{Pengujian -- Keandalan (Skenario 3)}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s3-delta-p2.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s3-error-p2.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian keandalan skenario 3 (hasil baik)}
+	\end{figure}
+\end{frame}
+\begin{frame}{Pengujian -- Keandalan (Skenario 3)}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s3-delta-p1.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s3-error-1.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian keandalan skenario 3 (hasil buruk)}
+	\end{figure}
+\end{frame}
+
+
+\begin{frame}{Pengujian -- Pengujian Keandalan (Skenario 4)}
+	\begin{itemize}
+		\item Jumlah layanan = 2 @ \SI{20}{\milli\second}.
+		\item Jumlah partisi penyedia masing-masing layanan = 1.
+		\item \textit{Major time frame} = \SI{180}{\milli\second}.
+		\item Pada kasus ini, partisi penyedia merupakan partisi yang sama.
+	\end{itemize}
+\end{frame}
+\begin{frame}{Pengujian -- Keandalan (Skenario 4)}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s4-delta.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s4-error.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian keandalan skenario 4}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Pengujian -- Pengujian Keandalan (Skenario 5)}
+	\begin{itemize}
+		\item Jumlah layanan = 4 @ \SI{10}{\milli\second}.
+		\item Jumlah partisi penyedia masing-masing layanan = 2.
+		\item Terdapat waktu \textit{idle} = \SI{10}{\milli\second}.
+		\item \textit{Major time frame} = \SI{50}{\milli\second}.
+	\end{itemize}
+\end{frame}
+\begin{frame}{Pengujian -- Keandalan (Skenario 5)}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s5-delta-p1.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s5-error-p1.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian keandalan skenario 5}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Pengujian -- Keandalan (Skenario 6)}
+	\begin{itemize}
+		\item Jumlah layanan = 3.
+		\item Durasi layanan 1 = \SI{30}{\milli\second}.
+		\item Durasi layanan 2 = \SI{20}{\milli\second}.
+		\item Durasi layanan 3 = \SI{10}{\milli\second}.
+		\item Jumlah partisi penyedia layanan 1 = 2.
+		\item Jumlah partisi penyedia layanan 2 = 3.
+		\item Jumlah partisi penyedia layanan 3 = 1.
+		\item \textit{Major time frame} = \SI{60}{\milli\second}.
+	\end{itemize}
+\end{frame}
+\begin{frame}{Pengujian -- Keandalan (Skenario 6)}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s6-delta-p1.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s6-error-p1.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian keandalan skenario 6 (layanan 1)}
+	\end{figure}
+\end{frame}
+\begin{frame}{Pengujian -- Keandalan (Skenario 6)}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s6-delta-p2.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s6-error-p2.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian keandalan skenario 6 (layanan 2)}
+	\end{figure}
+\end{frame}
+\begin{frame}{Pengujian -- Keandalan (Skenario 6)}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s6-delta-p3.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.15]{./reliability-s6-error-p3.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian keandalan skenario 6 (layanan 3)}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Pengujian -- Kesimpulan Pengujian Keandalan}
+	\begin{enumerate}
+
+		\item \textit{Scheduler} dapat melakukan penjadwalan partisi
+			\textit{backup} ketika partisi \textit{primary}
+			mengalami kegagalan.
+
+		\item \textit{Scheduler} dapat melakukan penjadwalan partisi
+			\textit{backup} dengan prioritas yang lebih rendah
+			ketika partisi \textit{backup} yang memiliki prioritas
+			lebih tinggi mengalami kegagalan.
+
+		\item Apabila terdapat beberapa layanan, maka beberapa saat
+			setelah pergantian partisi, terdapat \textit{latency}
+			yang cukup tinggi.
+
+	\end{enumerate}
+\end{frame}
+
+\begin{frame}{Pengujian -- Pengujian \textit{Latency} (Skenario 1)}
+	\begin{itemize}
+		\item Jumlah layanan = 1 @ \SI{20}{\milli\second}.
+		\item \textit{Major time frame} = \SI{20}{\milli\second}.
+	\end{itemize}
+\end{frame}
+\begin{frame}{Pengujian -- Pengujian \textit{Latency} (Skenario 1)}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.15]{./latency-s1-delta.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.15]{./latency-s1-error.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian \textit{latency} (Skenario 1)}
+	\end{figure}
+
+\end{frame}
+
+\begin{frame}{Pengujian -- Pengujian \textit{Latency} (Skenario 2)}
+	\begin{itemize}
+		\item Jumlah layanan = 4 @ \SI{10}{\milli\second}.
+		\item Terdapat waktu \textit{idle} = \SI{10}{\milli\second}.
+		\item \textit{Major time frame} = \SI{50}{\milli\second}.
+	\end{itemize}
+\end{frame}
+\begin{frame}{Pengujian -- Pengujian \textit{Latency} (Skenario 2)}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.15]{latency-s2-delta-p1.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.15]{latency-s2-error-p1.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian \textit{latency} skenario 2}
+	\end{figure}
+
+\end{frame}
+
+\begin{frame}{Pengujian -- Pengujian \textit{Latency} (Skenario 3)}
+	\begin{itemize}
+		\item Jumlah layanan = 9 @ \SI{20}{\milli\second}.
+		\item \textit{Major time frame} = \SI{180}{\milli\second}.
+	\end{itemize}
+\end{frame}
+\begin{frame}{Pengujian -- Pengujian \textit{Latency} (Skenario 3)}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.15]{./latency-s3-delta-p1.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.15]{./latency-s3-error-p1.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian \textit{latency} skenario 3 (hasil baik)}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Pengujian -- Pengujian \textit{Latency} (Skenario 3)}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.15]{./latency-s3-delta-p4.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.15]{./latency-s3-error-p4.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian \textit{latency} skenario 3 (hasil buruk)}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Pengujian -- Kesimpulan Pengujian \textit{Latency}}
+	\begin{enumerate}
+
+		\item \textit{Periodic} task memiliki \textit{timing} yang
+			sangat akurat apabila tidak ada partisi lain.
+
+		\item \textit{Periodic} task memiliki \textit{timing} yang
+			sangat jauh dari ekspektasi apabila terdapat beberapa
+			layanan.
+
+	\end{enumerate}
+\end{frame}
+
+\begin{frame}{Pengujian -- \textit{Time-drift}}
+	\begin{itemize}
+
+		\item Hasil pengujian sebelumnya menghasilkan pengukuran
+			\textit{timing} yang buruk.
+
+		\item Satu partisi vs Lebih dari satu partisi.
+
+		\item Cek apakah waktu \textit{periodic task} berjalan dengan
+			seharusnya.
+
+		\item Time-drift \textit{task}
+
+			\begin{equation}
+				drift = now - (start + samples * expected)
+			\end{equation}
+
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Pengujian -- \textit{Time-drift}}
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{c}
+			\subfloat{
+				\includegraphics[scale=0.12]{./timedrift-s1.png}
+			} \\
+			\subfloat{
+				\includegraphics[scale=0.12]{./timedrift-s2-p1.png}
+			}
+		\end{tabular}
+		\caption{Hasil pengujian \textit{time-drift}. Atas: Hasil pada sistem dengan satu layanan. Bawah: Hasil pada sistem dengan lebih daru satu layanan.}
+	\end{figure}
+\end{frame}
+
+\section{Kesimpulan dan Saran}
+
+\begin{frame}{Kesimpulan}
+	\begin{itemize}
+		\item \textit{Primary-backup partition scheduler} sudah diimplementasikan.
+		\item \textit{Primary-backup partition scheduler} dapat menangani \textit{fault} pada partisi \textit{primary}.
+		\item \textit{Primary-backup partition scheduler} dapat menangani \textit{fault} pada partisi \textit{backup}.
+		\item Pengiriman informasi partisi sudah dapat dilakukan dengan menggunakan \textit{hypercall}.
+		\item Sistem memiliki \textit{latency} yang buruk apabila terdapat pergantian partisi.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Saran}
+	\begin{itemize}
+		\item Perbaikan
+
+			\begin{enumerate}
+				\item \textit{Time-drift} pada sistem
+				\item Kerangka pengujian
+			\end{enumerate}
+
+		\item Pengembangan
+
+			\begin{enumerate}
+				\item Minimalisasi penggunaan memori
+				\item Pendeteksian kegagalan otomatis
+				\item \textit{Multicore}
+			\end{enumerate}
+	
+	\end{itemize}
+
+\end{frame}
+
+\begin{frame}[standout]
+	\centering Demo
+\end{frame}
+
 \begin{frame}[standout]
 	\centering Terima Kasih
 \end{frame}
@@ -361,4 +675,5 @@
 		\item \textit{Time-Drift} --- Pergeseran waktu sistem karena ketidaktelitian perhitungan waktu atau perangkat sistem.
 	\end{itemize}
 \end{frame}
+
 \end{document}

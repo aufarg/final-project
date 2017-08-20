@@ -1,0 +1,9 @@
+Statistics for entry 0
+delta(s): mean=0.040000776, median=0.040003939, sd=0.000400393, min=0.019950134, max=0.040202085 (15044 samples)
+error(s): mean=0.000019681, median=0.000012415, sd=0.000399910, min=0.000000000, max=0.020049866 (15044 samples)
+
+
+Statistics for entry 1
+delta(s): mean=0.040001897, median=0.040004955, sd=0.000400499, min=0.019948345, max=0.040193575 (15043 samples)
+error(s): mean=0.000019713, median=0.000012086, sd=0.000400018, min=0.000000001, max=0.020051655 (15043 samples)
+

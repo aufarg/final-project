@@ -1,0 +1,14 @@
+Statistics for entry 0
+delta(s): mean=0.059975803, median=0.060008736, sd=0.001147162, min=0.006988249, max=0.081515427 (6114 samples)
+error(s): mean=0.000062378, median=0.000019375, sd=0.001145720, min=0.000000004, max=0.053011751 (6114 samples)
+
+
+Statistics for entry 1
+delta(s): mean=0.059985610, median=0.060012268, sd=0.001425992, min=0.008529890, max=0.120339290 (6112 samples)
+error(s): mean=0.000059317, median=0.000013553, sd=0.001424830, min=0.000000000, max=0.060339290 (6112 samples)
+
+
+Statistics for entry 2
+delta(s): mean=0.060005246, median=0.060011917, sd=0.002309893, min=0.009922352, max=0.110076803 (6110 samples)
+error(s): mean=0.000122436, median=0.000015010, sd=0.002306651, min=0.000000000, max=0.050077648 (6110 samples)
+

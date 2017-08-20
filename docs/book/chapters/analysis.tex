@@ -57,7 +57,7 @@ yang tersedia secara gratis.
 \textit{Primary-backup scheduling} hanya akan diterapkan pada \textit{partition scheduler}. Hal
 ini dikarenakan \textit{process scheduler} bergantung pada sistem yang digunakan oleh partisi.
 Agar solusi dapat bekerja untuk kasus umum, solusi yang ditawarkan harus merupakan solusi yang
-tidak bergantung \textit{process scheduler}, dengan asumsi mekanisme \textit{process scheduler}
+tidak bergantung pada \textit{process scheduler}, dengan asumsi mekanisme \textit{process scheduler}
 yang digunakan tetap sesuai spesifikasi pada standar ARINC 653.
 
 Dengan menggunakan \textit{primary-backup}, layanan yang diberikan oleh partisi yang mengalami
@@ -76,16 +76,15 @@ ini mencakup kemungkinan yang lebih umum ketimbang partisi \textit{backup} yang 
 
 Implementasi dan pengujian \textit{primary-backup partition scheduling} akan dilakukan pada
 ARLX, yaitu prototipe sistem yang bersesuaian dengan spesifikasi ARINC 653 pada Xen. Hal ini
-dikarenakan prototipe tersebut tersedia gratis dan \textit{open-source}, sehingga pengembangan
-dan eksperimen yang akan dilakukan tidak memerlukan biaya banyak dan dapat dieksplorasi secara
-mandiri.
+dikarenakan prototipe tersebut tersedia gratis dan \textit{open-source}, sehingga penelitian
+maupun pengembangan terkait dengan sistem ARINC 653 tidak memerlukan biaya banyak dan mudah
+untuk mengembangkan komponen baru.
 
 \subsection{Implementasi \textit{Primary-Backup Partition Scheduling} pada ARLX}
 
 Pada ARLX, pembuatan sebuah partisi membutuhkan waktu yang cukup lama. Agar partisi
 \textit{backup} dapat langsung menggantikan partisi \textit{primary} ketika mengalami mengalami
-kegagalan, maka partisi \textit{backup} sudah harus dibuat pada tahap inisialisasi
-\textit{module} atau sistem.
+kegagalan, maka partisi \textit{backup} sudah harus dibuat pada tahap inisialisasi atau sistem.
 
 \textit{Scheduler} membutuhkan daftar jadwal layanan-layanan yang akan disediakan pada setiap
 \textit{major time frame}. \textit{Scheduler} akan mendapatkan daftar jadwal layanan melalui
@@ -94,14 +93,14 @@ waktu CPU. Partisi hanya akan diberikan kuantum waktu CPU jika partisi tersebut 
 kegagalan.
 
 Selain itu, \textit{scheduler} juga perlu mengetahui kapan sebuah partisi \textit{primary}
-dikategorikan mengalami kegagalan. Karena itu, perlu ada mekanisme untuk mendeteksi
+dikategorikan mengalami kegagalan. Oleh karena itu, perlu ada mekanisme untuk mendeteksi
 \textit{fault}, dan memberikan informasi tersebut kepada \textit{scheduler}.
 
 \subsection{Daftar Jadwal}
 \label{section:daftar_jadwal}
 
 \textit{Partition scheduler} akan bekerja pada sebuah daftar jadwal yang terdapat pada konteks
-global milik \textit{scheduler}. Dengan demikian, informasi tersebut dapat diakses kapanpun
+global milik \textit{scheduler}. Dengan demikian, informasi tersebut dapat diakses kapan pun
 apabila dibutuhkan oleh \textit{scheduler}. Daftar jadwal dapat diberikan oleh \textit{user
 space} melalui \textit{hypercall} yang disediakan. Setiap perubahan yang terjadi pada
 \textit{daftar jadwal} akan mengakibatkan seluruh proses penjadwalan yang sedang dilakukan oleh
@@ -393,7 +392,7 @@ Illustrasi bagaimana algoritma \textit{primary-backup scheduling} pada \textit{s
 653 bekerja dapat dilihat pada \autoref{figure:pb_scheduling}. Pada ilustrasi, partisi diberi
 label dengan format $PX-SY$, yang berarti partisi $X$ akan menyediakan layanan $Y$ jika
 diberikan kuantum waktu CPU oleh \textit{scheduler}. Pada skenario tersebut, \textit{scheduler} akan
-bekerja sebagai berikut:
+bekerja sebagai berikut.
 
 \begin{enumerate}
 
@@ -422,6 +421,20 @@ disediakan apabila terdapat setidaknya satu partisi yang memiliki layanan terseb
 tidak sedang mengalami kegagalan. Algoritma ini akan berulang secara terus menerus tiap akhir
 \textit{major time frame}.
 
+\subsection{Mekanisme Penanganan Kegagalan}
+
+Penanganan kegagalan dengan menggunakan \textit{primary-backup scheduler} dilakukan dengan
+mengubah nilai keadaan sebuah partisi dengan menggunakan \textit{hypercall}. \textit{Hypercall}
+tersebut tersedia pada dom0. \textit{Hypercall} tersebut tidak dapat diakses oleh partisi yang
+terdapat pada sistem. Partisi pada sistem dapat mengatasi permasalahan tersebut dengan
+menggunakan API yang tersedia pada dom0. Namun, pada penelitian ini, API tersebut tidak akan
+diimplementasikan dan perubahan nilai keadaan akan dilakukan secara manual.
+
+Sama seperti pada spesfikasi ARINC 653, metode pendeteksian kegagalan dapat dilakukan seperti
+yang telah dipaparkan pada \autoref{section:health_monitoring}. Namun, pada saat menggunakan
+\textit{primary-backup scheduler}, \textit{recovery action} yang dilakukan oleh sistem operasi
+adalah mengubah nilai keadaan sebuah partisi.
+
 \section{Rancangan Pengujian}
 \label{section:rancangan_pengujian}
 
@@ -437,7 +450,7 @@ Berikut adalah fungsionalitas sistem yang akan diukur pada saat menggunakan
 
 Pengukuran kedua fungsionalitas tersebut dilakukan guna mencapai tujuan yang telah dipaparkan
 pada \autoref{section:tujuan}. Pengukuran keandalan sistem diperlukan untuk mengkuantifikasi
-peningkatan keandalan yang diakibatkan karena penggunaan \textit{primary-backup partition
+peningkatan keandalan yang diakibatkan oleh penggunaan \textit{primary-backup partition
 scheduler}.  Pengukuran \textit{latency} layanan pada sistem diperlukan untuk melihat efek
 penggunaan \textit{primary-backup partition scheduler} pada kinerja sistem ARINC 653. Kedua
 jenis pengujian tersebut akan mengumpulkan data dengan melakukan \textit{timing}, yaitu
@@ -475,8 +488,8 @@ pengujian tersebut adalah dengan menggunakan kerangka uji dengan arsitektur
 \textit{server-client} seperti pada \autoref{figure:server_client_testing_arch}.
 
 Setiap partisi berlaku sebagai \textit{client} pada arsitektur tersebut. \textit{Server} dapat
-berupa komputer apapun yang terhubung dengan seluruh partisi menggunakan kanal TCP. Untuk
-mempermudah, mesin yang digunakan untuk \textit{server} adalah dom0 pada sistem. Pada awalnya,
+berupa komputer apa pun yang terhubung dengan seluruh partisi menggunakan kanal TCP. Untuk
+mempermudah pengujian, mesin yang digunakan untuk \textit{server} adalah dom0 pada sistem. Pada awalnya,
 dom0 akan menggunakan \textit{hypercall} untuk mengubah penjadwalan partisi-partisi pada sistem
 sesuai dengan skenario yang ditentukan.  Kemudian, setiap partisi mengirimkan \textit{heartbeat}
 dengan selang waktu tertentu kepada \textit{server}.  Kemudian, \textit{server} akan mencatat
@@ -568,9 +581,15 @@ berikut harus terpenuhi pada saat melakukan pengujian.
 	\label{figure:server_client_testing_impl}
 \end{figure}
 
-Perlu diperhatikan bahwa Penggunakan kanal TCP akan menambah \textit{delay} pada waktu hasil
+Perlu diperhatikan bahwa penggunaan kanal TCP akan menambah \textit{delay} pada waktu hasil
 pengukuran. Ditambah dengan \textit{delay} yang diakibatkan oleh \textit{system call}, maka
 hasil yang didapat memiliki resolusi waktu yang rendah.
+
+Pengujian keandalan juga dapat digunakan untuk menghitung \textit{latency} dari masing-masing
+layanan. Namun, seperti yang telah dijelaskan sebelumnya, akan terdapat \textit{delay} pada
+waktu hasil pengukuran dikarenakan I/O. Meski demikian, \textit{latency} yang didapat akan tetap
+bermanfaat untuk melihat kinerja sistem apabila layanan yang berjalan pada partisi akan
+menggunakan I/O (\textit{I/O-bound}).
 
 \subsection{Pengujian \textit{Latency} Layanan}
 \label{section:pengujian_latency}
@@ -592,6 +611,8 @@ diberikan oleh sistem apabila pengembang mengembangkan aplikasi pada sistem ters
 
 Karena pengujian \textit{latency} tidak membutuhkan komunikasi dengan partisi lain, maka
 \textit{timing} dapat dilakukan tanpa membutuhkan I/O. Dengan demikian, hasil pengujian
-\textit{latency} merepresentasikan kemampuan maksimal dari sistem.
+\textit{latency} merepresentasikan kemampuan maksimal dari sistem. Selain itu, hasil pengujian
+dapat dijadikan referensi pada saat membuat desain layanan yang kinerjanya berdasarkan kecepatan
+CPU (\textit{CPU-bound}).
 
 % vim: tw=96

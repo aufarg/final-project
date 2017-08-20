@@ -1,0 +1,19 @@
+Statistics for entry 0
+delta(s): mean=0.050007092, median=0.050016108, sd=0.000639187, min=0.009878269, max=0.060776404 (8503 samples)
+error(s): mean=0.000032361, median=0.000019541, sd=0.000638406, min=0.000000014, max=0.040121731 (8503 samples)
+
+
+Statistics for entry 1
+delta(s): mean=0.050001220, median=0.050014153, sd=0.000976689, min=0.009890167, max=0.090110858 (8504 samples)
+error(s): mean=0.000044055, median=0.000017758, sd=0.000975695, min=0.000000006, max=0.040110858 (8504 samples)
+
+
+Statistics for entry 2
+delta(s): mean=0.050001493, median=0.050016466, sd=0.001055401, min=0.009914713, max=0.090084848 (8504 samples)
+error(s): mean=0.000051392, median=0.000018593, sd=0.001054150, min=0.000000002, max=0.040085287 (8504 samples)
+
+
+Statistics for entry 3
+delta(s): mean=0.050007097, median=0.050016364, sd=0.000666761, min=0.009898559, max=0.066638722 (8503 samples)
+error(s): mean=0.000034110, median=0.000018826, sd=0.000665925, min=0.000000000, max=0.040101441 (8503 samples)
+

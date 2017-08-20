@@ -32,10 +32,11 @@ dibangun dengan memodifikasi kode \textit{scheduler} ARLX, yaitu prototipe siste
 dapat melakukan penjadwalan partisi \textit{backup} apabila partisi \textit{primary} mengalami
 kegagalan.
 
-\textit{Scheduler} hasil implementasi diuji untuk melihat apakah terjadi peningkatan keandalan
-sistem ketika menggunakan \textit{scheduler} tertentu. Selain itu, pengujian \textit{latency}
-juga dilakukan untuk melihat \textit{latency} maksimal pada sistem sehingga terlihat apakah
-sistem layak digunakan sebagai sistem \textit{real-time} atau tidak.
+\textit{Scheduler} yang telah dikembangkan diuji untuk melihat apakah terjadi peningkatan
+keandalan serta mengukur \textit{latency} maksimal pada sistem ketika menggunakan
+\textit{scheduler} tersebut. Hasil pengujian menunjukkan peningkatan keandalan sistem secara
+signifikan, namun \textit{latency} maksimal dari sebuah layanan masih tergolong terlalu tinggi
+sehingga \textit{scheduler} tersebut belum layak digunakan pada lingkungan produksi.
 
 \textbf{Kata kunci}: \textit{hierarchical scheduling}, sistem \textit{real-time},
 \textit{scheduling}, keandalan, \textit{fault-tolerance}

@@ -11,17 +11,17 @@ navigasi, \textit{dashboard} untuk manajemen sistem, dan sistem-sistem yang dipa
 pesawat terbang untuk melakukan fungsionalitas tersendiri.
 
 %  Design-issues pada avionik
-Avionik merupakan komponen penting dalam sebuah pesawat terbang dan merupakan \textit{safety\hyp
-critical system}, yaitu sistem yang apabila mengalami kegagalan dapat mengakibatkan kematian,
-kerugian besar, atau kerusakan lingkungan.  Sistem operasi yang digunakan oleh avionik pada
-sebuah pesawat umumnya merupakan sistem \textit{real-time}, yaitu sistem yang kebenaran
-komputasinya tidak hanya ditentukan oleh kebenaran hasil komputasi secara logika, tetapi juga
-waktu pada saat hasil komputasi dapat digunakan \citep[p.~6]{Shin1994}. Dengan demikian,
-manajemen waktu komputasi adalah aspek yang sangat mendasar pada sistem \textit{real-time}.
-Perangkat yang digunakan untuk avionik memiliki beberapa standar yang wajib dipenuhi. Standar
-tersebut dibuat oleh Aeronautical Radio, Incorporated (ARINC) dalam sebuah seri standar ARINC
-600. Penelitian ini akan mendalami lebih lanjut mengenai sistem operasi \textit{real-time} pada
-avionik yang dispesifikasikan pada penerbangan bernama ARINC 653.
+Avionik merupakan komponen penting dalam sebuah pesawat terbang dan umumnya merupakan
+\textit{safety\hyp critical system}, yaitu sistem yang apabila mengalami kegagalan dapat
+mengakibatkan kematian, kerugian besar, atau kerusakan lingkungan.  Sistem operasi yang
+digunakan oleh avionik pada sebuah pesawat umumnya merupakan sistem \textit{real-time}, yaitu
+sistem yang kebenaran komputasinya tidak hanya ditentukan oleh kebenaran hasil komputasi secara
+logika, tetapi juga waktu pada saat hasil komputasi dapat digunakan \citep[p.~6]{Shin1994}.
+Dengan demikian, manajemen waktu komputasi adalah aspek yang sangat mendasar pada sistem
+\textit{real-time}.  Perangkat yang digunakan untuk avionik memiliki beberapa standar yang wajib
+dipenuhi. Standar tersebut dibuat oleh Aeronautical Radio, Incorporated (ARINC) dalam sebuah
+seri standar ARINC 600. Penelitian ini akan mendalami lebih lanjut mengenai sistem operasi
+\textit{real-time} pada avionik yang dispesifikasikan pada penerbangan bernama ARINC 653.
 
 % ARINC 653
 Standar ARINC 653 menspesifikasikan partisi ruang dan waktu pada sistem operasi
@@ -51,7 +51,7 @@ lingkungan yang terlibat. Standar ARINC 653 memberikan spesifikasi komponen untu
 \textit{health monitoring}. Dengan adanya proses \textit{health monitoring}, sistem dapat
 mendeteksi kegagalan yang terjadi dan memberikan respons yang sesuai berdasarkan jenis kegagalan
 yang terjadi. Namun, dalam kasus tertentu, keadaan partisi tidak dapat dikembalikan seperti
-semula dikarenakan kegagalan yang terjadi bersifat tetap. Karena itu, perlu ada mekanisme untuk
+semula karena kegagalan yang terjadi bersifat tetap. Oleh karena itu, perlu ada mekanisme untuk
 menggantikan layanan pada partisi yang mengalami kegagalan.
 
 Untuk meningkatkan keandalan sistem dalam sistem \textit{real-time}, salah satu cara yang dapat
@@ -76,7 +76,8 @@ tersedia secara gratis sehingga peningkatan keandalan sistem dengan memanfaatkan
 \textit{primary-backup scheduling} sulit untuk dikuantifikasi. Untuk dapat melihat perbandingan
 antara \textit{primary-backup partition scheduling} dengan \textit{scheduling} sistem ARINC 653,
 perlu dilakukan pengujian keandalan sistem pada sistem yang menggunakan \textit{primary-backup
-partition scheduling} dan sistem yang menggunakan \textit{scheduling} sistem ARINC 653.
+partition scheduling} dan sistem yang menggunakan \textit{scheduling} seperti pada spesifikasi
+ARINC 653.
 
 % Hypervisor
 Arsitektur komputer yang dispesifikasikan pada standar ARINC 653 dapat divirtualisasikan dengan
@@ -109,18 +110,18 @@ Berikut adalah pertanyaan permasalahan yang akan dijawab dan diselesaikan pada t
 
 \begin{enumerate}
 
-	\item \label{item:problem_fault_tolerant} Bagaimana cara mengimplementasikan \textit{fault-tolerant partition scheduling} pada
-    	    sistem ARINC 653 sehingga keandalan sistem meningkat?
+	\item Bagaimana cara mengimplementasikan \textit{fault-tolerant partition scheduling} pada
+		sistem ARINC 653 sehingga keandalan sistem meningkat?
 
-    \item Bagaimana cara melakukan pengujian keandalan sistem ARINC 653 setelah menggunakan
-    	    \textit{fault-tolerant partition scheduling}?
+	\item Bagaimana cara melakukan pengujian keandalan sistem ARINC 653 setelah menggunakan
+		\textit{fault-tolerant partition scheduling}?
 
-    \item Apakah terjadi peningkatan keandalan sistem akibat penggunaan \textit{fault-tolerant
-    	    partition scheduling} pada sistem yang memenuhi standar ARINC 653?
+	\item Apakah terjadi peningkatan keandalan sistem akibat penggunaan \textit{fault-tolerant
+		partition scheduling} pada sistem yang memenuhi standar ARINC 653?
 
-    \item Apakah terdapat peningkatan atau penurunan kinerja akibat peningkatan keandalan
-    	    menggunakan \textit{fault-tolerant partition scheduling} pada sistem yang memenuhi
-    	    standar ARINC 653?
+	\item Apakah terdapat peningkatan atau penurunan kinerja akibat peningkatan keandalan
+		menggunakan \textit{fault-tolerant partition scheduling} pada sistem yang memenuhi
+		standar ARINC 653?
 
 \end{enumerate}
 
@@ -129,9 +130,19 @@ Berikut adalah pertanyaan permasalahan yang akan dijawab dan diselesaikan pada t
 
 Berdasarkan uraian pada rumusan masalah, tujuan yang ingin dicapai adalah meningkatkan keandalan
 sistem ARINC 653 tanpa mengurangi efisiensi sistem secara signifikan. Hal ini dapat dicapai
-dengan mengimplementasikan \textit{fault-tolerant partition scheduling} pada sistem ARINC 653,
-melakukan pengujian keandalan sistem, dan melakukan perbandingan keandalan sistem pada saat
-sebelum dan sesudah implementasi \textit{fault-tolerant partition scheduling}.
+dengan melakukan hal-hal berikut.
+
+\begin{enumerate}
+
+	\item Mengimplementasikan \textit{fault-tolerant partition scheduling} pada sistem ARINC
+		653,
+
+	\item Melakukan pengujian keandalan sistem.
+
+	\item Melakukan perbandingan keandalan sistem pada saat sebelum dan sesudah implementasi
+		\textit{fault-tolerant partition scheduling}.
+
+\end{enumerate}
 
 \section{Batasan Masalah}
 \label{section:batasan_masalah}
@@ -143,11 +154,8 @@ yang akan dikembangkan yaitu.
 
     \item Implementasi hanya akan dilakukan pada sistem dengan arsitektur x86-64.
 
-    \item Implementasi hanya akan dilakukan di atas \textit{virtual machine}. Hal ini
-	    mengakibatkan batasan pada \autoref{enumerate:linux_batasan}.
-
-    \item \label{enumerate:linux_batasan} Implementasi hanya akan diuji coba dengan menggunakan sistem operasi Linux untuk
-	    setiap partisi-nya. Hasil pada sistem operasi lain mungkin berbeda.
+    \item Implementasi hanya akan diuji coba dengan menggunakan sistem operasi Linux untuk
+	    setiap partisinya. Hasil pada sistem operasi lain mungkin berbeda.
 
 \end{enumerate}
 
@@ -163,13 +171,13 @@ Metodologi yang akan digunakan dalam penelitian tugas akhir adalah sebagai berik
 	dokumen resmi terkait dengan spesifikasi ARINC 653, arsitektur Xen, dan cara kerja ARLX.
 	Pembelajaran mengenai spesifikasi ARINC 653 dilakukan untuk dapat mengetahui kriteria
 	penilaian yang akan digunakan sebagai patokan dalam pembuatan kerangka pengujian.
-	Pembelajaran arsitektur Xen dilakukan untuk mengetahui cara memodifikasi ARLX untuk
-	mencari tahu bagaimana modifikasi dan pengujian pada prototipe tersebut akan dilakukan.
+	Pembelajaran arsitektur Xen dilakukan untuk mengetahui cara memodifikasi ARLX terkait
+	dengan cara melakukan modifikasi dan pengujian pada prototipe tersebut akan dilakukan.
 
     \item Analisis
 
 	Pada tahap ini dilakukan analisis permasalahan yang berkaitan dengan topik tugas akhir
-	ini.  Analisis permasalahan akan membahas spesifikasi ARINC 653 dan arsitektur Xen untuk
+	ini. Analisis permasalahan akan membahas spesifikasi ARINC 653 dan arsitektur Xen untuk
 	kemudian dijadikan sebagai solusi terhadap permasalahan.
 
     \item Perancangan Solusi dan Pengujian

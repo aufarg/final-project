@@ -1,0 +1,2 @@
+reliability-s2-error.pdf: ./data/master-slave/schedule-1p-1b.json-random-failure.csv.xen-vm1
+reliability-s2-error.pdf: ./data/master-slave/schedule-1p-1b.json-random-failure.csv.xen-vm2

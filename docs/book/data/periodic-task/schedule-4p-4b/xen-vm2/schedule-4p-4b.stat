@@ -1,0 +1,4 @@
+Statistics:
+delta(s): mean=0.050008071, median=0.050016263, sd=0.000571656, min=0.009959549, max=0.050102679 (4913 samples)
+error(s): mean=0.000025972, median=0.000019855, sd=0.000571123, min=0.000000006, max=0.040040451 (4913 samples)
+drift(s): mean=0.016836336, median=0.017990003, sd=0.012753213, min=-0.000127906, max=0.039940522 (4913 samples)

@@ -1,0 +1,44 @@
+Statistics for entry 0
+delta(s): mean=0.180000519, median=0.180014470, sd=0.002095888, min=0.019932050, max=0.340065552 (29219 samples)
+error(s): mean=0.000049486, median=0.000018440, sd=0.002095303, min=0.000000001, max=0.160067950 (29219 samples)
+
+
+Statistics for entry 1
+delta(s): mean=0.180000520, median=0.180015261, sd=0.001632978, min=0.019904611, max=0.202430830 (29218 samples)
+error(s): mean=0.000039215, median=0.000018822, sd=0.001632507, min=0.000000002, max=0.160095389 (29218 samples)
+
+
+Statistics for entry 2
+delta(s): mean=0.180000520, median=0.180015447, sd=0.001626384, min=0.019902337, max=0.193437703 (29218 samples)
+error(s): mean=0.000038617, median=0.000019462, sd=0.001625926, min=0.000000001, max=0.160097663 (29218 samples)
+
+
+Statistics for entry 3
+delta(s): mean=0.180000520, median=0.180016271, sd=0.001622321, min=0.019925824, max=0.182820545 (29218 samples)
+error(s): mean=0.000037602, median=0.000019399, sd=0.001621885, min=0.000000000, max=0.160074176 (29218 samples)
+
+
+Statistics for entry 4
+delta(s): mean=0.180000520, median=0.180014557, sd=0.001622387, min=0.019907466, max=0.180541322 (29218 samples)
+error(s): mean=0.000037184, median=0.000019364, sd=0.001621961, min=0.000000002, max=0.160092534 (29218 samples)
+
+
+Statistics for entry 5
+delta(s): mean=0.180000520, median=0.180015450, sd=0.001631479, min=0.019904899, max=0.194755881 (29218 samples)
+error(s): mean=0.000039542, median=0.000019376, sd=0.001630999, min=0.000000000, max=0.160095101 (29218 samples)
+
+
+Statistics for entry 6
+delta(s): mean=0.180000520, median=0.180014811, sd=0.001622501, min=0.019894901, max=0.181095813 (29218 samples)
+error(s): mean=0.000037483, median=0.000019459, sd=0.001622068, min=0.000000001, max=0.160105099 (29218 samples)
+
+
+Statistics for entry 7
+delta(s): mean=0.180000520, median=0.180014785, sd=0.001642801, min=0.019909234, max=0.211270132 (29218 samples)
+error(s): mean=0.000039519, median=0.000019405, sd=0.001642326, min=0.000000001, max=0.160090766 (29218 samples)
+
+
+Statistics for entry 8
+delta(s): mean=0.180000520, median=0.180016070, sd=0.001630495, min=0.019905475, max=0.196468893 (29218 samples)
+error(s): mean=0.000039338, median=0.000019149, sd=0.001630021, min=0.000000001, max=0.160094525 (29218 samples)
+
