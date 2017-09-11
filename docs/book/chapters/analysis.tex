@@ -488,14 +488,17 @@ pengujian tersebut adalah dengan menggunakan kerangka uji dengan arsitektur
 \textit{server-client} seperti pada \autoref{figure:server_client_testing_arch}.
 
 Setiap partisi berlaku sebagai \textit{client} pada arsitektur tersebut. \textit{Server} dapat
-berupa komputer apa pun yang terhubung dengan seluruh partisi menggunakan kanal TCP. Untuk
-mempermudah pengujian, mesin yang digunakan untuk \textit{server} adalah dom0 pada sistem. Pada awalnya,
-dom0 akan menggunakan \textit{hypercall} untuk mengubah penjadwalan partisi-partisi pada sistem
-sesuai dengan skenario yang ditentukan.  Kemudian, setiap partisi mengirimkan \textit{heartbeat}
-dengan selang waktu tertentu kepada \textit{server}.  Kemudian, \textit{server} akan mencatat
-setiap layanan sudah pernah disediakan pada tiap akhir \textit{major time frame}. Pada saat
-pengujian tersebut dijalankan, dom0 akan memanggil \textit{hypervisor} secara acak untuk
-mengubah keadaan salah satu partisi. Ilustrasi langkah-langkah pengujian dapat dilihat pada
+berupa komputer apa pun yang terhubung dengan seluruh partisi menggunakan kanal TCP. TCP dipilih
+karena kerangka uji didesain agar dapat digunakan antar komputer sehingga memerlukan komunikasi
+antara komputer melalui jaringan. Selain itu, protokol komunikasi dipilih menggunakan TCP karena
+protokol TCP menjamin paket yang dikirim akan sampai pada tujuan. Untuk mempermudah pengujian,
+mesin yang digunakan untuk \textit{server} adalah dom0 pada sistem. Pada awalnya, dom0 akan
+menggunakan \textit{hypercall} untuk mengubah penjadwalan partisi-partisi pada sistem sesuai
+dengan skenario yang ditentukan.  Kemudian, setiap partisi mengirimkan \textit{heartbeat} dengan
+selang waktu tertentu kepada \textit{server}.  Kemudian, \textit{server} akan mencatat setiap
+layanan sudah pernah disediakan pada tiap akhir \textit{major time frame}. Pada saat pengujian
+tersebut dijalankan, dom0 akan memanggil \textit{hypervisor} secara acak untuk mengubah keadaan
+salah satu partisi. Ilustrasi langkah-langkah pengujian dapat dilihat pada
 \autoref{figure:server_client_testing_impl}.
 
 \begin{figure}[!ht]
@@ -582,8 +585,14 @@ berikut harus terpenuhi pada saat melakukan pengujian.
 \end{figure}
 
 Perlu diperhatikan bahwa penggunaan kanal TCP akan menambah \textit{delay} pada waktu hasil
-pengukuran. Ditambah dengan \textit{delay} yang diakibatkan oleh \textit{system call}, maka
-hasil yang didapat memiliki resolusi waktu yang rendah.
+pengukuran.  Ditambah dengan \textit{delay} yang diakibatkan oleh \textit{system call}, maka
+hasil yang didapat memiliki resolusi waktu yang rendah.  \textit{Delay} tersebut mungkin dapat
+diperkecil apabila komunikasi dilakukan menggunakan UDP. Namun, UDP tidak menjamin paket akan
+sampai pada tujuan, sehingga UDP bukanlah metode komunikasi yang andal. Meski demikian, tujuan
+utama pengujian keandalan dilakukan adalah untuk melihat keandalan sistem dan bukan untuk
+melihat kinerja sistem. Apabila terdapat paket yang hilang, maka hasil perhitungan keandalan
+sistem akan berbeda secara signifikan. Dengan demikian, kanal TCP tetap dipilih sebagai metode
+komunikasi antara \textit{client} dan \textit{server} pada pengujian keandalan.
 
 Pengujian keandalan juga dapat digunakan untuk menghitung \textit{latency} dari masing-masing
 layanan. Namun, seperti yang telah dijelaskan sebelumnya, akan terdapat \textit{delay} pada

@@ -2020,17 +2020,19 @@ hanya akan ditampilkan sampai terlihat sebuah kecenderungan pada data.
 					\label{figure:hasil_keandalan_s6_service2}
 				\end{figure}
 
-			\item Pada layanan 2, partisi berjalan dengan stabil. Dari hasil pengujian, terlihat
-				bahwa partisi 5 dapat menggantikan peran partisi 2 ketika terjadi kegagalan pada
-				partisi 2. Dan apabila partisi 5 juga mengalami kegagalan, partisi 6 dapat
-				menggantikan peran partisi 5. Ketika partisi 2 kembali dari kegagalan, maka
-				partisi 6 tidak lagi berjalan dan digantikan oleh partisi 2. Dengan demikian,
-				layanan 2 selalu tersedia selama pengujian.
-
-				Namun, galat maksimal antara pengukuran \textit{timing} dengan \textit{timing}
-				ekspektasi sangat tinggi yaitu sekitar \SI{60}{\milli\second}.  Selain itu,
-				terlihat beberapa titik dengan galat yang cukup tinggi berada pada waktu sekitar
-				pergantian partisi \textit{primary} dengan partisi \textit{backup}.
+			\item Pada layanan 2, partisi berjalan dengan stabil. Dari hasil
+				pengujian, terlihat bahwa partisi 5 dapat menggantikan peran
+				partisi 2 ketika terjadi kegagalan pada partisi 2. Dan apabila
+				partisi 5 juga mengalami kegagalan, partisi 6 dapat menggantikan
+				peran partisi 5. Ketika partisi 2 kembali dari kegagalan, maka
+				partisi 6 tidak lagi berjalan dan digantikan oleh partisi 2.
+				Dengan demikian, layanan 2 selalu tersedia selama pengujian.
+				Namun, galat maksimal antara pengukuran \textit{timing} dengan
+				\textit{timing} ekspektasi sangat tinggi yaitu sekitar
+				\SI{60}{\milli\second}.  Selain itu, terlihat beberapa titik
+				dengan galat yang cukup tinggi berada pada waktu sekitar
+				pergantian partisi \textit{primary} dengan partisi
+				\textit{backup}.
 
 				\begin{figure}[!ht]
 					\centering

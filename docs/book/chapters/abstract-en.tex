@@ -1,0 +1,46 @@
+\clearpage
+\chapter*{ABSTRACT}
+\addcontentsline{toc}{chapter}{ABSTRAK}
+
+\begin{center}
+
+	\large \bfseries
+	\MakeUppercase{Improving ARINC 653 Systems Reliability by Using Fault-Tolerant Partition Scheduling}
+
+	\normalsize \normalfont By
+
+	\large \penulis
+
+	\large NIM: \nimpenulis
+
+\end{center}
+
+\singlespacing
+
+The ARINC 653 specifies multiple real-time operating system components to provide isolation between
+partitions. This means failure on one partition does not affect any other partition. When a
+failure occurs, the system will handle the failure through health monitor component. Health
+monitor will detect a failure when it occurs and try to do recovery acts to make sure the system
+stays stable.  Unfortunately, some failure cannot be handled by recovery procedures defined in
+the standard.  This means the failure will persists and while each partition cannot affect the
+other partitions, the failure still happens and possibly leads to failure to the whole system. 
+
+In this research, partition scheduler specified in ARINC 653 standard is extended to improve
+reliability in ARINC 653 compliant systems. Scheduler is developed based on ARLX, an existing
+ARINC 653 prototype built on top of Xen hypervisor. The scheduler will modified to support
+primary-backup scheduling scheme when scheduling partitions on the systems. This means, the
+scheduler can choose a backup partition if primary partition experienced a failure.
+
+The extended scheduler then tested to measure increase in reliability and worst-case latency when
+the system used said scheduler. Test result shows that system reliability increased
+significantly on the system, but with high worst-case latency. This means the system is less
+affected by failures, but cannot be used as productiono technology yet because the system could
+not provide real-time performance by industry standards.
+
+\textbf{Keywords}: hierarchical scheduling, real-time system,
+scheduling, reliability, fault-tolerance
+
+\clearpage
+
+\defaultspacing
+% vim: tw=96

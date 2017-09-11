@@ -134,7 +134,8 @@ volume           = {{volume}{vol.}},
 % Paragraphs
 \usepackage{parskip}
 \usepackage{setspace}
-\doublespacing
+\newcommand{\defaultspacing}{\doublespacing}
+\defaultspacing
 
 % Counters
 \usepackage{chngcntr}
@@ -186,7 +187,7 @@ volume           = {{volume}{vol.}},
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
 
 %-------------------- META --------------------%
-\newcommand{\context}{Draft Laporan Tugas Akhir}
+\newcommand{\context}{Laporan Tugas Akhir}
 \newcommand{\matakuliah}{IF4092/Tugas Akhir II}
 \newcommand{\judul}{%
 	\MakeUppercase{Pengembangan Keandalan Sistem ARINC 653}\\
