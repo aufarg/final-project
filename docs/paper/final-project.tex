@@ -1,3 +1,4 @@
+%! TEX program = xelatex
 
 %% bare_conf_compsoc.tex
 %% V1.4b
@@ -67,6 +68,7 @@
 
 \usepackage[table]{xcolor}
 \usepackage{tikz}
+\usepackage{siunitx}
 \usetikzlibrary{shapes.geometric}
 
 
@@ -452,7 +454,7 @@ applications in different partition. Despite being protected of fault from other
 fault the application experienced from its own partition will still happen. It might be the case
 that the faulty application or partition is a safety-critical system or part of such system.
 Failure of such application or partition leads to a significant increase of the safety risk for
-the people and/or partition involved. This leads to the need of system reliability in the
+the people and/or environment involved. This leads to the need of system reliability in the
 platform or operating system to reduce the safety risk in case of failure.
 
 There are several ways to achieve system reliability in ARINC 653 operating systems. One way is
@@ -480,9 +482,9 @@ compliant hypervisor. The main topic of this paper includes describing the prima
 
 The rest of this paper is organized as follows. In Section II, we will cover the current
 implementation of ARINC 653 scheduler in ARLX and primary-backup scheduling algorithm. In
-Section III we introduce the proposed primary-backup ARINC 653 compliant scheduling algorithm
-and provides testing and performance analysis of the proposed scheduling algorithm on different
-scenarios.
+Section III we introduce the proposed primary-backup ARINC 653 compliant scheduling algorithm.
+In section IV, we provide testing performance analysis of the proposed scheduling algorithm on
+different scenarios.
 
 % \subsection{Subsection Heading Here}
 % Subsection text here.
@@ -743,7 +745,7 @@ There are some differences between standard ARINC 653 scheduler and ARLX.
 		with uniprocessor architecture.
 \end{itemize}
 
-\section{Improving Service Reliability}
+\section{Improving System Reliability}
 
 The problem with faulty partition is that the service it provides will cease to work and/or give
 incorrect result. In avionics, this could lead to incorrect calculation of control systems, thus
@@ -756,8 +758,8 @@ persistent.
 To improve service reliability in real-time systems, one solution is to have the scheduler to be
 fault-tolerant \cite{Campbell1986} \cite{Han2003} \cite{Shin2008}. A study shows that a
 hierarchical scheduler like ARINC 653 scheduler, which has at least two levels of scheduling,
-can be made fault-tolerant with primary-backup scheme \cite{Jin2013}. When a partition
-experienced failure, the scheduler can keeps the service running by having backup partition
+can be made fault-tolerant by means of primary-backup scheme \cite{Jin2013}. When a partition
+experienced failure, the scheduler can keep the service running by having backup partition
 running in place of the faulty primary partition. Common primary-backup schemes make sure that
 each partition have replicas that is identical service-wise to the primary partition before
 being operational. When said partition experienced a failure, one of its replicas could take
@@ -946,51 +948,179 @@ works as intended.
 
 Reliability testing is done by checking whether each partition can successfully pass heartbeat
 check. The partition is said to be successfully pass heartbeat check when it sends heartbeat if
-and only if the partition satisfies the running condition. One simple way to do this is by
-creating a testing framework with server-client architecture. Each partition is a client, and we
-can have any machine as the server, as long as all the partitions is connected to the server
+and only if the partition satisfies the running condition. The heartbeat will be noted by the
+time it is passed. A problem arises when a partition is idle because the time when a heartbeat
+measured in the partition could be skipped. To make sure the timing is properly measured, the
+testing framework should have one single source of truth for time. One simple way to do this is
+by creating a testing framework with server-client architecture. Each partition is a client, and
+we can have any machine as the server, as long as all the partitions is connected to the server
 machine by any means. Each partition then sends heartbeat with its service identification and
 partition identification to the server on a fixed interval. The server makes sure that each
 service is provided, while noting which partition provides the service.
 
-We tested the primary-backup ARINC 653 scheduler by having five partitions, named as P1 to P5.
-The first two partitions (P1 and P2) provide service $A$ and the last three partitions (P3, P4,
-and P5) provide service $B$. The testing scenarios on these partitions, including the expected
-outcome, are as follows:
+We will do the sampling the primary-backup ARINC 653 scheduler reliability with some scenarios.
+For each scenario, there will be $n$ number of service. The $i$-th service will be provided by
+$m_i$ number of partition. In most of these scenarios, all service will have the same number of
+providing partitions. A service have a fixed runtime and providing partition is expected to send
+heartbeat within this runtime. After the runtime has elapsed, the service will be idle. The
+service will be running again after the major time frame has elapsed. The scenarios used for
+testing are as follows.
 
 \begin{enumerate}
-	\item Initially, all five partitions are healthy. In this scenario, the scheduler are
-		supposed to selects partition P1 and partition P3.
+	\item Scenario 1
 
-	\item Partition P3 experienced a failure. In this scenario, the scheduler are supposed
-		to selects partition P1 and partition P4. This scenario is exactly the same as
-		illustrated in \figurename ~\ref{figure:pb_scheduling}.
+		In this scenario, there will be 1 service, provided by 1 partition and running for
+		\SI{20}{\milli\second} with \SI{20}{\milli\second} major time frame.
 
-	\item Partition P2, P3, and P5 then experienced a failure. In this scenario, the
-		scheduler are supposed to selects partition P1 and partition P5. This scenario is
-		done to test the scheduler behavior. The scheduler should still choose a
-		candidate which meets the running conddition, even when there are backup
-		partitions, which to be scheduled later than the candidate experienced a
-		failure. 
+	\item Scenario 2
+
+		In this scenario, there will be 1 partition, provided by 2 partitions and running for
+		\SI{20}{\milli\second} with \SI{20}{\milli\second} major time frame.
+
+	\item Scenario 3
+
+		In this scenario, there will be 9 partition, each provided by 1 partitions and running for
+		\SI{20}{\milli\second} with \SI{180}{\milli\second} major time frame.
+
+	\item Scenario 4
+
+		In this scenario, there will be 4 partition, each provided by 2 partitions and running for
+		\SI{10}{\milli\second} with \SI{50}{\milli\second} major time frame (there's
+		\SI{10}{\milli\second} idle time).
+
+	\item Scenario 5
+
+		In this scenario, there will be 9 partition. Partition 1 will be provided by 2 partitions and running for
+		\SI{30}{\milli\second}. Partition 2 will be provided by 3 partitions and running for
+		\SI{20}{\milli\second}. Partition 3 will be provided by 1 partition and running for
+		\SI{10}{\milli\second}.
+
 \end{enumerate}
 
-In the first scenario, when all partitions are healthy, the server receive service $A$ from
-partition P1 and service P2 from partition P3. For the second scenario, the server receives
-heartbeat from partition P1 for service $A$ and from partition P4 for service $B$. This means
-the service still functioning correctly even when the original partition which provides the
-service experiencing a failure. On the third scenario, the server still receives heartbeat for
-service $A$ from partition P1 and service $B$ from partition P4. This means failured experienced
-by backup partitions later than the supposed selected partitions do not affect scheduler
-selection.
+In \tablename ~\ref{table:test_result}, we include the measured timing for each scenario. We also provide
+timing graphs showing measured timing against time. We choose to pick the timing graphs for
+scenario 5, as it is the most generic case out of all scenarios.
 
-In all of these scenarios, all the service required is provided, even though partitions can
-still experience failures as base ARINC 653 scheduler. This means, while this scheme does not
-increases the mean time to failure for each partition, it does increases mean time to failure
-for each service. 
+\begin{table}
+	\caption{Timing error for testing scenarios (in nanoseconds)}
+	\label{table:test_result}
+	\centering
+	\begin{tabular}{|r|r|r|r|r|r|}
+		\hline
+		\multicolumn{1}{|c|}{scenario} &
+		\multicolumn{1}{|c|}{service} &
+		\multicolumn{1}{|c|}{mean} &
+		\multicolumn{1}{|c|}{median} &
+		\multicolumn{1}{|c|}{min} &
+		\multicolumn{1}{|c|}{max} \\ \hline
+		1 & 1 & 22091 & 16544 & 2 & 188922 \\                                 \hline
+		2 & 1 & 59278 & 3143 & 0 & 19764828 \\                                \hline
+		3 & 1 & 49486 & 18440 & 1 & 160067950 \\                              \hline
+		3 & 2 & 39215 & 18822 & 2 & 160095389 \\                              \hline
+		3 & 3 & 38617 & 19462 & 1 & 160097663 \\                              \hline
+		3 & 4 & 37602 & 19399 & 0 & 160074176 \\                              \hline
+		3 & 5 & 37184 & 19364 & 2 & 160092534 \\                              \hline
+		3 & 6 & 39542 & 19376 & 0 & 160095101 \\                              \hline
+		3 & 7 & 37483 & 19459 & 1 & 160105099 \\                              \hline
+		3 & 8 & 39519 & 19405 & 1 & 160090766 \\                              \hline
+		3 & 9 & 39338 & 19149 & 1 & 160094525 \\                              \hline
+		4 & 1 & 32361 & 19541 & 14 & 40121731 \\                              \hline
+		4 & 2 & 44055 & 17758 & 6 & 40110858\\                                \hline
+		4 & 3 & 51392 & 18593 & 2 & 40085287\\                                \hline
+		4 & 4 & 34110 & 18826 & 0 & 40101441 \\                               \hline
+		5 & 1 & 62378 & 19375 & 4 & 53011751 \\                               \hline
+		5 & 2 & 59317 & 13553 & 0 & 60339290 \\                               \hline
+		5 & 3 & 122436 & 15010 & 0 & 50077648 \\                              \hline
+	\end{tabular}
+\end{table}
+
+\begin{figure}[!ht]
+	\centering
+	\begin{tabular}{c}
+		\subfloat{
+			\includegraphics[scale=0.18]{reliability-s6-delta-p1.png}
+		} \\
+		\subfloat{
+			\includegraphics[scale=0.18]{reliability-s6-error-p1.png}
+		}
+	\end{tabular}
+	\caption{Test result for scenario 5 (service 1)}
+	\label{figure:hasil_keandalan_s6_service1}
+\end{figure}
+
+\begin{figure}[!ht]
+	\centering
+	\begin{tabular}{c}
+		\subfloat{
+			\includegraphics[scale=0.18]{reliability-s6-delta-p2.png}
+		} \\
+		\subfloat{
+			\includegraphics[scale=0.18]{reliability-s6-error-p2.png}
+		}
+	\end{tabular}
+	\caption{Test result for scenario 5 (service 2)}
+	\label{figure:hasil_keandalan_s6_service2}
+\end{figure}
+
+\begin{figure}[!ht]
+	\centering
+	\begin{tabular}{c}
+		\subfloat{
+			\includegraphics[scale=0.18]{reliability-s6-delta-p3.png}
+		} \\
+		\subfloat{
+			\includegraphics[scale=0.18]{reliability-s6-error-p3.png}
+		}
+	\end{tabular}
+	\caption{Test result for scenario 5 (service 3)}
+	\label{figure:hasil_keandalan_s6_service3}
+\end{figure}
+
+Test results show that using primary-backup scheme indeed increase the reliability of the
+service. The increase is indicated by continuous sample even when a partition experienced a
+failure as depicted in \figurename ~\ref{figure:hasil_keandalan_s6_service1}, \figurename
+~\ref{figure:hasil_keandalan_s6_service2}, and \figurename
+~\ref{figure:hasil_keandalan_s6_service3}.  Unfortunately, \tablename ~\ref{table:test_result}
+shows that the latency for each heartbeat is quite high, which makes it unsuitable for
+production environment.
+% We tested the primary-backup ARINC 653 scheduler by having five partitions, named as P1 to P5.
+% The first two partitions (P1 and P2) provide service $A$ and the last three partitions (P3,
+% P4, and P5) provide service $B$. The testing scenarios on these partitions, including the
+% expected outcome, are as follows:
+
+% \begin{enumerate}
+% 	\item Initially, all five partitions are healthy. In this scenario, the scheduler are
+% 		supposed to selects partition P1 and partition P3.
+
+% 	\item Partition P3 experienced a failure. In this scenario, the scheduler are supposed
+% 		to selects partition P1 and partition P4. This scenario is exactly the same as
+% 		illustrated in \figurename ~\ref{figure:pb_scheduling}.
+
+% 	\item Partition P2, P3, and P5 then experienced a failure. In this scenario, the
+% 		scheduler are supposed to selects partition P1 and partition P5. This scenario is
+% 		done to test the scheduler behavior. The scheduler should still choose a
+% 		candidate which meets the running conddition, even when there are backup
+% 		partitions, which to be scheduled later than the candidate experienced a
+% 		failure. 
+% \end{enumerate}
+
+% In the first scenario, when all partitions are healthy, the server receive service $A$ from
+% partition P1 and service P2 from partition P3. For the second scenario, the server receives
+% heartbeat from partition P1 for service $A$ and from partition P4 for service $B$. This means
+% the service still functioning correctly even when the original partition which provides the
+% service experiencing a failure. On the third scenario, the server still receives heartbeat for
+% service $A$ from partition P1 and service $B$ from partition P4. This means failured experienced
+% by backup partitions later than the supposed selected partitions do not affect scheduler
+% selection.
+
+% In all of these scenarios, all the service required is provided, even though partitions can
+% still experience failures as base ARINC 653 scheduler. This means, while this scheme does not
+% increases the mean time to failure for each partition, it does increases mean time to failure
+% for each service. 
 
 \section{Conclusion}
 
-In this paper, we proposed a way to increases the reliability of ARINC 653 operating systems by
+In this paper, we proposed a way to increase the reliability of ARINC 653 operating systems by
 using primary-backup scheme on ARINC 653 partition scheduler. The scheduler works by giving CPU
 time to candidate partition only when it is currently healthy and the corresponding service has
 not provided yet. In order to let the scheduler know partition status, we define a new hypercall
@@ -999,12 +1129,18 @@ scheduler increases the reliability for each service and thus prolong the mean t
 for any service. Since we assume that services reliability is the most unreliable component on the
 system, this means the proposed scheduler also increases the whole system reliability.
 
-While the result of the reliability testing is already good, the testing is done without regards
-of processes' deadline inside of each partition. We intend to do some improvement on the testing
-method so it also considers the deadline of each process inside of each partition. Doing so will
-make the result more relevant to the actual use case of the system. We also plan to have
-another type of test to measure performance difference caused by the overhead of the scheduler
-and analyze the effect of the difference on the system.
+While the result of the reliability testing is already good, the maximum measured heartbeat
+latency is very high. This means that that the proposed scheduler is still not suitable for
+production environment. We suspect that switching partitions in Xen could leave the operating
+system clock management inside the partition at unexpected state, thus creating error in timing
+calculation.
+
+Besides high latency, the testing is done without regards of processes' deadline inside of each
+partition. We intend to do some improvement on the testing method so it also considers the
+deadline of each process inside of each partition. Doing so will make the result more relevant
+to the actual use case of the system. We also plan to have another type of test to measure
+performance difference caused by the overhead of the scheduler and analyze the effect of the
+difference on the system.
 
 As the paper proposed a new scheduler, there are some issues which need to be solved such as:
 
@@ -1019,7 +1155,7 @@ As the paper proposed a new scheduler, there are some issues which need to be so
 	\item \textit{Automatic partition failure detection}: Telling the scheduler whether the
 		service on a partition is healthy or not can already be done by means of
 		hypercalls. This cannot be done if the environment on said partition does not
-		functions properly, which can be caused by transient or inherent problems. The
+		function properly, which can be caused by transient or inherent problems. The
 		hypervisor must be able detect such cases automatically so the scheduler could
 		properly select one of the backup partitions.
 
@@ -1033,7 +1169,7 @@ As the paper proposed a new scheduler, there are some issues which need to be so
 	\item \textit{Automatic schedule list generator}: It is up to the engineer to provide a
 		schedule list which satisfies the deadline and runtime constraints. Since the
 		schedule list might need to be adjusted when a partition failure occurs, the
-		scheduler list should still satisfies the deadline and runtime constraints on
+		scheduler list should still satisfy the deadline and runtime constraints on
 		any possible partitions state. This proves to be a daunting task for the
 		engineer since there will be many cases (up to $2^N$ possible cases, $N$ is the
 		number of partitions).

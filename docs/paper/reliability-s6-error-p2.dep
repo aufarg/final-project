@@ -1,0 +1,3 @@
+reliability-s6-error-p2.pdf: ./data/master-slave/schedule-random.json-random-failure.csv.xen-vm2
+reliability-s6-error-p2.pdf: ./data/master-slave/schedule-random.json-random-failure.csv.xen-vm6
+reliability-s6-error-p2.pdf: ./data/master-slave/schedule-random.json-random-failure.csv.xen-vm7

@@ -1,0 +1,103 @@
+%! TEX program = xelatex
+\documentclass[25pt, a0paper, portrait, margin=0mm, innermargin=25mm,
+blockverticalspace=15mm, colspace=15mm, subcolspace=8mm]{tikzposter}
+
+\usepackage[no-math]{fontspec}      
+
+\settitle{%
+	\begin{minipage}{0.2\linewidth}
+		\centering
+		\@titlegraphic
+	\end{minipage}%
+	\begin{minipage}{0.8\linewidth}
+		\centering
+		\color{titlefgcolor}
+		{
+			\bfseries \Huge \sc \@title
+		}
+		\\
+		\vspace*{2em}
+		{
+			\begin{minipage}{0.4\linewidth}
+				\centering
+				\large Aufar Gilbran\\%
+				\large aufargilbran@gmail.com
+			\end{minipage}%
+			\begin{minipage}{0.5\linewidth}
+				\centering
+				\large Achmad Imam Kistijantoro\\%
+				\large imam@stei.itb.ac.id
+			\end{minipage}
+		}
+	\end{minipage}%
+}
+
+\definebackgroundstyle{my}{}
+\definetitlestyle{my}{
+	width=820mm,
+	titletotopverticalspace=20mm, titletoblockverticalspace=30mm,
+	titlegraphictotitledistance=90pt
+}{}
+
+\definelayouttheme{my}{
+	\usebackgroundstyle{my}
+	\usetitlestyle{my}
+}
+
+\usetheme{my}
+
+
+\title{\parbox{\linewidth}{
+		\centering%
+Improving ARINC 653 Systems Reliability by Using Fault-Tolerant Partition Scheduling}}
+\titlegraphic{\includegraphics[width=10cm]{logo-itb.png}}
+
+\begin{document}
+\maketitle
+\begin{columns}
+	\column{0.4}
+	\block{Introduction}{
+		The ARINC 653 specifies multiple operating system components to
+		provide isolation between partitions in avionics. This means
+		failure on one partition in such system does not affect any
+		other partition.  While each partition cannot affect the other
+		partitions, the failure still happens and possibly leads to
+		failure to the whole system. System failure on avionics often
+		leads to significant increase of the safety risk for the people
+		and/or environment involved.
+
+		Currently, solutions for described problem already exists and
+		implemented. Unfortunately, these solutions are proprietary, thus
+		limiting further research for this domain. This research will
+		propose a reliable ARINC 653 compliant system which will be
+		provided gratis for further research.
+
+}
+
+	\column{0.6}
+	\block{Improving System Reliability}{
+		To improve service reliability in real-time systems, one
+		solution is to have the scheduler to be fault-tolerant. Studies
+		shows that a hierarchical scheduler like ARINC 653 scheduler
+		can be made fault-tolerant by means of primary-backup scheme.
+
+		Primary-backup scheme will be used when choose partition to
+		run. If primary partition experienced a failure, a backup
+		partition is chosen to run in place of the faulty primary
+		partition.
+
+}
+
+\end{columns}
+
+\begin{columns}
+	\column{0.4}
+	\block{BlocktitleB}{Blocktext}
+	\block{BlocktitleB}{Blocktext}
+	\block{BlocktitleB}{Blocktext}
+	\column{0.6}
+	\block{BlocktitleC}{Blocktext}
+	\note{Notetext}
+\end{columns}
+
+\end{document}
